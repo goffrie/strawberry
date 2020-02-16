@@ -6,7 +6,6 @@ import {useJoinRoom, PlayerNameContext, useInputWord} from './gameHook';
 import { start } from 'repl';
 
 function StartGameRoom({startingGameState}: {startingGameState: StartingPhase}) {
-    const joinStatus = useJoinRoom(startingGameState);
     return <div className='gameContainer'>
         <StartGameRoomSidebar startingGameState={startingGameState} />
         <div className='flexCenterContainer'>
@@ -41,6 +40,7 @@ function StartGameRoomSidebar({startingGameState}: {startingGameState: StartingP
 
 function StartGameRoomMain({startingGameState}: {startingGameState: StartingPhase}) {
     const username = useContext(PlayerNameContext);
+    const joinStatus = useJoinRoom(startingGameState);
 
     const [inputWord, setInputWord] = useState('');
     const [errorToRender, setErrorToRender] = useState('');
@@ -68,6 +68,14 @@ function StartGameRoomMain({startingGameState}: {startingGameState: StartingPhas
         errorMessage = "J, Q, V, X and Z aren't allowed, sorry";
     } else {
         isInputWordValid = true;
+    }
+
+    if (isSpectator) {
+        if (isGameReady) {
+            return <div className='bigText'>🕐 Waiting for game to start...</div>
+        } else {
+            return <div className='bigText'>🕐 Waiting for players to decide on words...</div>
+        }
     }
 
     if (playerNeedsToInputWord) {
@@ -98,18 +106,20 @@ function StartGameRoomMain({startingGameState}: {startingGameState: StartingPhas
         </div>;
     }
 
+    let startGame;
     if (isGameReady) {
-        if (isSpectator) {
-            return <div className='bigText'>🕐 Waiting for game to start...</div>
-        } else {
-            return <div className='strawberryButton' onClick={() => {
-                // TODO
-            }}>Start game</div>
-        }
+        startGame = <div className='strawberryButton' onClick={() => {
+            // TODO
+        }}>Start game</div>
+    } else {
+        startGame = <div className='bigText'>🕐 Waiting for other players to enter words...</div>;
     }
 
     // TODO: allow editing a word here for player
-    return <div className='bigText'>🕐 Waiting for players to enter words...</div>
+    return <div>
+        {startGame}
+        <div className='strawberryButton' onClick={() => setCommittedWord(null)}>Change my word</div>
+    </div>;
 }
 
 export {StartGameRoom};
