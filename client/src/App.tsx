@@ -1,15 +1,15 @@
-import React, {useState, useEffect} from 'react';
-import {SuperWrappedLoadingStrawberry} from './LoadingStrawberry';
+import React, { useState, useEffect } from 'react';
+import { SuperWrappedLoadingStrawberry } from './LoadingStrawberry';
 
-import {MainPage} from './MainPage';
-import {StartGameRoom} from './StartGameRoom';
-import {createNewRoom} from './gameActions';
-import {JoinRoomStatus, StrawberryGame, useJoinRoom, useStrawberryGame, StrawberryGameProvider, PlayerNameContext} from './gameHook';
+import { MainPage } from './MainPage';
+import { StartGameRoom } from './StartGameRoom';
+import { createNewRoom } from './gameActions';
+import { useStrawberryGame, StrawberryGameProvider, PlayerNameContext } from './gameHook';
+import { RoomPhase } from './gameState';
 
 import './App.css';
-import {RoomPhase, StartingPhase} from './gameState';
 
-function App({initialUsername, initialRoom}: {initialUsername: string | null, initialRoom: string}) {
+function App({ initialUsername, initialRoom }: { initialUsername: string | null, initialRoom: string }) {
     const [username, setUsername] = useState(initialUsername);
     const [room, setRoom] = useState(initialRoom);
     const [isPendingRoomCreation, setIsPendingRoomCreation] = useState(false);

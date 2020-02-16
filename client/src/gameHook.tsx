@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { delay } from './utils';
-import { RoomPhase, RoomState, StartingPhase } from './gameState';
+import { RoomState, StartingPhase } from './gameState';
 import { MAX_PLAYERS, setPlayerWord, addPlayerToRoom } from './gameLogic';
 import { callCommit, callList } from './gameAPI';
 
