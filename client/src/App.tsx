@@ -56,15 +56,13 @@ function Game({username, room}: {username: string, room: string}) {
     // TODO: bounce if game doesn't exist
     const strawberryGame = useStrawberryGame(room);
 
-    const joinStatus = useJoinRoom(room, strawberryGame, username);
-
     // Game state is null if game doesnt exist or still loading.
-    if (strawberryGame === null || joinStatus === JoinRoomStatus.JOINING) {
+    if (strawberryGame === null) {
         return <SuperWrappedLoadingStrawberry />;
     }
 
     if (strawberryGame.gameState.phase === RoomPhase.START) {
-        return <StartGameRoom username={username} startingGameState={strawberryGame.gameState} />;
+        return <StartGameRoom room={room} username={username} startingGameState={strawberryGame.gameState} stateVersion={strawberryGame.stateVersion} />;
     }
 
     return <div>{JSON.stringify(strawberryGame)}</div>;

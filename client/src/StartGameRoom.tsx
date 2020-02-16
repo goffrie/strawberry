@@ -2,8 +2,10 @@ import React, {useState} from 'react';
 import {StartingPhase} from './gameState';
 import {PlayerWithCardsInHand} from './Cards';
 import {LETTERS} from './gameLogic';
+import {useJoinRoom} from './gameHook';
 
-function StartGameRoom({username, startingGameState}: {username: string, startingGameState: StartingPhase}) {
+function StartGameRoom({room, username, startingGameState, stateVersion}: {room: string, username: string, startingGameState: StartingPhase, stateVersion: number}) {
+    const joinStatus = useJoinRoom(room, startingGameState, stateVersion, username);
     return <div className='gameContainer'>
         <StartGameRoomSidebar username={username} startingGameState={startingGameState} />
         <div className='flexCenterContainer'>
