@@ -1,9 +1,8 @@
 import React, {useState, useContext} from 'react';
 import {StartingPhase} from './gameState';
 import {PlayerWithCardsInHand} from './Cards';
-import {LETTERS, isRoomReady} from './gameLogic';
+import {LETTERS, MIN_PLAYERS, isRoomReady} from './gameLogic';
 import {useJoinRoom, PlayerNameContext, useInputWord} from './gameHook';
-import { start } from 'repl';
 
 function StartGameRoom({startingGameState}: {startingGameState: StartingPhase}) {
     return <div className='gameContainer'>
@@ -104,6 +103,10 @@ function StartGameRoomMain({startingGameState}: {startingGameState: StartingPhas
             </form>
             <div className='gameStartWordErrorMessage'>{errorToRender}</div>
         </div>;
+    }
+
+    if (startingGameState.players.length < MIN_PLAYERS) {
+        return <div className='bigText'>🕐 Waiting for players to join...</div>;
     }
 
     let startGame;
