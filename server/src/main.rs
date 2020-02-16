@@ -33,29 +33,25 @@ async fn main() -> io::Result<()> {
     println!("Listening on {}", listen_addr);
     let state = Arc::new(State::default());
     let state_ = state.clone();
-    let list = warp::post()
-        .and(warp::path!("list"))
+    let list = warp::path!("list")
         .and(warp::body::json())
         .and_then(move |req| {
             let state_ = state_.clone();
             async move { Ok::<_, Infallible>(warp::reply::json(&state_.list(req).await)) }
         });
     let state_ = state.clone();
-    let commit = warp::post()
-        .and(warp::path!("commit"))
+    let commit = warp::path!("commit")
         .and(warp::body::json())
         .map(move |req| {
             warp::reply::json(&CommitReply {
                 success: state_.commit(req),
             })
         });
-    let make_room = warp::post()
-        .and(warp::path!("make_room"))
+    let make_room = warp::path!("make_room")
         .and(warp::body::json())
         .map(move |req| warp::reply::json(&state.make_room(req)));
-    warp::serve(list.or(commit).or(make_room))
-        .run(listen_addr)
-        .await;
+    let mutating_routes = warp::post().and(list.or(commit).or(make_room));
+    warp::serve(mutating_routes).run(listen_addr).await;
     Ok(())
 }
 
