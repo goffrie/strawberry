@@ -39,6 +39,27 @@ export function newStartingPhase(firstPlayerName: string, wordLength: number): S
     };
 }
 
+export function addPlayerToRoom(room: StartingPhase, playerName: string): StartingPhase {
+    return {
+        phase: RoomPhase.START,
+        wordLength: room.wordLength,
+        players: [...room.players, {name: playerName, word: null}],
+    };
+}
+
+export function setPlayerWord(room: StartingPhase, playerName: string, word: string | null): StartingPhase {
+    return {
+        players: room.players.map((player) => {
+            if (player.name == playerName) {
+                return {name: playerName, word};
+            } else {
+                return player;
+            }
+        }),
+        ...room
+    };
+}
+
 // Move a room from the StartingPhase to the HintingPhase.
 export function startGameRoom(room: StartingPhase): HintingPhase {
     const numDummies = MAX_PLAYERS - room.players.length;
