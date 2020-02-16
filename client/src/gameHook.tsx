@@ -23,7 +23,7 @@ async function listLoop(roomName: string, version: number, signal: AbortSignal):
                 };
             }
         } catch (e) {
-            if (signal) return null;
+            if (signal.aborted) return null;
             console.error(e);
             // probably timed out.
             // back off and retry
