@@ -13,6 +13,7 @@ async function listLoop(roomName: string, version: number, signal: AbortSignal):
     while (true) {
         let result;
         try {
+            console.log("listing");
             result = await callList(roomName, version, signal);
         } catch (e) {
             if (signal) return null;
@@ -36,6 +37,7 @@ async function listLoop(roomName: string, version: number, signal: AbortSignal):
 export function useStrawberryGame(roomName: string): StrawberryGame | null {
     const [state, setState] = useState<StrawberryGame | null>(null);
     const version = state?.stateVersion || 0;
+    console.log(version);
     useEffect(() => {
         const abortController = new AbortController();
         listLoop(roomName, version, abortController.signal).then(setState);
