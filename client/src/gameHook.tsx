@@ -51,7 +51,7 @@ export function useJoinRoom(roomName: string, game: StrawberryGame, playerName: 
     if (room == null) status = JoinRoomStatus.WAITING;
     // can't join if the game has started
     else if (room.phase !== RoomPhase.START) status = JoinRoomStatus.GAME_STARTED;
-    else if (room.players.some((player) => player.name == playerName)) status = JoinRoomStatus.JOINED;
+    else if (room.players.some((player) => player.name === playerName)) status = JoinRoomStatus.JOINED;
     else if (room.players.length >= MAX_PLAYERS) status = JoinRoomStatus.ROOM_FULL;
     else status = JoinRoomStatus.JOINING;
     useEffect(() => {
@@ -61,7 +61,7 @@ export function useJoinRoom(roomName: string, game: StrawberryGame, playerName: 
         const abortController = new AbortController();
         callCommit(roomName, game.stateVersion, addPlayerToRoom(room, playerName));
         return () => abortController.abort();
-    }, [roomName, game.stateVersion, playerName]);
+    }, [room, status, roomName, game.stateVersion, playerName]);
     return status;
 }
 
@@ -71,8 +71,8 @@ export function useInputWord(roomName: string, game: StrawberryGame, playerName:
         const room = game.gameState;
         if (room == null) return;
         if (room.phase !== RoomPhase.START) return;
-        if (!room.players.some((player) => player.name == playerName && player.word !== word)) return;
+        if (!room.players.some((player) => player.name === playerName && player.word !== word)) return;
         callCommit(roomName, game.stateVersion, setPlayerWord(room, playerName, word), abortController.signal);
         return () => abortController.abort();
-    }, [roomName, game.stateVersion, playerName, word]);
+    }, [roomName, game.gameState, game.stateVersion, playerName, word]);
 }

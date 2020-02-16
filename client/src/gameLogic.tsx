@@ -50,7 +50,7 @@ export function addPlayerToRoom(room: StartingPhase, playerName: string): Starti
 export function setPlayerWord(room: StartingPhase, playerName: string, word: string | null): StartingPhase {
     return {
         players: room.players.map((player) => {
-            if (player.name == playerName) {
+            if (player.name === playerName) {
                 return {name: playerName, word};
             } else {
                 return player;
@@ -62,7 +62,6 @@ export function setPlayerWord(room: StartingPhase, playerName: string, word: str
 
 // Move a room from the StartingPhase to the HintingPhase.
 export function startGameRoom(room: StartingPhase): HintingPhase {
-    const numDummies = MAX_PLAYERS - room.players.length;
     return {
         phase: RoomPhase.HINT,
         players: room.players.map((player, index) => {
