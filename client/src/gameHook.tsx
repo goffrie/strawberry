@@ -4,22 +4,19 @@ import { MAX_PLAYERS, setPlayerWord, addPlayerToRoom } from './gameLogic';
 import { callCommit, callList } from './gameAPI';
 
 export type StrawberryGame = Readonly<{
-    // null if loading
-    gameState: RoomState | null,
+    gameState: RoomState,
     stateVersion: number,
 }>;
 
-const nullState: StrawberryGame = Object.freeze({ gameState: null, stateVersion: 0 });
-
-export function useStrawberryGame(roomName: string): StrawberryGame {
-    const [state, setState] = useState(nullState);
+export function useStrawberryGame(roomName: string): StrawberryGame | null {
+    const [state, setState] = useState<StrawberryGame | null>(null);
     useEffect(() => {
         const abortController = new AbortController();
-        callList(roomName, state.stateVersion, abortController.signal)
+        callList(roomName, state?.stateVersion || 0, abortController.signal)
             .then((result) => {
                 if (result == null) {
                     // TODO: potentially add error state
-                    setState(nullState);
+                    setState(null);
                 } else {
                     setState({
                         gameState: result.data,
@@ -45,8 +42,8 @@ export enum JoinRoomStatus {
     GAME_STARTED = 'game_started',
 }
 
-export function useJoinRoom(roomName: string, game: StrawberryGame, playerName: string): JoinRoomStatus {
-    const room = game.gameState;
+export function useJoinRoom(roomName: string, game: StrawberryGame | null, playerName: string): JoinRoomStatus {
+    const room = game?.gameState;
     let status: JoinRoomStatus;
     if (room == null) status = JoinRoomStatus.WAITING;
     // can't join if the game has started
@@ -56,23 +53,34 @@ export function useJoinRoom(roomName: string, game: StrawberryGame, playerName: 
     else status = JoinRoomStatus.JOINING;
     useEffect(() => {
         if (status !== JoinRoomStatus.JOINING) return;
-        if (room == null) throw new Error("impossible");
-        if (room.phase !== RoomPhase.START) throw new Error("impossible");
+        if (game == null || room == null || room.phase !== RoomPhase.START) throw new Error("impossible");
         const abortController = new AbortController();
         callCommit(roomName, game.stateVersion, addPlayerToRoom(room, playerName));
         return () => abortController.abort();
-    }, [room, status, roomName, game.stateVersion, playerName]);
+    }, [room, status, roomName, game, playerName]);
     return status;
 }
 
-export function useInputWord(roomName: string, game: StrawberryGame, playerName: string, word: string | null): void {
+export function useInputWord(roomName: string, game: StrawberryGame, playerName: string): [string | null, (newWord: string | null) => void] {
+    const [transition, setTransition] = useState<(Readonly<{from: string | null, to: string | null}> | null)>(null);
     useEffect(() => {
-        const abortController = new AbortController();
+        if (transition == null) return;
+        if (game == null) return;
         const room = game.gameState;
-        if (room == null) return;
         if (room.phase !== RoomPhase.START) return;
-        if (!room.players.some((player) => player.name === playerName && player.word !== word)) return;
-        callCommit(roomName, game.stateVersion, setPlayerWord(room, playerName, word), abortController.signal);
+        if (!room.players.some((player) => player.name === playerName && player.word !== transition.from)) return;
+        const abortController = new AbortController();
+        callCommit(roomName, game.stateVersion, setPlayerWord(room, playerName, transition.to), abortController.signal);
         return () => abortController.abort();
-    }, [roomName, game.gameState, game.stateVersion, playerName, word]);
+    }, [roomName, game, playerName, transition]);
+    if (game != null && game.gameState.phase === RoomPhase.START) {
+        for (const player of game.gameState.players) {
+            if (player.name === playerName) {
+                return [player.word, (newWord) => {
+                    setTransition({from: player.word, to: newWord});
+                }];
+            }
+        }
+    }
+    return [null, (_) => {}];
 }

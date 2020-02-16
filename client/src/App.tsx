@@ -48,7 +48,7 @@ function Game({username, room}: {username: string, room: string}) {
     // TODO: bounce back to main page if joining the room fails
     useJoinRoom(room, strawberryGame, username);
 
-    if (strawberryGame.gameState === null) {
+    if (strawberryGame === null) {
         return <SuperWrappedLoadingStrawberry />;
     }
 
