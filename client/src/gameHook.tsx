@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { delay } from './utils';
 import { RoomPhase, RoomState } from './gameState';
 import { MAX_PLAYERS, setPlayerWord, addPlayerToRoom } from './gameLogic';
 import { callCommit, callList } from './gameAPI';
@@ -8,27 +9,38 @@ export type StrawberryGame = Readonly<{
     stateVersion: number,
 }>;
 
+async function listLoop(roomName: string, version: number, signal: AbortSignal): Promise<StrawberryGame | null> {
+    while (true) {
+        let result;
+        try {
+            result = await callList(roomName, version, signal);
+        } catch (e) {
+            if (signal) return null;
+            console.error(e);
+            // probably timed out.
+            // back off and retry
+            await delay(1000);
+        }
+        if (result == null) {
+            // TODO: potentially add error state
+            return null;
+        } else {
+            return {
+                gameState: result.data,
+                stateVersion: result.version,
+            };
+        }
+    }
+}
+
 export function useStrawberryGame(roomName: string): StrawberryGame | null {
     const [state, setState] = useState<StrawberryGame | null>(null);
+    const version = state?.stateVersion || 0;
     useEffect(() => {
         const abortController = new AbortController();
-        callList(roomName, state?.stateVersion || 0, abortController.signal)
-            .then((result) => {
-                if (result == null) {
-                    // TODO: potentially add error state
-                    setState(null);
-                } else {
-                    setState({
-                        gameState: result.data,
-                        stateVersion: result.version,
-                    });
-                }
-            })
-            .catch((reason) => {
-                console.error(reason);
-            });
+        listLoop(roomName, version, abortController.signal).then(setState);
         return () => abortController.abort();
-    });
+    }, [roomName, version]);
     return state;
 }
 
