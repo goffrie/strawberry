@@ -23,9 +23,9 @@ export type LetterAndSource = {
 } | {
     letter: '*',
     sourceType: LetterSources.WILDCARD,
-}
+};
 
 export type Hint = {
     givenByPlayer: PlayerNumber;
     lettersAndSources: Array<LetterAndSource>;
-}
+};
