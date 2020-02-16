@@ -37,6 +37,7 @@ function PlayerWithCardsInHand({hand, isForViewingPlayer, playerName, playerNumb
     shouldHideHand: boolean,  // used for layout/sizing reasons
 }) {
     // TODO: later, for end game, separate isForViewingPlayer with shouldHideLetter
+    // TODO: render fallback on top of cardsInHand or something so the whitespace doesn't look weird
     return <div style={{display: 'flex', marginBottom: '10px'}}>
         <DisplayNumberOrLetter numberOrLetter={playerNumber}/>
         <div style={{marginLeft: '10px'}}>
