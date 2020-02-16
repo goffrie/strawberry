@@ -2,3 +2,38 @@
   text-align: center;
 }
 
+
+.playerNumber {
+  width: 25px;
+  height: 25px;
+  line-height: 25px;
+  font-size: 16px;
+  border-radius: 50%;
+  border: 1px solid black;
+  text-align: center;
+}
+
+.card {
+  margin: 5px;
+  width: 60px;
+  height: 80px;
+  line-height: 80px;
+  font-size: 60px;
+  color: white;
+  text-align: center;
+  border: 1px solid #575757;
+  border-radius: 5px;
+}
+
+.cardActive {
+  background-color: #575757;
+}
+
+.cardWithPlayerNumber {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: fit-content;
+}
+
+

@@ -1,4 +1,8 @@
 import React from 'react';
+
+import {PlayerNumber} from './PlayerNumber';
+import {Card, CardWithPlayerNumber, InactiveCard} from './Card';
+
 import './App.css';
 
 function App() {
@@ -16,6 +20,12 @@ function App() {
         >
           Learn React
         </a>
+        <CardWithPlayerNumber letter={'A'} playerNumberOrLetter={1}/>
+
+        <Card letter={'A'} />
+        <InactiveCard />
+
+        <PlayerNumber numberOrLetter={1} />
       </header>
     </div>
   );
