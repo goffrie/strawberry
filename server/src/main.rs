@@ -20,6 +20,17 @@ async fn main() -> io::Result<()> {
             "First argument should be listen host:port",
         )
     })?;
+    let listen_addr = listen_addr
+        .to_socket_addrs()?
+        .into_iter()
+        .next()
+        .ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Listen address resolved to nothing",
+            )
+        })?;
+    println!("Listening on {}", listen_addr);
     let state = Arc::new(State::default());
     let state_ = state.clone();
     let list = warp::post()
@@ -43,13 +54,7 @@ async fn main() -> io::Result<()> {
         .and(warp::body::json())
         .map(move |req| warp::reply::json(&state.make_room(req)));
     warp::serve(list.or(commit).or(make_room))
-        .run(
-            listen_addr
-                .to_socket_addrs()?
-                .into_iter()
-                .next()
-                .expect("no"),
-        )
+        .run(listen_addr)
         .await;
     Ok(())
 }
