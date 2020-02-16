@@ -6,7 +6,12 @@ function LoadingStrawberry() {
 
 function WrappedLoadingStrawberry() {
     // Loading strawberry that is centered
-    return <div className='wrappedLoadingStrawberry'><LoadingStrawberry/></div>
+    return <div className='wrappedLoadingStrawberry'><LoadingStrawberry /></div>
 }
 
-export {LoadingStrawberry, WrappedLoadingStrawberry};
+function SuperWrappedLoadingStrawberry() {
+    // Loading strawberry that is SUPER centered
+    return <div style={{width: '100%', height: '100vh'}}><WrappedLoadingStrawberry /></div>
+}
+
+export {LoadingStrawberry, WrappedLoadingStrawberry, SuperWrappedLoadingStrawberry};

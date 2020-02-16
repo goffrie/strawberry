@@ -4,29 +4,45 @@ import {DisplayNumberOrLetter} from './DisplayNumberOrLetter';
 import {Card, CardsInHand, CardsInHint, CardWithAnnotation, InactiveCard} from './Cards';
 
 import {LetterSources} from './gameTypes';
-import {LoadingStrawberry, WrappedLoadingStrawberry} from './LoadingStrawberry';
+import {SuperWrappedLoadingStrawberry} from './LoadingStrawberry';
 
 import {MainPage} from './MainPage';
+import {createNewRoom} from './gameActions';
 
 import './App.css';
 
 function App({initialUsername}: {initialUsername: string | null}) {
     const [username, setUsername] = useState(initialUsername);
+    // TODO: read this from hash
+    const [room, setRoom] = useState('');
+    const [isPendingRoomCreation, setIsPendingRoomCreation] = useState(false);
 
-    const isLoggedIn = username !== null;
+    if (isPendingRoomCreation) {
+        return <SuperWrappedLoadingStrawberry />;
+    }
 
-    return <WrappedLoadingStrawberry />;
+    if (username !== null && room !== '') {
+        return <Game username={username} room={room} />;
+    }
 
+    // TODO: confusingly, this handles both setting a username and creating a game. They should be separate.
     return <MainPage
-        isLoggedIn={isLoggedIn}
+        isLoggedIn={username !== null}
         setUsername={(username) => {
             setUsername(username);
             localStorage.setItem('username', username);
         }}
-        createGame={(wordLength) => {
-            console.log('creating game of word length', wordLength);
+        createGame={async (wordLength) => {
+            setIsPendingRoomCreation(true);
+            const newRoom = await createNewRoom(username!, wordLength);
+            setRoom(newRoom);
+            setIsPendingRoomCreation(false);
         }}
     />;
+}
+
+function Game({username, room}: {username: string, room: string}) {
+    return <div />;
 }
 
 export default App;
