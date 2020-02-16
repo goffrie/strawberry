@@ -12,6 +12,8 @@ use warp::Filter;
 
 mod words;
 
+const SIZE_LIMIT: u64 = 1024 * 1024; // 1MB
+
 #[tokio::main]
 async fn main() -> io::Result<()> {
     let listen_addr = env::args().nth(1).ok_or_else(|| {
@@ -38,14 +40,20 @@ async fn main() -> io::Result<()> {
         })?;
     println!("Listening on {}", listen_addr);
     let state = Arc::new(State::default());
-    let state_ = state.clone();
+    let state_ = Arc::clone(&state);
     let list = warp::path!("list")
         .and(warp::body::json())
         .and_then(move |req| {
-            let state_ = state_.clone();
-            async move { Ok::<_, Infallible>(warp::reply::json(&state_.list(req).await)) }
+            let state_ = Arc::clone(&state_);
+            async move {
+                let reply = state_
+                    .list(req)
+                    .await
+                    .unwrap_or_else(|| warp::reply::json(&None::<()>));
+                Ok::<_, Infallible>(reply)
+            }
         });
-    let state_ = state.clone();
+    let state_ = Arc::clone(&state);
     let commit = warp::path!("commit")
         .and(warp::body::json())
         .map(move |req| {
@@ -56,7 +64,9 @@ async fn main() -> io::Result<()> {
     let make_room = warp::path!("make_room")
         .and(warp::body::json())
         .map(move |req| warp::reply::json(&state.make_room(req)));
-    let stateful_routes = warp::post().and(list.or(commit).or(make_room));
+    let stateful_routes = warp::post()
+        .and(warp::body::content_length_limit(SIZE_LIMIT))
+        .and(list.or(commit).or(make_room));
     let static_routes = warp::get().and(warp::fs::dir(static_dir));
     warp::serve(stateful_routes.or(static_routes))
         .run(listen_addr)
@@ -77,7 +87,7 @@ struct Inner {
 struct Room {
     version: u32,
     event: Arc<futures_intrusive::channel::OneshotBroadcastChannel<Infallible>>,
-    data: serde_json::Value,
+    data: Box<serde_json::value::RawValue>,
 }
 
 #[derive(Deserialize)]
@@ -87,16 +97,16 @@ struct ListReq {
 }
 
 #[derive(Serialize)]
-struct ListReply {
+struct ListReply<'a> {
     version: u32,
-    data: serde_json::Value,
+    data: &'a serde_json::value::RawValue,
 }
 
 #[derive(Deserialize)]
 struct CommitReq {
     version: u32,
     room: String,
-    data: serde_json::Value,
+    data: Box<serde_json::value::RawValue>,
 }
 
 #[derive(Serialize)]
@@ -106,7 +116,7 @@ struct CommitReply {
 
 #[derive(Deserialize)]
 struct MakeRoomReq {
-    data: serde_json::Value,
+    data: Box<serde_json::value::RawValue>,
 }
 
 #[derive(Serialize)]
@@ -115,16 +125,16 @@ struct MakeRoomReply {
 }
 
 impl State {
-    async fn list(&self, req: ListReq) -> Option<ListReply> {
+    async fn list(&self, req: ListReq) -> Option<warp::reply::Json> {
         loop {
             let event = {
                 let inner = self.inner.read();
                 let room = inner.rooms.get(&req.room)?;
                 if room.version != req.version {
-                    return Some(ListReply {
+                    return Some(warp::reply::json(&ListReply {
                         version: room.version,
-                        data: room.data.clone(),
-                    });
+                        data: &room.data,
+                    }));
                 } else {
                     room.event.clone()
                 }
