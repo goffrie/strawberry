@@ -1,5 +1,6 @@
 import { ActiveHintState, StartingPhase, RoomPhase, HintingPhase } from './gameState';
 import { Letter } from './gameTypes';
+import { shuffle } from './utils';
 
 export const MIN_PLAYERS: number = 2;
 export const MAX_PLAYERS: number = 6;
@@ -91,17 +92,4 @@ export function startGameRoom(room: StartingPhase): HintingPhase {
             proposedHints: {},
         },
     };
-}
-
-function shuffle<T>(list: ArrayLike<T>): T[] {
-    const array = Array.from(list);
-    for (let i = 1; i < array.length; i++) {
-        let j = Math.floor(Math.random() * (i + 1));
-        if (i != j) {
-            const val = array[i];
-            array[i] = array[j];
-            array[j] = val;
-        }
-    }
-    return array;
 }
