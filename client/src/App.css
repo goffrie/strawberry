@@ -109,10 +109,10 @@
 
 .card {
   margin: 5px;
-  width: 60px;
-  height: 80px;
-  line-height: 80px;
-  font-size: 60px;
+  width: 55px;
+  height: 75px;
+  line-height: 75px;
+  font-size: 55px;
   color: white;
   text-align: center;
   border: 1px solid #777777;
@@ -149,6 +149,7 @@
   padding: 20px;
   box-sizing: border-box;
   flex: none;
+  overflow: auto;
 }
 
 .gameStartMainContent {
