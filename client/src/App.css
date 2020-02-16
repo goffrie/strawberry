@@ -1,7 +1,74 @@
-.App {
+.mainContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* TODO: give this a height later so strawberry doesnt move */
+.mainPageContent {
+  text-align: center;
+  font-size: 40px;
+  margin-top: -50px;
+  height: 310px;
+}
+
+.bigStrawberry {
+  font-size: 120px;
+}
+
+.usernameInput {
+  border: 2px solid #D20B0B;
+  height: 40px;
+  line-height: 40px;
+  font-size: 40px;
+  width: 320px;
+
+  padding: 10px;
+  margin-top: 20px;
+  outline: none;
+}
+
+.usernameInput:focus {
+  border: 2px solid #19AF00;
+}
+
+.startGameButton {
+  height: 40px;
+  line-height: 40px;
+  padding: 10px 10px 15px 10px;
+  border: 2px solid #D20B0B;
+  margin-bottom: 20px;
+  cursor: pointer;
+  width: 300px;  /* so it doesn't change width on italicise */
+}
+
+.startGameButton:hover {
+  border: 2px solid #19AF00;
+  font-style: italic;
+}
+
+.wordLengthControl {
+  font-size: 25px;
+}
+
+.wordLengthSelect {
+  height: 40px;
+  line-height: 35px; /* make it more vertically centered */
+  padding: 0px 10px 0px 11px;  /* make it more centered looking */
+  border: 2px solid #D20B0B;
+  font-size: 25px;
+  border-radius: 0px;
+  -webkit-appearance: none;
+  outline: none;
+  background-color: white;
+  margin-right: 5px;
   text-align: center;
 }
 
+.wordLengthSelect:active, .wordLengthSelect:focus {
+  border: 2px solid #19AF00;
+}
 
 .displayNumberOrLetter {
   width: 25px;
