@@ -23,6 +23,9 @@ export function useStrawberryGame(roomName: string): StrawberryGame | null {
                         stateVersion: result.version,
                     });
                 }
+            })
+            .catch((reason) => {
+                console.error(reason);
             });
         return () => abortController.abort();
     });
@@ -55,7 +58,10 @@ export function useJoinRoom(roomName: string, game: StrawberryGame | null, playe
         if (status !== JoinRoomStatus.JOINING) return;
         if (game == null || room == null || room.phase !== RoomPhase.START) throw new Error("impossible");
         const abortController = new AbortController();
-        callCommit(roomName, game.stateVersion, addPlayerToRoom(room, playerName));
+        callCommit(roomName, game.stateVersion, addPlayerToRoom(room, playerName))
+            .catch((reason) => {
+                console.error(reason);
+            });
         return () => abortController.abort();
     }, [room, status, roomName, game, playerName]);
     return status;
@@ -70,13 +76,20 @@ export function useInputWord(roomName: string, game: StrawberryGame, playerName:
         if (room.phase !== RoomPhase.START) return;
         if (!room.players.some((player) => player.name === playerName && player.word !== transition.from)) return;
         const abortController = new AbortController();
-        callCommit(roomName, game.stateVersion, setPlayerWord(room, playerName, transition.to), abortController.signal);
+        callCommit(roomName, game.stateVersion, setPlayerWord(room, playerName, transition.to), abortController.signal)
+            .catch((reason) => {
+                console.error(reason);
+            });
         return () => abortController.abort();
     }, [roomName, game, playerName, transition]);
     if (game != null && game.gameState.phase === RoomPhase.START) {
         for (const player of game.gameState.players) {
             if (player.name === playerName) {
-                return [player.word, (newWord) => {
+                let word = player.word;
+                if (transition != null && word === transition.from) {
+                    word = transition.to;
+                }
+                return [word, (newWord) => {
                     setTransition({from: player.word, to: newWord});
                 }];
             }

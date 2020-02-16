@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 
 import {DisplayNumberOrLetter} from './DisplayNumberOrLetter';
 import {Card, CardsInHand, CardsInHint, CardWithAnnotation, InactiveCard} from './Cards';
@@ -16,6 +16,19 @@ function App({initialUsername, initialRoom}: {initialUsername: string | null, in
     const [username, setUsername] = useState(initialUsername);
     const [room, setRoom] = useState(initialRoom);
     const [isPendingRoomCreation, setIsPendingRoomCreation] = useState(false);
+
+    useEffect(() => {
+        const listener = () => {
+            const newRoom = window.location.hash.substr(1);
+            if (room !== newRoom) {
+                setRoom(newRoom);
+            }
+        };
+        window.addEventListener('hashchange', listener, false);
+        return () => {
+            window.removeEventListener('hashchange', listener, false);
+        };
+    });
 
     if (isPendingRoomCreation) {
         return <SuperWrappedLoadingStrawberry />;
