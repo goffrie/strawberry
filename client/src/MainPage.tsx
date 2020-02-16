@@ -29,17 +29,20 @@ function SetUsername({setUsername}: {setUsername: setUsernameFn}) {
 function UsernameInput({setUsername}: {setUsername: setUsernameFn}) {
     const [input, setInput] = useState('');
     return <form onSubmit={(e) => {
-        setUsername(input);
         e.preventDefault();
+
+        if (input !== '') {
+            setUsername(input);
+        }
     }}>
-        <input className='usernameInput' value={input} onChange={(e) => setInput(e.target.value)} />
+        <input className='strawberryInput' value={input} onChange={(e) => setInput(e.target.value)} />
     </form>
 }
 
 function StartNewGame({createGame}: {createGame: createGameFn}) {
     const [wordLength, setWordLength] = useState(5);
     return <div style={{textAlign: 'center'}}>
-        <div className='startGameButton' onClick={() => createGame(wordLength)}>Start new game</div>
+        <div className='strawberryButton' onClick={() => createGame(wordLength)}>Start new game</div>
 
         <div className='wordLengthControl'>
             <select className='wordLengthSelect' value={wordLength} onChange={(e) => {setWordLength(Number(e.target.value))}}>

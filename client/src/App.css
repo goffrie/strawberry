@@ -1,13 +1,49 @@
+/* SHARED STYLES */
 .loadingStrawberry {
   animation: rotate 2s infinite linear;
   filter: grayscale(100%);
-    font-size: 50px;
-
+  font-size: 50px;
 }
+
+.bigText {
+  font-size: 40px;
+}
+
 @keyframes rotate {
   to {
     transform: rotate(360deg);
   }
+}
+
+.strawberryInput {
+  border: 2px solid #D20B0B;
+  height: 40px;
+  line-height: 40px;
+  font-size: 40px;
+  width: 320px;
+
+  padding: 10px;
+  margin-top: 20px;
+  outline: none;
+}
+
+.strawberryInput:focus {
+  border: 2px solid #19AF00;
+}
+
+.strawberryButton {
+  height: 40px;
+  line-height: 40px;
+  padding: 10px 10px 15px 10px;
+  border: 2px solid #D20B0B;
+  margin-bottom: 20px;
+  cursor: pointer;
+  width: 300px;  /* so it doesn't change width on italicise */
+}
+
+.strawberryButton:hover {
+  border: 2px solid #19AF00;
+  font-style: italic;
 }
 
 .flexCenterContainer {
@@ -35,37 +71,6 @@
 
 .bigStrawberry {
   font-size: 120px;
-}
-
-.usernameInput {
-  border: 2px solid #D20B0B;
-  height: 40px;
-  line-height: 40px;
-  font-size: 40px;
-  width: 320px;
-
-  padding: 10px;
-  margin-top: 20px;
-  outline: none;
-}
-
-.usernameInput:focus {
-  border: 2px solid #19AF00;
-}
-
-.startGameButton {
-  height: 40px;
-  line-height: 40px;
-  padding: 10px 10px 15px 10px;
-  border: 2px solid #D20B0B;
-  margin-bottom: 20px;
-  cursor: pointer;
-  width: 300px;  /* so it doesn't change width on italicise */
-}
-
-.startGameButton:hover {
-  border: 2px solid #19AF00;
-  font-style: italic;
 }
 
 .wordLengthControl {
@@ -146,5 +151,15 @@
   flex: none;
 }
 
-.gameBody {
+.gameStartMainContent {
+  text-align: center;
+  font-size: 30px;
+}
+
+.gameStartWordErrorMessage {
+  height: 15px;
+  font-size: 15px;
+  line-height: 15px;
+  margin-top: 10px;
+  font-style: italic;
 }
