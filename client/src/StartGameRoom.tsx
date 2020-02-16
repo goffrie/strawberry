@@ -2,6 +2,14 @@ import React from 'react';
 import {StartingPhase} from './gameState';
 import {PlayerWithCardsInHand} from './Cards';
 
+function StartGameRoom({username, startingGameState}: {username: string, startingGameState: StartingPhase}) {
+    return <div className='gameContainer'>
+        <StartGameRoomSidebar username={username} startingGameState={startingGameState} />
+        <StartGameRoomMain username={username} startingGameState={startingGameState} />
+    </div>;
+}
+
+
 function StartGameRoomSidebar({username, startingGameState}: {username: string, startingGameState: StartingPhase}) {
     return <div className='gameSidebar'>
         {startingGameState.players.map((player, i) => {
@@ -23,7 +31,16 @@ function StartGameRoomSidebar({username, startingGameState}: {username: string, 
             />
         })}
     </div>
-
 }
 
-export {StartGameRoomSidebar};
+function StartGameRoomMain({username, startingGameState}: {username: string, startingGameState: StartingPhase}) {
+    const filteredPlayers = startingGameState.players.filter(player => player.name === username);
+    const playerIfExists = filteredPlayers.length !== 0 && filteredPlayers[0];
+    const isSpectator = !playerIfExists;
+
+    const needsToInputWord = playerIfExists && playerIfExists.word === null;
+
+    return <div className='flexCenterContainer'>bluh</div>;
+}
+
+export {StartGameRoom};

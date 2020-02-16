@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 import {SuperWrappedLoadingStrawberry} from './LoadingStrawberry';
 
 import {MainPage} from './MainPage';
-import {StartGameRoomSidebar} from './StartGameRoomSidebar';
+import {StartGameRoom} from './StartGameRoom';
 import {createNewRoom} from './gameActions';
 import {JoinRoomStatus, StrawberryGame, useJoinRoom, useStrawberryGame} from './gameHook';
 
@@ -68,19 +68,6 @@ function Game({username, room}: {username: string, room: string}) {
     }
 
     return <div>{JSON.stringify(strawberryGame)}</div>;
-}
-
-function StartGameRoom({username, startingGameState}: {username: string, startingGameState: StartingPhase}) {
-    // TODO: remove ! later
-    const filteredPlayers = startingGameState.players.filter(player => player.name === username);
-    const playerIfExists = filteredPlayers.length !== 0 && filteredPlayers[0];
-    const isSpectator = !playerIfExists;
-
-    const needsToInputWord = playerIfExists && playerIfExists.word === null;
-
-    return <div className='gameContainer'>
-        <StartGameRoomSidebar username={username} startingGameState={startingGameState} />
-    </div>;
 }
 
 export default App;

@@ -6,7 +6,7 @@ function LoadingStrawberry() {
 
 function WrappedLoadingStrawberry() {
     // Loading strawberry that is centered
-    return <div className='wrappedLoadingStrawberry'><LoadingStrawberry /></div>
+    return <div className='flexCenterContainer'><LoadingStrawberry /></div>
 }
 
 function SuperWrappedLoadingStrawberry() {
