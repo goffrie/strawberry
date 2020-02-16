@@ -27,7 +27,7 @@ export async function callList(room: string, version: number, signal?: AbortSign
 }
 
 export async function callCommit(room: string, version: number, data: RoomState, signal?: AbortSignal): Promise<CommitReply> {
-    const resp = await fetch("/make_room", {
+    const resp = await fetch("/commit", {
         method: "POST",
         cache: "no-cache",
         headers: {"content-type": "application/json"},
