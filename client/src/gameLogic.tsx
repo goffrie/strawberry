@@ -30,7 +30,17 @@ function dummyLettersForFreeHint(playerCount: number): Array<number> {
     }
 }
 
-export function startGame(room: StartingPhase): HintingPhase {
+// Initialize a brand-new room in the StartingPhase.
+export function newStartingPhase(firstPlayerName: string, wordLength: number): StartingPhase {
+    return {
+        phase: RoomPhase.START,
+        wordLength,
+        players: [{name: firstPlayerName, word: null}],
+    };
+}
+
+// Move a room from the StartingPhase to the HintingPhase.
+export function startGameRoom(room: StartingPhase): HintingPhase {
     const numDummies = MAX_PLAYERS - room.players.length;
     return {
         phase: RoomPhase.HINT,
