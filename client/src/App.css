@@ -6,7 +6,7 @@
 }
 
 .bigText {
-  font-size: 40px;
+  font-size: 30px;
 }
 
 @keyframes rotate {
@@ -40,11 +40,27 @@
   margin-bottom: 20px;
   cursor: pointer;
   width: 300px;  /* so it doesn't change width on italicise */
+  text-align: center;
 }
 
 .strawberryButton:hover {
   border: 2px solid #19AF00;
   font-style: italic;
+}
+
+.strawberryLinkButton {
+  border-bottom: 2px solid #D20B0B;
+  cursor: pointer;
+  padding-bottom: 2px;
+}
+
+.strawberryLinkButton:hover {
+  border-bottom: 2px solid #19AF00;
+  font-style: italic;
+}
+
+.strawberryCenter {
+  text-align: center;
 }
 
 .flexCenterContainer {

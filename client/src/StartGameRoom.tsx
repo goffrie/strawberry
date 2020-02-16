@@ -113,13 +113,12 @@ function StartGameRoomMain({startingGameState}: {startingGameState: StartingPhas
     if (doStartGame != null) {
         startGame = <div className='strawberryButton' onClick={doStartGame}>Start game</div>
     } else {
-        startGame = <div className='bigText'>🕐 Waiting for other players to enter words...</div>;
+        startGame = <div className='bigText' style={{marginBottom: '20px'}}>🕐 Waiting for other players to enter words...</div>;
     }
 
-    // TODO: allow editing a word here for player
-    return <div>
+    return <div className='strawberryCenter'>
         {startGame}
-        <div className='strawberryButton' onClick={() => setCommittedWord(null)}>Change my word</div>
+        <span className='strawberryLinkButton' onClick={() => setCommittedWord(null)}>Change my word</span>
     </div>;
 }
 
