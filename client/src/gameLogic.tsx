@@ -1,5 +1,5 @@
-import {StartingPhase, RoomPhase, HintingPhase} from './gameState';
-import {Letter} from './gameTypes';
+import { ActiveHintState, StartingPhase, RoomPhase, HintingPhase } from './gameState';
+import { Letter } from './gameTypes';
 
 export const MIN_PLAYERS: number = 2;
 export const MAX_PLAYERS: number = 6;
@@ -14,8 +14,8 @@ function randomLetter(): Letter {
 
 export function isRoomReady(room: StartingPhase): boolean {
     return room.players.every((player) => player.word != null) &&
-           room.players.length >= MIN_PLAYERS &&
-           room.players.length <= MAX_PLAYERS;
+        room.players.length >= MIN_PLAYERS &&
+        room.players.length <= MAX_PLAYERS;
 }
 
 function dummyLettersForFreeHint(playerCount: number): Array<number> {
@@ -35,7 +35,7 @@ export function newStartingPhase(firstPlayerName: string, wordLength: number): S
     return {
         phase: RoomPhase.START,
         wordLength,
-        players: [{name: firstPlayerName, word: null}],
+        players: [{ name: firstPlayerName, word: null }],
     };
 }
 
@@ -43,7 +43,7 @@ export function addPlayerToRoom(room: StartingPhase, playerName: string): Starti
     return {
         phase: RoomPhase.START,
         wordLength: room.wordLength,
-        players: [...room.players, {name: playerName, word: null}],
+        players: [...room.players, { name: playerName, word: null }],
     };
 }
 
@@ -52,7 +52,7 @@ export function setPlayerWord(room: StartingPhase, playerName: string, word: str
         ...room,
         players: room.players.map((player) => {
             if (player.name === playerName) {
-                return {name: playerName, word};
+                return { name: playerName, word };
             } else {
                 return player;
             }
@@ -73,7 +73,7 @@ export function startGameRoom(room: StartingPhase): HintingPhase {
             return {
                 name: player.name,
                 hand: {
-                    letters: Array.from(word),
+                    letters: shuffle(word),
                     activeIndex: 0,
                 },
                 hintsGiven: 0,
@@ -85,5 +85,23 @@ export function startGameRoom(room: StartingPhase): HintingPhase {
         })),
         bonuses: [],
         hintsRemaining: STARTING_HINTS,
+        hintLog: [],
+        activeHint: {
+            state: ActiveHintState.PROPOSING,
+            proposedHints: {},
+        },
     };
+}
+
+function shuffle<T>(list: ArrayLike<T>): T[] {
+    const array = Array.from(list);
+    for (let i = 1; i < array.length; i++) {
+        let j = Math.floor(Math.random() * (i + 1));
+        if (i != j) {
+            const val = array[i];
+            array[i] = array[j];
+            array[j] = val;
+        }
+    }
+    return array;
 }

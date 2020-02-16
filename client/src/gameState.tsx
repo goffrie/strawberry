@@ -1,4 +1,4 @@
-import {Letter, Hand} from './gameTypes';
+import { Letter, Hand, Hint, PlayerNumber, HintSpecs } from './gameTypes';
 
 export enum RoomPhase {
     START = 'start',
@@ -33,6 +33,35 @@ export type Dummy = Readonly<{
     untilFreeHint: number,
 }>;
 
+export enum ResolveActionKind {
+    NONE = 'none',
+    FLIP = 'flip',
+    GUESS = 'guess',
+}
+
+export type ResolveAction = Readonly<{
+    kind: ResolveActionKind.NONE | ResolveActionKind.FLIP
+}> | Readonly<{
+    kind: ResolveActionKind.GUESS,
+    guess: Letter,
+}>;
+
+export enum ActiveHintState {
+    // Players are proposing hints.
+    PROPOSING,
+    // A hint has been given and players are deciding whether to flip their cards.
+    RESOLVING,
+}
+
+export type ActiveHint = Readonly<{
+    state: ActiveHintState.PROPOSING,
+    proposedHints: Readonly<Record<PlayerNumber, HintSpecs>>,
+}> | Readonly<{
+    state: ActiveHintState.RESOLVING,
+    hint: Hint,
+    playerActions: Readonly<Record<PlayerNumber, ResolveAction>>,
+}>;
+
 // The main phase of the game, in which players give hints and flip over their
 // cards.
 export type HintingPhase = Readonly<{
@@ -41,6 +70,9 @@ export type HintingPhase = Readonly<{
     dummies: readonly Dummy[],
     bonuses: readonly Letter[],
     hintsRemaining: number,
+    // Hints that have previously been given and resolved.
+    hintLog: readonly Hint[],
+    activeHint: ActiveHint,
 }>;
 
 export type RoomState = StartingPhase | HintingPhase;
