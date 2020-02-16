@@ -45,7 +45,7 @@ function StartNewGame({createGame}: {createGame: createGameFn}) {
             <select className='wordLengthSelect' value={wordLength} onChange={(e) => {setWordLength(Number(e.target.value))}}>
                 {[3, 4, 5, 6, 7, 8].map(n => {
                     // yeah...
-                    return <option value={n}>{n}</option>
+                    return <option value={n} key={n}>{n}</option>
                 })}
             </select> letter words
         </div>
