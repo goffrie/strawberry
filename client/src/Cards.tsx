@@ -23,8 +23,9 @@ function CardsInHand({hand, isForViewingPlayer}: {hand: Hand, isForViewingPlayer
             if (i === hand.activeIndex) {
                 const letterToDisplay = isForViewingPlayer ? '?' : card;
                 return <Card letter={letterToDisplay} key={i} />
+            } else {
+                return <InactiveCard key={i} />
             }
-            return <InactiveCard />
         })}
     </div>
 }
