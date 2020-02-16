@@ -2,7 +2,8 @@ import React, {useState, useContext} from 'react';
 import {StartingPhase} from './gameState';
 import {PlayerWithCardsInHand} from './Cards';
 import {LETTERS, isRoomReady} from './gameLogic';
-import {useJoinRoom, PlayerNameContext} from './gameHook';
+import {useJoinRoom, PlayerNameContext, useInputWord} from './gameHook';
+import { start } from 'repl';
 
 function StartGameRoom({startingGameState}: {startingGameState: StartingPhase}) {
     const joinStatus = useJoinRoom(startingGameState);
@@ -44,14 +45,14 @@ function StartGameRoomMain({startingGameState}: {startingGameState: StartingPhas
     const [inputWord, setInputWord] = useState('');
     const [errorToRender, setErrorToRender] = useState('');
 
+    const [committedWord, setCommittedWord] = useInputWord(startingGameState);
+
     const filteredPlayers = startingGameState.players.filter(player => player.name === username);
     const playerIfExists = filteredPlayers.length !== 0 && filteredPlayers[0];
     const isSpectator = !playerIfExists;
 
-    const playerNeedsToInputWord = playerIfExists && playerIfExists.word === null;
+    const playerNeedsToInputWord = playerIfExists && committedWord == null;
     const isGameReady = isRoomReady(startingGameState);
-
-
 
     let isInputWordValid = false;
     // note: we don't always render this (only rendered after a submit until next keystroke), but compute it here
@@ -75,7 +76,7 @@ function StartGameRoomMain({startingGameState}: {startingGameState: StartingPhas
             <form onSubmit={e => {
                 e.preventDefault();
                 if (isInputWordValid) {
-                    // TODO
+                    setCommittedWord(inputWord.toUpperCase());
                 } else {
                     setErrorToRender(errorMessage);
                 }

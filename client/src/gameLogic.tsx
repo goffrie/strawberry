@@ -49,6 +49,7 @@ export function addPlayerToRoom(room: StartingPhase, playerName: string): Starti
 
 export function setPlayerWord(room: StartingPhase, playerName: string, word: string | null): StartingPhase {
     return {
+        ...room,
         players: room.players.map((player) => {
             if (player.name === playerName) {
                 return {name: playerName, word};
@@ -56,7 +57,6 @@ export function setPlayerWord(room: StartingPhase, playerName: string, word: str
                 return player;
             }
         }),
-        ...room
     };
 }
 

@@ -101,9 +101,14 @@ export function useInputWord(room: StartingPhase): [string | null, (newWord: str
     const [transition, setTransition] = useState<(Readonly<{from: string | null, to: string | null}> | null)>(null);
     useEffect(() => {
         if (transition == null) return;
-        if (!room.players.some((player) => player.name === playerName && player.word !== transition.from)) return;
+        if (!room.players.some((player) => player.name === playerName && player.word === transition.from)) return;
         const abortController = new AbortController();
         callCommit(roomName, stateVersion, setPlayerWord(room, playerName, transition.to), abortController.signal)
+            .then((response) => {
+                if (response.success) {
+                    setTransition(null);
+                }
+            })
             .catch((reason) => {
                 console.error(reason);
             });
@@ -121,5 +126,7 @@ export function useInputWord(room: StartingPhase): [string | null, (newWord: str
         }
     }
     // not in the game!
-    return [null, (_) => {}];
+    return [null, (_) => {
+        throw new Error("attempting to set word but we're not in the game");
+    }];
 }
