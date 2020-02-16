@@ -8,6 +8,7 @@ import {SuperWrappedLoadingStrawberry} from './LoadingStrawberry';
 
 import {MainPage} from './MainPage';
 import {createNewRoom} from './gameActions';
+import {useStrawberryGame, useJoinRoom} from './gameHook';
 
 import './App.css';
 
@@ -42,7 +43,16 @@ function App({initialUsername}: {initialUsername: string | null}) {
 }
 
 function Game({username, room}: {username: string, room: string}) {
-    return <div />;
+    const strawberryGame = useStrawberryGame(room);
+
+    // TODO: bounce back to main page if joining the room fails
+    useJoinRoom(room, strawberryGame, username);
+
+    if (strawberryGame.gameState === null) {
+        return <SuperWrappedLoadingStrawberry />;
+    }
+
+    return <div>{JSON.stringify(strawberryGame)}</div>;
 }
 
 export default App;
