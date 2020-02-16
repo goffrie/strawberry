@@ -1,8 +1,8 @@
 import {StartingPhase, RoomPhase, HintingPhase} from './gameState';
 import {Letter} from './gameTypes';
 
-const MIN_PLAYERS: number = 2;
-const MAX_PLAYERS: number = 6;
+export const MIN_PLAYERS: number = 2;
+export const MAX_PLAYERS: number = 6;
 const STARTING_HINTS: number = 11;
 
 // no J, Q, V, X, Z
