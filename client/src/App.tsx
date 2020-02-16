@@ -1,16 +1,13 @@
 import React, {useState, useEffect} from 'react';
-
-import {DisplayNumberOrLetter} from './DisplayNumberOrLetter';
-import {Card, CardsInHand, CardsInHint, CardWithAnnotation, InactiveCard} from './Cards';
-
-import {LetterSources} from './gameTypes';
 import {SuperWrappedLoadingStrawberry} from './LoadingStrawberry';
 
 import {MainPage} from './MainPage';
+import {StartGameRoomSidebar} from './StartGameRoomSidebar';
 import {createNewRoom} from './gameActions';
-import {useStrawberryGame, useJoinRoom} from './gameHook';
+import {JoinRoomStatus, StrawberryGame, useJoinRoom, useStrawberryGame} from './gameHook';
 
 import './App.css';
+import {RoomPhase, StartingPhase} from './gameState';
 
 function App({initialUsername, initialRoom}: {initialUsername: string | null, initialRoom: string}) {
     const [username, setUsername] = useState(initialUsername);
@@ -56,16 +53,34 @@ function App({initialUsername, initialRoom}: {initialUsername: string | null, in
 }
 
 function Game({username, room}: {username: string, room: string}) {
+    // TODO: bounce if game doesn't exist
     const strawberryGame = useStrawberryGame(room);
 
-    // TODO: bounce back to main page if joining the room fails
-    useJoinRoom(room, strawberryGame, username);
+    const joinStatus = useJoinRoom(room, strawberryGame, username);
 
-    if (strawberryGame === null) {
+    // Game state is null if game doesnt exist or still loading.
+    if (strawberryGame === null || joinStatus === JoinRoomStatus.JOINING) {
         return <SuperWrappedLoadingStrawberry />;
     }
 
+    if (strawberryGame.gameState.phase === RoomPhase.START) {
+        return <StartGameRoom username={username} startingGameState={strawberryGame.gameState} />;
+    }
+
     return <div>{JSON.stringify(strawberryGame)}</div>;
+}
+
+function StartGameRoom({username, startingGameState}: {username: string, startingGameState: StartingPhase}) {
+    // TODO: remove ! later
+    const filteredPlayers = startingGameState.players.filter(player => player.name === username);
+    const playerIfExists = filteredPlayers.length !== 0 && filteredPlayers[0];
+    const isSpectator = !playerIfExists;
+
+    const needsToInputWord = playerIfExists && playerIfExists.word === null;
+
+    return <div className='gameContainer'>
+        <StartGameRoomSidebar username={username} startingGameState={startingGameState} />
+    </div>;
 }
 
 export default App;
