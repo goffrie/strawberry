@@ -11,25 +11,24 @@ export type StrawberryGame = Readonly<{
 
 async function listLoop(roomName: string, version: number, signal: AbortSignal): Promise<StrawberryGame | null> {
     while (true) {
-        let result;
         try {
-            console.log("listing");
-            result = await callList(roomName, version, signal);
+            const result = await callList(roomName, version, signal);
+            if (result == null) {
+                // TODO: potentially add error state
+                return null;
+            } else {
+                return {
+                    gameState: result.data,
+                    stateVersion: result.version,
+                };
+            }
         } catch (e) {
             if (signal) return null;
             console.error(e);
             // probably timed out.
             // back off and retry
             await delay(1000);
-        }
-        if (result == null) {
-            // TODO: potentially add error state
-            return null;
-        } else {
-            return {
-                gameState: result.data,
-                stateVersion: result.version,
-            };
+            continue;
         }
     }
 }
@@ -37,7 +36,6 @@ async function listLoop(roomName: string, version: number, signal: AbortSignal):
 export function useStrawberryGame(roomName: string): StrawberryGame | null {
     const [state, setState] = useState<StrawberryGame | null>(null);
     const version = state?.stateVersion || 0;
-    console.log(version);
     useEffect(() => {
         const abortController = new AbortController();
         listLoop(roomName, version, abortController.signal).then(setState);
