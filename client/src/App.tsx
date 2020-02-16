@@ -12,10 +12,9 @@ import {useStrawberryGame, useJoinRoom} from './gameHook';
 
 import './App.css';
 
-function App({initialUsername}: {initialUsername: string | null}) {
+function App({initialUsername, initialRoom}: {initialUsername: string | null, initialRoom: string}) {
     const [username, setUsername] = useState(initialUsername);
-    // TODO: read this from hash
-    const [room, setRoom] = useState('');
+    const [room, setRoom] = useState(initialRoom);
     const [isPendingRoomCreation, setIsPendingRoomCreation] = useState(false);
 
     if (isPendingRoomCreation) {
@@ -37,6 +36,7 @@ function App({initialUsername}: {initialUsername: string | null}) {
             setIsPendingRoomCreation(true);
             const newRoom = await createNewRoom(username!, wordLength);
             setRoom(newRoom);
+            window.location.hash = `#${newRoom}`;
             setIsPendingRoomCreation(false);
         }}
     />;

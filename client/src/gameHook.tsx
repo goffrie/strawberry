@@ -18,6 +18,7 @@ export function useStrawberryGame(roomName: string): StrawberryGame {
         callList(roomName, state.stateVersion, abortController.signal)
             .then((result) => {
                 if (result == null) {
+                    // TODO: potentially add error state
                     setState(nullState);
                 } else {
                     setState({
