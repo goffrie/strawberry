@@ -59,4 +59,4 @@ function BigStrawberry() {
     return <div className='bigStrawberry'>{fruitEmoji}</div>;
 }
 
-export {MainPage}
+export {MainPage};

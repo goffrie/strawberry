@@ -1,3 +1,24 @@
+.loadingStrawberry {
+  animation: rotate 2s infinite linear;
+  filter: grayscale(100%);
+    font-size: 50px;
+
+}
+@keyframes rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.wrappedLoadingStrawberry {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* MAIN PAGE STYLES */
 .mainContainer {
   display: flex;
   justify-content: center;
@@ -5,7 +26,6 @@
   height: 100vh;
 }
 
-/* TODO: give this a height later so strawberry doesnt move */
 .mainPageContent {
   text-align: center;
   font-size: 40px;
@@ -69,6 +89,8 @@
 .wordLengthSelect:active, .wordLengthSelect:focus {
   border: 2px solid #19AF00;
 }
+
+/* GAME STYLES */
 
 .displayNumberOrLetter {
   width: 25px;

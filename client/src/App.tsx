@@ -4,6 +4,7 @@ import {DisplayNumberOrLetter} from './DisplayNumberOrLetter';
 import {Card, CardsInHand, CardsInHint, CardWithAnnotation, InactiveCard} from './Cards';
 
 import {LetterSources} from './gameTypes';
+import {LoadingStrawberry, WrappedLoadingStrawberry} from './LoadingStrawberry';
 
 import {MainPage} from './MainPage';
 
@@ -13,6 +14,8 @@ function App({initialUsername}: {initialUsername: string | null}) {
     const [username, setUsername] = useState(initialUsername);
 
     const isLoggedIn = username !== null;
+
+    return <WrappedLoadingStrawberry />;
 
     return <MainPage
         isLoggedIn={isLoggedIn}
