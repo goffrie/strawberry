@@ -4,6 +4,7 @@ use rand::thread_rng;
 use serde::{Deserialize, Serialize};
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
+use std::convert::Infallible;
 use std::net::ToSocketAddrs;
 use std::sync::Arc;
 use std::{env, io};
@@ -21,21 +22,22 @@ async fn main() -> io::Result<()> {
     })?;
     let state = Arc::new(State::default());
     let state_ = state.clone();
-    let list =
-        warp::post()
-            .and(warp::path!("list"))
-            .and(warp::body::json())
-            .and_then(move |req| {
-                let state_ = state_.clone();
-                async move {
-                    Ok::<_, std::convert::Infallible>(warp::reply::json(&state_.list(req).await))
-                }
-            });
+    let list = warp::post()
+        .and(warp::path!("list"))
+        .and(warp::body::json())
+        .and_then(move |req| {
+            let state_ = state_.clone();
+            async move { Ok::<_, Infallible>(warp::reply::json(&state_.list(req).await)) }
+        });
     let state_ = state.clone();
     let commit = warp::post()
         .and(warp::path!("commit"))
         .and(warp::body::json())
-        .map(move |req| warp::reply::json(&state_.commit(req)));
+        .map(move |req| {
+            warp::reply::json(&CommitReply {
+                success: state_.commit(req),
+            })
+        });
     let make_room = warp::post()
         .and(warp::path!("make_room"))
         .and(warp::body::json())
@@ -64,7 +66,7 @@ struct Inner {
 
 struct Room {
     version: u32,
-    event: Arc<futures_intrusive::channel::OneshotBroadcastChannel<()>>,
+    event: Arc<futures_intrusive::channel::OneshotBroadcastChannel<Infallible>>,
     data: serde_json::Value,
 }
 
@@ -87,6 +89,11 @@ struct CommitReq {
     data: serde_json::Value,
 }
 
+#[derive(Serialize)]
+struct CommitReply {
+    success: bool,
+}
+
 #[derive(Deserialize)]
 struct MakeRoomReq {
     data: serde_json::Value,
@@ -103,13 +110,13 @@ impl State {
             let event = {
                 let inner = self.inner.read();
                 let room = inner.rooms.get(&req.room)?;
-                if room.version < req.version {
-                    room.event.clone()
-                } else {
+                if room.version != req.version {
                     return Some(ListReply {
                         version: room.version,
                         data: room.data.clone(),
                     });
+                } else {
+                    room.event.clone()
                 }
             };
             event.receive().await;
@@ -128,7 +135,8 @@ impl State {
         }
         room.data = req.data;
         room.version += 1;
-        room.event.send(()).expect("failed to notify");
+        room.event.close();
+        room.event = Arc::new(futures_intrusive::channel::OneshotBroadcastChannel::new());
         true
     }
 
@@ -139,7 +147,7 @@ impl State {
             let room = format!(
                 "{}.{}",
                 words::FRUITS.choose(&mut rng).unwrap(),
-                words::FRUITS.choose(&mut rng).unwrap()
+                words::FRUITS.choose(&mut rng).unwrap(),
             );
             match inner.rooms.entry(room.clone()) {
                 Entry::Occupied(_) => continue,
