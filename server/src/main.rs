@@ -20,6 +20,12 @@ async fn main() -> io::Result<()> {
             "First argument should be listen host:port",
         )
     })?;
+    let static_dir = env::args().nth(2).ok_or_else(|| {
+        io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "Second argument should be static directory",
+        )
+    })?;
     let listen_addr = listen_addr
         .to_socket_addrs()?
         .into_iter()
@@ -50,8 +56,11 @@ async fn main() -> io::Result<()> {
     let make_room = warp::path!("make_room")
         .and(warp::body::json())
         .map(move |req| warp::reply::json(&state.make_room(req)));
-    let mutating_routes = warp::post().and(list.or(commit).or(make_room));
-    warp::serve(mutating_routes).run(listen_addr).await;
+    let stateful_routes = warp::post().and(list.or(commit).or(make_room));
+    let static_routes = warp::get().and(warp::fs::dir(static_dir));
+    warp::serve(stateful_routes.or(static_routes))
+        .run(listen_addr)
+        .await;
     Ok(())
 }
 
