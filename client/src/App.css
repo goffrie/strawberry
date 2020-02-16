@@ -3,7 +3,7 @@
 }
 
 
-.playerNumber {
+.displayNumberOrLetter {
   width: 25px;
   height: 25px;
   line-height: 25px;
@@ -21,12 +21,12 @@
   font-size: 60px;
   color: white;
   text-align: center;
-  border: 1px solid #575757;
+  border: 1px solid #777777;
   border-radius: 5px;
 }
 
 .cardActive {
-  background-color: #575757;
+  background-color: #777777;
 }
 
 .cardWithPlayerNumber {
@@ -37,3 +37,6 @@
 }
 
 
+.cardsInHand {
+  display: flex;
+}
