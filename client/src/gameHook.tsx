@@ -1,13 +1,24 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { delay } from './utils';
 import { RoomPhase, RoomState, StartingPhase } from './gameState';
 import { MAX_PLAYERS, setPlayerWord, addPlayerToRoom } from './gameLogic';
 import { callCommit, callList } from './gameAPI';
 
 export type StrawberryGame = Readonly<{
+    roomName: string,
     gameState: RoomState,
     stateVersion: number,
 }>;
+
+export const RoomContext = React.createContext<StrawberryGame | null>(null);
+export const PlayerNameContext = React.createContext<string>("");
+
+export function StrawberryGameProvider({roomName, children}: {roomName: string, children: React.ReactNode}) {
+    const game = useListStrawberryGame(roomName);
+    return <RoomContext.Provider value={game}>
+        {children}
+    </RoomContext.Provider>;
+}
 
 async function listLoop(roomName: string, version: number, signal: AbortSignal): Promise<StrawberryGame | null> {
     while (true) {
@@ -18,6 +29,7 @@ async function listLoop(roomName: string, version: number, signal: AbortSignal):
                 return null;
             } else {
                 return {
+                    roomName,
                     gameState: result.data,
                     stateVersion: result.version,
                 };
@@ -33,7 +45,7 @@ async function listLoop(roomName: string, version: number, signal: AbortSignal):
     }
 }
 
-export function useStrawberryGame(roomName: string): StrawberryGame | null {
+function useListStrawberryGame(roomName: string): StrawberryGame | null {
     const [state, setState] = useState<StrawberryGame | null>(null);
     const version = state?.stateVersion || 0;
     useEffect(() => {
@@ -42,6 +54,11 @@ export function useStrawberryGame(roomName: string): StrawberryGame | null {
         return () => abortController.abort();
     }, [roomName, version]);
     return state;
+}
+
+// Gain access to the StrawberryGame from context.
+export function useStrawberryGame(): StrawberryGame | null {
+    return useContext(RoomContext);
 }
 
 export enum JoinRoomStatus {
@@ -53,8 +70,12 @@ export enum JoinRoomStatus {
     ROOM_FULL = 'room_full',
 }
 
-// TODO: consider using a context to pass through roomName, stateVersion, playerName
-export function useJoinRoom(roomName: string, room: StartingPhase, stateVersion: number, playerName: string): JoinRoomStatus {
+export function useJoinRoom(room: StartingPhase): JoinRoomStatus {
+    const {roomName, stateVersion} = useStrawberryGame()!;
+    const playerName = useContext(PlayerNameContext);
+    if (playerName == null) {
+        throw new Error("PlayerNameContext not provided");
+    }
     let status: JoinRoomStatus;
     if (room.players.some((player) => player.name === playerName)) status = JoinRoomStatus.JOINED;
     else if (room.players.length >= MAX_PLAYERS) status = JoinRoomStatus.ROOM_FULL;
@@ -71,7 +92,12 @@ export function useJoinRoom(roomName: string, room: StartingPhase, stateVersion:
     return status;
 }
 
-export function useInputWord(roomName: string, room: StartingPhase, stateVersion: number, playerName: string): [string | null, (newWord: string | null) => void] {
+export function useInputWord(room: StartingPhase): [string | null, (newWord: string | null) => void] {
+    const {roomName, stateVersion} = useStrawberryGame()!;
+    const playerName = useContext(PlayerNameContext);
+    if (playerName == null) {
+        throw new Error("PlayerNameContext not provided");
+    }
     const [transition, setTransition] = useState<(Readonly<{from: string | null, to: string | null}> | null)>(null);
     useEffect(() => {
         if (transition == null) return;

@@ -4,7 +4,7 @@ import {SuperWrappedLoadingStrawberry} from './LoadingStrawberry';
 import {MainPage} from './MainPage';
 import {StartGameRoom} from './StartGameRoom';
 import {createNewRoom} from './gameActions';
-import {JoinRoomStatus, StrawberryGame, useJoinRoom, useStrawberryGame} from './gameHook';
+import {JoinRoomStatus, StrawberryGame, useJoinRoom, useStrawberryGame, StrawberryGameProvider, PlayerNameContext} from './gameHook';
 
 import './App.css';
 import {RoomPhase, StartingPhase} from './gameState';
@@ -32,7 +32,11 @@ function App({initialUsername, initialRoom}: {initialUsername: string | null, in
     }
 
     if (username !== null && room !== '') {
-        return <Game username={username} room={room} />;
+        return <StrawberryGameProvider roomName={room}>
+            <PlayerNameContext.Provider value={username}>
+                <Game />
+            </PlayerNameContext.Provider>
+        </StrawberryGameProvider>;
     }
 
     // TODO: confusingly, this handles both setting a username and creating a game. They should be separate.
@@ -52,9 +56,9 @@ function App({initialUsername, initialRoom}: {initialUsername: string | null, in
     />;
 }
 
-function Game({username, room}: {username: string, room: string}) {
+function Game() {
     // TODO: bounce if game doesn't exist
-    const strawberryGame = useStrawberryGame(room);
+    const strawberryGame = useStrawberryGame();
 
     // Game state is null if game doesnt exist or still loading.
     if (strawberryGame === null) {
@@ -62,7 +66,7 @@ function Game({username, room}: {username: string, room: string}) {
     }
 
     if (strawberryGame.gameState.phase === RoomPhase.START) {
-        return <StartGameRoom room={room} username={username} startingGameState={strawberryGame.gameState} stateVersion={strawberryGame.stateVersion} />;
+        return <StartGameRoom startingGameState={strawberryGame.gameState} />;
     }
 
     return <div>{JSON.stringify(strawberryGame)}</div>;

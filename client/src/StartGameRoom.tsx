@@ -1,20 +1,21 @@
-import React, {useState} from 'react';
+import React, {useState, useContext} from 'react';
 import {StartingPhase} from './gameState';
 import {PlayerWithCardsInHand} from './Cards';
-import {LETTERS} from './gameLogic';
-import {useJoinRoom} from './gameHook';
+import {LETTERS, isRoomReady} from './gameLogic';
+import {useJoinRoom, PlayerNameContext} from './gameHook';
 
-function StartGameRoom({room, username, startingGameState, stateVersion}: {room: string, username: string, startingGameState: StartingPhase, stateVersion: number}) {
-    const joinStatus = useJoinRoom(room, startingGameState, stateVersion, username);
+function StartGameRoom({startingGameState}: {startingGameState: StartingPhase}) {
+    const joinStatus = useJoinRoom(startingGameState);
     return <div className='gameContainer'>
-        <StartGameRoomSidebar username={username} startingGameState={startingGameState} />
+        <StartGameRoomSidebar startingGameState={startingGameState} />
         <div className='flexCenterContainer'>
-            <StartGameRoomMain username={username} startingGameState={startingGameState} />
+            <StartGameRoomMain startingGameState={startingGameState} />
         </div>
     </div>;
 }
 
-function StartGameRoomSidebar({username, startingGameState}: {username: string, startingGameState: StartingPhase}) {
+function StartGameRoomSidebar({startingGameState}: {startingGameState: StartingPhase}) {
+    const username = useContext(PlayerNameContext);
     return <div className='gameSidebar'>
         {startingGameState.players.map((player, i) => {
             // For sizing purposes, we render an invisible dummy hand if the player has not yet submitted a word
@@ -37,7 +38,9 @@ function StartGameRoomSidebar({username, startingGameState}: {username: string, 
     </div>
 }
 
-function StartGameRoomMain({username, startingGameState}: {username: string, startingGameState: StartingPhase}) {
+function StartGameRoomMain({startingGameState}: {startingGameState: StartingPhase}) {
+    const username = useContext(PlayerNameContext);
+
     const [inputWord, setInputWord] = useState('');
     const [errorToRender, setErrorToRender] = useState('');
 
@@ -46,7 +49,7 @@ function StartGameRoomMain({username, startingGameState}: {username: string, sta
     const isSpectator = !playerIfExists;
 
     const playerNeedsToInputWord = playerIfExists && playerIfExists.word === null;
-    const isGameReady = startingGameState.players.every(player => player.word !== null);
+    const isGameReady = isRoomReady(startingGameState);
 
 
 
