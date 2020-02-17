@@ -3,24 +3,26 @@ import { delay } from './utils';
 import { Hint } from './gameTypes';
 import {
     HintingPhase,
+    HintingPhasePlayer,
     ProposingHintPhase,
     ResolveAction,
     ResolvingHintPhase,
+    RoomPhase,
     RoomState,
     StartingPhase,
 } from './gameState';
 import {
-    MAX_PLAYERS,
     addPlayerToRoom,
     getPlayerNumber,
     giveHint,
     isRoomReady,
+    MAX_PLAYERS,
     setPlayerWord,
     setProposedHint,
     startGameRoom,
     performResolveAction,
 } from './gameLogic';
-import { callCommit, callList } from './gameAPI';
+import {callCommit, callList} from './gameAPI';
 
 export type StrawberryGame = Readonly<{
     roomName: string,
@@ -30,6 +32,49 @@ export type StrawberryGame = Readonly<{
 
 export const RoomContext = React.createContext<StrawberryGame | null>(null);
 export const PlayerNameContext = React.createContext<string>("");
+
+export function usePlayerContext(): {
+    username: string,
+    isSpectator: boolean,
+    player: HintingPhasePlayer | null,
+    playerNumber: number | null,
+} {
+    const room = useContext(RoomContext);
+    const username = useContext(PlayerNameContext);
+
+    // game hasn't loaded
+    if (room === null) {
+        throw new Error('illegal');
+    }
+    // should have been provided
+    if (username === '') {
+        throw new Error('illegal');
+    }
+    // TODO: support other phase too
+    if (room.gameState.phase !== RoomPhase.HINT) {
+        throw new Error('illegal');
+    }
+
+    let player = null;
+    let playerNumber = null;
+
+    // slightly inefficient, but n = 6 max...
+    room.gameState.players.forEach((p, i) => {
+        if (p.name === username) {
+            player = p;
+            playerNumber = i;
+        }
+    });
+
+    const isSpectator = player === null;
+
+    return {
+        username,
+        player,
+        playerNumber,
+        isSpectator,
+    }
+}
 
 export function StrawberryGameProvider({ roomName, children }: { roomName: string, children: React.ReactNode }) {
     const game = useListStrawberryGame(roomName);

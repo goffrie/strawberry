@@ -2,24 +2,31 @@ import React from 'react';
 import {DisplayNumberOrLetter} from './DisplayNumberOrLetter';
 import {Hand, Hint, LetterAndSource, LetterSources, PlayerNumber} from './gameTypes';
 
-function Card({letter}: {letter: string}) {
-    return <div className='card cardActive'>{letter}</div>
+function Card({letter, onClick}: {letter: string, onClick?: () => void}) {
+    let classNames = 'card cardActive';
+    if (onClick !== undefined) {
+        classNames += ' cardButton';
+    }
+    return <div className={classNames} onClick={onClick}>{letter}</div>
 }
 
 function InactiveCard() {
     return <div className='card' />;
 }
 
-function CardWithAnnotation({letter, annotation}: {letter: string, annotation: React.ReactNode}) {
+function CardWithAnnotation({letter, annotation, onClick}: {letter: string, annotation: React.ReactNode, onClick?: () => void}) {
     return <div className='cardWithPlayerNumber'>
-        <Card letter={letter} />
+        <Card letter={letter} onClick={onClick} />
         {annotation}
     </div>
 }
 
-function CardWithPlayerNumberOrLetter({letter, playerNumberOrLetter}: {letter: string, playerNumberOrLetter: number | string | null}) {
-    const annotation = playerNumberOrLetter !== null && <DisplayNumberOrLetter numberOrLetter={playerNumberOrLetter} />;
-    return <CardWithAnnotation letter={letter} annotation={annotation}/>
+function CardWithPlayerNumberOrLetter({letter, playerNumberOrLetter, onClick}: {letter: string, playerNumberOrLetter: number | string | null, onClick?: () => void}) {
+    // keep same height even when there is no number or letter.
+    const annotation = <div style={playerNumberOrLetter === null ? {visibility: 'hidden'} : {}}>
+        <DisplayNumberOrLetter numberOrLetter={playerNumberOrLetter || '🍓'} />
+    </div> ;
+    return <CardWithAnnotation letter={letter} annotation={annotation} onClick={onClick} />
 }
 
 function CardsInHand({hand, isForViewingPlayer}: {hand: Hand, isForViewingPlayer: boolean}) {
@@ -99,16 +106,35 @@ function getPlayerNumberOrLetterFromLetterAndSource(letterAndSource: LetterAndSo
     }
 }
 
-function CardsInHint({hint, viewingPlayer}: {hint: Hint, viewingPlayer: PlayerNumber}) {
+function CardsInHint({hint, viewingPlayer}: {
+    hint: Hint,
+    viewingPlayer: PlayerNumber,
+}) {
+    return <CardsFromLettersAndSources
+        lettersAndSources={hint.lettersAndSources}
+        viewingPlayer={viewingPlayer}
+    />;
+}
+
+function CardsFromLettersAndSources({lettersAndSources, viewingPlayer, onClick}: {
+    lettersAndSources: readonly LetterAndSource[],
+    viewingPlayer: PlayerNumber,
+    onClick? : (letterAndSource: LetterAndSource) => void,
+}) {
     return <div className='flex'>
-        {hint.lettersAndSources.map((letterAndSource, i) => {
+        {lettersAndSources.map((letterAndSource, i) => {
 
             const letterToDisplay = letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === viewingPlayer ? '?' : letterAndSource.letter;
 
             const playerNumberOrLetter = getPlayerNumberOrLetterFromLetterAndSource(letterAndSource);
-            return <CardWithPlayerNumberOrLetter letter={letterToDisplay} playerNumberOrLetter={playerNumberOrLetter} key={i} />
+            return <CardWithPlayerNumberOrLetter
+                letter={letterToDisplay}
+                playerNumberOrLetter={playerNumberOrLetter}
+                onClick={onClick !== undefined ? () => onClick(letterAndSource) : undefined}
+                key={i}
+            />
         })}
     </div>
 }
 
-export {Card, CardWithAnnotation, CardWithPlayerNumberOrLetter, InactiveCard, PlayerWithCardsInHand, DisplayNumberOrLetterWithTextAndCards, CardsInHand, CardsInHint};
+export {Card, CardWithAnnotation, CardWithPlayerNumberOrLetter, InactiveCard, PlayerWithCardsInHand, DisplayNumberOrLetterWithTextAndCards, CardsInHand, CardsInHint, CardsFromLettersAndSources};

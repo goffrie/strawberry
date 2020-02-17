@@ -48,6 +48,12 @@
   font-style: italic;
 }
 
+.strawberryLinkButtonDisabled {
+  border-bottom: 2px solid #777777;
+  cursor: default;
+  padding-bottom: 2px;
+}
+
 .strawberryLinkButton {
   border-bottom: 2px solid #D20B0B;
   cursor: pointer;
@@ -84,6 +90,10 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
+}
+
+.italics {
+  font-style: italic;
 }
 
 /* MAIN PAGE STYLES */
@@ -140,6 +150,8 @@
   box-sizing: border-box;
 }
 
+/* TODO: improve card styling, inc button hover */
+
 .card {
   margin: 5px;
   width: 55px;
@@ -154,6 +166,15 @@
 
 .cardActive {
   background-color: #777777;
+}
+
+.cardButton {
+  cursor: pointer;
+}
+
+.cardButton:hover {
+  background-color: #999999;
+  border-color: #999999;
 }
 
 .cardWithPlayerNumber {
@@ -197,4 +218,37 @@
 .dummyAnnotation {
   font-size: 12px;
   margin-bottom: 5px;
+}
+
+.hintLog {
+  height: 100%;
+  overflow: auto;
+  display: flex;
+  flex: auto;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.hintLogTitle {
+  font-size: 25px;
+  margin-bottom: 15px;
+}
+
+.hintLogLine {
+  margin-bottom: 15px;
+}
+
+.hintLogDivider {
+
+}
+
+.hintLogGuessBox {
+  border: 2px solid #D20B0B;
+  padding: 10px;
+  margin-bottom: 15px;
+  overflow: auto; /* awwww yeah side scrolling */
+}
+
+.hintLogGuessBox:hover {
+  border: 2px solid #19AF00;
 }
