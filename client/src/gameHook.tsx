@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { delay } from './utils';
+import { delay, deepEqual } from './utils';
 import { Hint } from './gameTypes';
 import {
     HintingPhase,
@@ -155,6 +155,7 @@ export function useJoinRoom(room: StartingPhase): JoinRoomStatus {
     return status;
 }
 
+// GOTCHA: the mutation *must* be idempotent!
 function useMutateGame<Room, Mutation>(room: Room, allowed: boolean, mutator: (room: Room, mutation: Mutation) => RoomState): [Mutation | undefined, (arg: Mutation) => void] {
     const { roomName, stateVersion } = useStrawberryGame()!;
     const [mutation, setMutation] = useState<Mutation | undefined>(undefined);
@@ -162,9 +163,14 @@ function useMutateGame<Room, Mutation>(room: Room, allowed: boolean, mutator: (r
         if (mutation === undefined) return;
         if (!allowed) {
             setMutation(undefined);
+            return;
         }
         const newRoom = mutator(room, mutation);
-        // TODO: check room != newRoom
+        if (deepEqual(room, newRoom)) {
+            // noop.
+            setMutation(undefined);
+            return;
+        }
         const abortController = new AbortController();
         callCommit(roomName, stateVersion, newRoom, abortController.signal)
             .then((response) => {
@@ -227,7 +233,8 @@ export function useProposeHint(room: ProposingHintPhase): [Hint | null | undefin
     return [mutation?.hint, allowed ? (hint) => mutate({playerName, hint}) : null];
 }
 
-function giveHintMutator(room: ProposingHintPhase, {playerName, hint}: {playerName: string, hint: Hint}): HintingPhase {
+function giveHintMutator(room: ProposingHintPhase, {hintNumber, playerName, hint}: {hintNumber: number, playerName: string, hint: Hint}): HintingPhase {
+    if (hintNumber != room.hintLog.length) return room; // raced
     return giveHint(room, playerName, hint);
 }
 
@@ -236,9 +243,10 @@ export function useGiveHint(room: ProposingHintPhase): ((hint: Hint) => void) | 
     if (playerName == null) {
         throw new Error("PlayerNameContext not provided");
     }
+    const hintNumber = room.hintLog.length;
     const allowed = getPlayerNumber(room, playerName) != null;
     const [, mutate] = useMutateGame(room, allowed, giveHintMutator);
-    return allowed ? (hint) => mutate({playerName, hint}) : null;
+    return allowed ? (hint) => mutate({hintNumber, playerName, hint}) : null;
 }
 
 function resolveHintMutator(room: ResolvingHintPhase, {playerName, action}: {playerName: string, action: ResolveAction}): HintingPhase {
