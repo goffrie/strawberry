@@ -164,7 +164,7 @@ export function giveHint(room: ProposingHintPhase, playerName: string, hint: Hin
         activeHint: {
             state: ActiveHintState.RESOLVING,
             hint,
-            playerActions: {},
+            playerActions: [],
         },
     };
 }

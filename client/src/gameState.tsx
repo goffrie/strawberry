@@ -40,8 +40,10 @@ export enum ResolveActionKind {
 }
 
 export type ResolveAction = Readonly<{
+    player: PlayerNumber,
     kind: ResolveActionKind.NONE | ResolveActionKind.FLIP
 }> | Readonly<{
+    player: PlayerNumber,
     kind: ResolveActionKind.GUESS,
     guess: Letter,
     actual: Letter,
@@ -62,7 +64,7 @@ export interface ProposingHint {
 export interface ResolvingHint {
     readonly state: ActiveHintState.RESOLVING,
     readonly hint: Hint,
-    readonly playerActions: Readonly<Record<PlayerNumber, ResolveAction>>,
+    readonly playerActions: readonly ResolveAction[],
 }
 
 export type ActiveHint = ProposingHint | ResolvingHint;
@@ -74,8 +76,8 @@ export interface HintLogEntry {
     readonly totalHints: number,
     // Which card was active for each player.
     readonly activeIndexes: Readonly<Record<PlayerNumber, number>>,
-    // The actions each player took.
-    readonly playerActions: Readonly<Record<PlayerNumber, ResolveAction>>,
+    // The action each player took.
+    readonly playerActions: readonly ResolveAction[],
 }
 
 // The main phase of the game, in which players give hints and flip over their
