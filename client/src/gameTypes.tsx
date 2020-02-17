@@ -1,9 +1,9 @@
-export type PlayerNumber = number;
+export type PlayerNumber = number; // 1-indexed
 export type Letter = string;
 
 export interface Hand {
     letters: readonly Letter[];
-    activeIndex: number; // -1 if no active card
+    activeIndex: number; // 0-indexed, -1 if no active card
 }
 
 export enum LetterSources {
@@ -23,7 +23,7 @@ export type LetterAndSource = Readonly<{
 }> | Readonly<{
     letter: Letter,
     sourceType: LetterSources.DUMMY,
-    dummyNumber: number,
+    dummyNumber: number, // 1-indexed
 }> | Readonly<{
     letter: '*',
     sourceType: LetterSources.WILDCARD,

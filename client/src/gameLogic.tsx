@@ -1,7 +1,11 @@
 import {
     ActiveHintState,
     HintingPhase,
+    HintingPhasePlayer,
     ProposingHintPhase,
+    ResolveAction,
+    ResolveActionKind,
+    ResolvingHint,
     ResolvingHintPhase,
     RoomPhase,
     StartingPhase,
@@ -162,6 +166,13 @@ export function setProposedHint(room: ProposingHintPhase, playerName: string, hi
 export function giveHint(room: ProposingHintPhase, playerName: string, hint: Hint): ResolvingHintPhase {
     return {
         ...room,
+        players: room.players.map((player) => {
+            if (player.name === playerName) {
+                return {...player, hintsGiven: player.hintsGiven + 1};
+            } else {
+                return player;
+            }
+        }),
         activeHint: {
             state: ActiveHintState.RESOLVING,
             hint,
@@ -199,4 +210,113 @@ export function whichResolveActionRequired(room: ResolvingHintPhase, playerName:
         return ResolveActionChoice.GUESS;
     }
     return ResolveActionChoice.FLIP;
+}
+
+function allPlayersHaveActed(activeHint: ResolvingHint): boolean {
+    const hint = activeHint.hint;
+    const playerNumbers: Set<PlayerNumber> = new Set();
+    for (const letterAndSource of hint.lettersAndSources) {
+        if (letterAndSource.sourceType === LetterSources.PLAYER) {
+            playerNumbers.add(letterAndSource.playerNumber);
+        }
+    }
+    return playerNumbers.size === activeHint.playerActions.length;
+}
+
+function fullyResolveHint(room: ResolvingHintPhase): ProposingHintPhase {
+    const logEntry = {
+        hint: room.activeHint.hint,
+        totalHints: room.hintLog.length + room.hintsRemaining,
+        activeIndexes: room.players.map((player) => player.hand.activeIndex),
+        playerActions: room.activeHint.playerActions,
+    };
+    let hintsRemaining = room.hintsRemaining - 1;
+
+    // process cards used up
+    const dummiesUsed: Set<number> = new Set(); // 0-indexed
+    const bonusesUsed: Set<number> = new Set(); // 0-indexed
+    for (const letterAndSource of room.activeHint.hint.lettersAndSources) {
+        if (letterAndSource.sourceType === LetterSources.BONUS) {
+            bonusesUsed.add(room.bonuses.findIndex((bonus) => bonus === letterAndSource.letter));
+        } else if (letterAndSource.sourceType === LetterSources.DUMMY) {
+            dummiesUsed.add(letterAndSource.dummyNumber - 1);
+        }
+    }
+    const dummies = room.dummies.map((dummy, index) => {
+        if (dummiesUsed.has(index)) {
+            if (dummy.untilFreeHint === 1) {
+                // got a hint!
+                hintsRemaining += 1;
+            }
+            return {
+                currentLetter: randomLetter(),
+                untilFreeHint: dummy.untilFreeHint - 1,
+            };
+        } else {
+            return dummy;
+        }
+    });
+    const bonuses = room.bonuses.filter((bonus, index) => !bonusesUsed.has(index));
+
+    const players = Array.from(room.players);
+    for (const action of room.activeHint.playerActions) {
+        let player = players[action.player - 1];
+        if (action == null || action.kind === ResolveActionKind.NONE) {
+            // do nothing
+        } else if (action.kind === ResolveActionKind.FLIP) {
+            const letters = (player.hand.activeIndex === room.wordLength - 1) ?
+                            [...player.hand.letters, randomLetter()] :
+                            player.hand.letters;
+            player = {
+                ...player,
+                hand: {
+                    letters,
+                    activeIndex: player.hand.activeIndex+1,
+                }
+            };
+        } else if (action.kind === ResolveActionKind.GUESS) {
+            if (action.guess === action.actual) {
+                bonuses.push(action.guess);
+            }
+            player = {
+                ...player,
+                hand: {
+                    letters: [
+                        ...player.hand.letters.slice(0, room.wordLength),
+                        randomLetter(),
+                    ],
+                    // index doesn't change
+                    activeIndex: player.hand.activeIndex,
+                },
+            };
+        }
+        players[action.player - 1] = player;
+    }
+    return {
+        ...room,
+        players,
+        dummies,
+        bonuses,
+        hintsRemaining,
+        hintLog: [...room.hintLog, logEntry],
+        activeHint: {
+            state: ActiveHintState.PROPOSING,
+            proposedHints: {},
+        },
+    };
+}
+
+export function performResolveAction(room: ResolvingHintPhase, playerName: string, action: ResolveAction): HintingPhase {
+    const newRoom = {
+        ...room,
+        activeHint: {
+            ...room.activeHint,
+            playerActions: [...room.activeHint.playerActions, action],
+        }
+    };
+    if (allPlayersHaveActed(newRoom.activeHint)) {
+        return fullyResolveHint(newRoom);
+    } else {
+        return newRoom;
+    }
 }
