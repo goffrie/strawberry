@@ -144,14 +144,14 @@ function addLetterAndSourceToHint(hint: Hint | null, letterAndSource: LetterAndS
 
 function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}) {
     const {username, player, playerNumber} = usePlayerContext();
+    const proposedHint: Hint | null = hintingGameState.activeHint.proposedHints[playerNumber!] || null;
 
-    const [stagedHint, setStagedHint] = useState(null as Hint | null);
+    const [stagedHint, setStagedHint] = useState<Hint | null>(proposedHint);
 
     const [nextProposedHint, callProposeHint] = useProposeHint(hintingGameState);
 
     const stagedHintSentence = stagedHint !== null && getHintSentence(stagedHint);
 
-    const proposedHint = hintingGameState.activeHint.proposedHints[playerNumber!];
     const proposedWord = proposedHint && proposedHint.lettersAndSources.map(letterAndSource => letterAndSource.letter).join('').toUpperCase();
     let proposeText = 'Propose hint';
     if (proposedWord) {
