@@ -147,6 +147,8 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
     const [stagedHint, setStagedHint] = useState(null as Hint | null);
     const [canSubmitHint, setCanSubmitHint] = useState(false);
 
+    const callProposeHint = useProposeHint(hintingGameState);
+
     const stagedHintSentence = stagedHint !== null && getHintSentence(stagedHint);
 
     const proposedHint = hintingGameState.activeHint.proposedHints[playerNumber!];
@@ -185,7 +187,7 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
         <div className='flex hintLogLine'>
             {stagedHint !== null && <span className='italics'>{stagedHintSentence}</span>}
             <span style={{flex: 'auto', textAlign: 'right'}}>
-                <LinkButton isDisabled={stagedHint === null}>{proposeText}</LinkButton>
+                <LinkButton isDisabled={stagedHint == null && callProposeHint != null} onClick={() => stagedHint != null && callProposeHint != null && callProposeHint(stagedHint)}>{proposeText}</LinkButton>
                 <span style={{marginLeft: '10px'}} />
                 <LinkButton isDisabled={!canSubmitHint}>Submit hint</LinkButton>
             </span>
