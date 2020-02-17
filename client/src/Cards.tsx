@@ -10,11 +10,16 @@ function InactiveCard() {
     return <div className='card' />;
 }
 
-function CardWithAnnotation({letter, playerNumberOrLetter}: {letter: string, playerNumberOrLetter: number | string | null}) {
+function CardWithAnnotation({letter, annotation}: {letter: string, annotation: React.ReactNode}) {
     return <div className='cardWithPlayerNumber'>
         <Card letter={letter} />
-        {playerNumberOrLetter !== null && <DisplayNumberOrLetter numberOrLetter={playerNumberOrLetter} />}
+        {annotation}
     </div>
+}
+
+function CardWithPlayerNumberOrLetter({letter, playerNumberOrLetter}: {letter: string, playerNumberOrLetter: number | string | null}) {
+    const annotation = playerNumberOrLetter !== null && <DisplayNumberOrLetter numberOrLetter={playerNumberOrLetter} />;
+    return <CardWithAnnotation letter={letter} annotation={annotation}/>
 }
 
 function CardsInHand({hand, isForViewingPlayer}: {hand: Hand, isForViewingPlayer: boolean}) {
@@ -42,16 +47,40 @@ function PlayerWithCardsInHand({hand, isForViewingPlayer, playerName, playerNumb
     // TODO: render fallback on top of cardsInHand or something so the whitespace doesn't look weird
     // TODO: dont inline style here
     // TODO: render top bar better when there are few cards
+
+    const topText = <>
+        <span style={{maxWidth: '150px'}} className='ellipsis'>{playerName}&nbsp;</span>
+        {isForViewingPlayer ? <span style={{color: '#777777'}}>(you)</span>: null}
+        {extraText ? <span style={{flex: 'auto', textAlign: 'right'}}>{extraText}</span> : null}
+    </>;
+
+    const cardsToRender = <CardsInHand hand={hand} isForViewingPlayer={isForViewingPlayer} />;
+
+    return <DisplayNumberOrLetterWithTextAndCards
+        numberOrLetter={playerNumber}
+        topText={topText}
+        cardsToRender={cardsToRender}
+        shouldHideCards={shouldHideHand}
+    />;
+}
+
+function DisplayNumberOrLetterWithTextAndCards({numberOrLetter, topText, cardsToRender, shouldHideCards=false} : {
+    numberOrLetter: number | string,
+    topText: React.ReactNode,
+    cardsToRender: React.ReactNode,
+    shouldHideCards?: boolean,
+}) {
+    // TODO: render fallback on top of cardsInHand or something so the whitespace doesn't look weird
+    // TODO: dont inline style here
+    // TODO: render top bar better when there are few cards
     return <div style={{display: 'flex', marginBottom: '10px'}}>
-        <DisplayNumberOrLetter numberOrLetter={playerNumber}/>
+        <DisplayNumberOrLetter numberOrLetter={numberOrLetter}/>
         <div style={{marginLeft: '10px'}}>
             <div style={{marginLeft: '5px', marginBottom: '5px', marginRight: '5px', lineHeight: '25px', display: 'flex'}}>
-                <span style={{maxWidth: '150px'}} className='ellipsis'>{playerName}&nbsp;</span>
-                {isForViewingPlayer ? <span style={{color: '#777777'}}>(you)</span>: null}
-                {extraText ? <span style={{flex: 'auto', textAlign: 'right'}}>{extraText}</span> : null}
+                {topText}
             </div>
-            <div style={shouldHideHand ? {visibility: 'hidden'}: {}}>
-                <CardsInHand hand={hand} isForViewingPlayer={isForViewingPlayer} />
+            <div style={shouldHideCards ? {visibility: 'hidden'}: {}}>
+                {cardsToRender}
             </div>
         </div>
     </div>
@@ -77,9 +106,9 @@ function CardsInHint({hint, viewingPlayer}: {hint: Hint, viewingPlayer: PlayerNu
             const letterToDisplay = letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === viewingPlayer ? '?' : letterAndSource.letter;
 
             const playerNumberOrLetter = getPlayerNumberOrLetterFromLetterAndSource(letterAndSource);
-            return <CardWithAnnotation letter={letterToDisplay} playerNumberOrLetter={playerNumberOrLetter} key={i} />
+            return <CardWithPlayerNumberOrLetter letter={letterToDisplay} playerNumberOrLetter={playerNumberOrLetter} key={i} />
         })}
     </div>
 }
 
-export {Card, CardWithAnnotation, InactiveCard, PlayerWithCardsInHand, CardsInHand, CardsInHint};
+export {Card, CardWithAnnotation, CardWithPlayerNumberOrLetter, InactiveCard, PlayerWithCardsInHand, DisplayNumberOrLetterWithTextAndCards, CardsInHand, CardsInHint};

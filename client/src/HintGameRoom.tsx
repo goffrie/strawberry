@@ -2,7 +2,7 @@ import React, {useState, useContext} from 'react';
 import {Dummy, HintingPhase} from './gameState';
 import {Letter} from './gameTypes';
 import {PlayerNameContext} from './gameHook';
-import {Card, PlayerWithCardsInHand} from './Cards';
+import {Card, CardWithAnnotation, PlayerWithCardsInHand, DisplayNumberOrLetterWithTextAndCards} from './Cards';
 
 function HintGameRoom({hintingGameState}: {hintingGameState: HintingPhase}) {
     const username = useContext(PlayerNameContext);
@@ -44,20 +44,31 @@ function HintGameRoomSidebar({hintingGameState}: {hintingGameState: HintingPhase
 }
 
 function DummiesSection({dummies}: {dummies: readonly Dummy[]}) {
-    return <></>;
-
+    const cards = <div className='flex'>
+        {dummies.map((dummy, i) => {
+            // TODO: render # until hint
+            const annotation = <span className='dummyAnnotation strawberryCenter'>{dummy.untilFreeHint > 0 ? `${dummy.untilFreeHint} to hint` : ''}</span>;
+            return <CardWithAnnotation letter={dummy.currentLetter} annotation={annotation} key={i} />
+        })}
+    </div>;
+    return <DisplayNumberOrLetterWithTextAndCards
+        numberOrLetter='D'
+        topText='Dummies'
+        cardsToRender={cards}
+    />
 }
 
 function BonusesSection({bonuses}: {bonuses: readonly Letter[]}) {
-    return <>
-        Bonuses
-        <div className='flex'>
-            {bonuses.map((letter, i) => {
-                return <Card letter={letter} key={i} />
-            })}
-        </div>
-    </>
-
+    const cards = <div className='flex'>
+        {bonuses.map((letter, i) => {
+            return <Card letter={letter} key={i} />
+        })}
+    </div>;
+    return <DisplayNumberOrLetterWithTextAndCards
+        numberOrLetter='B'
+        topText='Bonuses'
+        cardsToRender={cards}
+    />
 }
 
 
