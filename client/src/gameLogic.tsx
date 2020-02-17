@@ -93,3 +93,33 @@ export function startGameRoom(room: StartingPhase): HintingPhase {
         },
     };
 }
+
+export function specsOfHint(hint: Hint): HintSpecs {
+    const players = {};
+    const dummies = {};
+    const bonuses = {};
+    let wildcard = false;
+    for (const l of hint.lettersAndSources) {
+        switch (l.sourceType) {
+            case LetterSources.PLAYER:
+                players[l.playerNumber] = true;
+                break;
+            case LetterSource.WILDCARD:
+                wildcard = true;
+                break;
+            case LetterSource.DUMMY:
+                dummies[l.dummyNumber] = true;
+                break;
+            case LetterSource.BONUS:
+                bonuses[l.letter] = true;
+                break;
+        }
+    }
+    return {
+        length: hint.lettersAndSources.length,
+        players: Object.keys(players).length,
+        wildcard,
+        dummies: Object.keys(dummies).length,
+        bonuss: Object.keys(bonuses).length,
+    };
+}

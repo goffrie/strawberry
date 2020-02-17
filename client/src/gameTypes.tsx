@@ -19,7 +19,11 @@ export type LetterAndSource = Readonly<{
     playerNumber: PlayerNumber,
 }> | Readonly<{
     letter: Letter,
-    sourceType: LetterSources.DUMMY | LetterSources.BONUS,
+    sourceType: LetterSources.BONUS,
+}> | Readonly<{
+    letter: Letter,
+    sourceType: LetterSources.DUMMY,
+    dummyNumber: number,
 }> | Readonly<{
     letter: '*',
     sourceType: LetterSources.WILDCARD,
