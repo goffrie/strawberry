@@ -179,6 +179,7 @@ function useMutateGame<Room, Mutation>(room: Room, allowed: boolean, mutator: (r
                     console.error(reason);
                 }
             });
+        return () => abortController.abort();
     }, [roomName, stateVersion, room, allowed, mutator, mutation]);
     return [mutation, setMutation];
 }
