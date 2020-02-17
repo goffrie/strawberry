@@ -1,4 +1,4 @@
-import { Letter, Hand, Hint, PlayerNumber, HintSpecs } from './gameTypes';
+import { Letter, Hand, Hint, PlayerNumber } from './gameTypes';
 
 export enum RoomPhase {
     START = 'start',

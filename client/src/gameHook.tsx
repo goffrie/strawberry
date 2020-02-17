@@ -1,7 +1,14 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { delay } from './utils';
 import { Hint } from './gameTypes';
-import { RoomState, StartingPhase, HintingPhase, ProposingHintPhase, ResolvingHintPhase } from './gameState';
+import {
+    HintingPhase,
+    ProposingHintPhase,
+    ResolveAction,
+    ResolvingHintPhase,
+    RoomState,
+    StartingPhase,
+} from './gameState';
 import {
     MAX_PLAYERS,
     addPlayerToRoom,
@@ -11,6 +18,7 @@ import {
     setPlayerWord,
     setProposedHint,
     startGameRoom,
+    performResolveAction,
 } from './gameLogic';
 import { callCommit, callList } from './gameAPI';
 
@@ -185,4 +193,18 @@ export function useGiveHint(room: ProposingHintPhase): ((hint: Hint) => void) | 
     const allowed = getPlayerNumber(room, playerName) != null;
     const mutate = useMutateGame(room, allowed, giveHintMutator);
     return allowed ? (hint) => mutate({playerName, hint}) : null;
+}
+
+function resolveHintMutator(room: ResolvingHintPhase, {playerName, action}: {playerName: string, action: ResolveAction}): HintingPhase {
+    return performResolveAction(room, playerName, action);
+}
+
+export function useResolveHint(room: ResolvingHintPhase): ((action: ResolveAction) => void) | null {
+    const playerName = useContext(PlayerNameContext);
+    if (playerName == null) {
+        throw new Error("PlayerNameContext not provided");
+    }
+    const allowed = getPlayerNumber(room, playerName) != null;
+    const mutate = useMutateGame(room, allowed, resolveHintMutator);
+    return allowed ? (action) => mutate({playerName, action}) : null;
 }
