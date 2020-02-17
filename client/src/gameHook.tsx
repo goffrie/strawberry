@@ -227,7 +227,7 @@ export function useProposeHint(room: ProposingHintPhase): [Hint | null | undefin
     return [mutation?.hint, allowed ? (hint) => mutate({playerName, hint}) : null];
 }
 
-function giveHintMutator(room: ProposingHintPhase, {playerName, hint}: {playerName: string, hint: Hint}): ResolvingHintPhase {
+function giveHintMutator(room: ProposingHintPhase, {playerName, hint}: {playerName: string, hint: Hint}): HintingPhase {
     return giveHint(room, playerName, hint);
 }
 

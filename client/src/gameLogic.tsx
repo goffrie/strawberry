@@ -162,8 +162,9 @@ export function setProposedHint(room: ProposingHintPhase, playerName: string, hi
     };
 }
 
-export function giveHint(room: ProposingHintPhase, playerName: string, hint: Hint): ResolvingHintPhase {
-    return {
+export function giveHint(room: ProposingHintPhase, playerName: string, hint: Hint): HintingPhase {
+    // The player `playerName` gives a hint. This sets that hint as the activeHint, moving the game into the ResolvingHintPhase.
+    const newRoom: ResolvingHintPhase = {
         ...room,
         players: room.players.map((player) => {
             if (player.name === playerName) {
@@ -178,6 +179,13 @@ export function giveHint(room: ProposingHintPhase, playerName: string, hint: Hin
             playerActions: [],
         },
     };
+    // It's possible no players were actually involved in the hint. In that case we immediately finish the resolving phase.
+    // TODO: is this actually legal?
+    if (allPlayersHaveActed(newRoom.activeHint)) {
+        return fullyResolveHint(newRoom);
+    } else {
+        return newRoom;
+    }
 }
 
 export enum ResolveActionChoice {
