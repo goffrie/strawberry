@@ -195,6 +195,6 @@ export function useProposeHint(room: ProposingHintPhase): ((specs: HintSpecs) =>
                 console.error(reason);
             });
         return () => abortController.abort();
-    });
+    }, [toPropose, canPropose, roomName, stateVersion, room, playerName]);
     return canPropose ? (specs) => setToPropose(specs) : null;
 }

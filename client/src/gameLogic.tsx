@@ -1,4 +1,11 @@
-import { ActiveHintState, StartingPhase, RoomPhase, HintingPhase, ProposingHintPhase } from './gameState';
+import {
+    ActiveHintState,
+    HintingPhase,
+    ProposingHintPhase,
+    ResolvingHintPhase,
+    RoomPhase,
+    StartingPhase,
+} from './gameState';
 import { PlayerNumber, Letter, Hint, HintSpecs, LetterSources } from './gameTypes';
 import { shuffle } from './utils';
 
@@ -126,7 +133,7 @@ export function specsOfHint(hint: Hint): HintSpecs {
 
 export function getPlayerNumber(room: HintingPhase, playerName: string): PlayerNumber | null {
     for (let i = 0; i < room.players.length; i++) {
-        if (room.players[i].name == playerName) return i+1;
+        if (room.players[i].name === playerName) return i+1;
     }
     return null;
 }
