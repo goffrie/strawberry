@@ -1,5 +1,5 @@
-import { ActiveHintState, StartingPhase, RoomPhase, HintingPhase } from './gameState';
-import { Letter, Hint, HintSpecs, LetterSources } from './gameTypes';
+import { ActiveHintState, StartingPhase, RoomPhase, HintingPhase, ProposingHintPhase } from './gameState';
+import { PlayerNumber, Letter, Hint, HintSpecs, LetterSources } from './gameTypes';
 import { shuffle } from './utils';
 
 export const MIN_PLAYERS: number = 2;
@@ -121,5 +121,32 @@ export function specsOfHint(hint: Hint): HintSpecs {
         wildcard,
         dummies: Object.keys(dummies).length,
         bonuses: Object.keys(bonuses).length,
+    };
+}
+
+export function getPlayerNumber(room: HintingPhase, playerName: string): PlayerNumber | null {
+    for (let i = 0; i < room.players.length; i++) {
+        if (room.players[i].name == playerName) return i+1;
+    }
+    return null;
+}
+
+export function setProposedHint(room: ProposingHintPhase, playerName: string, specs: HintSpecs | null): ProposingHintPhase {
+    const proposedHints: Record<PlayerNumber, HintSpecs> = Object.assign({}, room.activeHint.proposedHints);
+    const playerNumber = getPlayerNumber(room, playerName);
+    if (playerNumber == null) {
+        throw new Error("player not in room");
+    }
+    if (specs == null) {
+        delete proposedHints[playerNumber];
+    } else {
+        proposedHints[playerNumber] = specs;
+    }
+    return {
+        ...room,
+        activeHint: {
+            ...room.activeHint,
+            proposedHints,
+        },
     };
 }

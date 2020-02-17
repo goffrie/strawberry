@@ -79,4 +79,7 @@ export interface HintingPhase {
     readonly activeHint: ActiveHint,
 }
 
+export type ProposingHintPhase = HintingPhase & { readonly activeHint: ProposingHint };
+export type ResolvingHintPhase = HintingPhase & { readonly activeHint: ResolvingHint };
+
 export type RoomState = StartingPhase | HintingPhase;

@@ -1,7 +1,16 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { delay } from './utils';
-import { RoomState, StartingPhase } from './gameState';
-import { MAX_PLAYERS, setPlayerWord, addPlayerToRoom, isRoomReady, startGameRoom } from './gameLogic';
+import { HintSpecs } from './gameTypes';
+import { RoomState, StartingPhase, ProposingHintPhase } from './gameState';
+import {
+    MAX_PLAYERS,
+    addPlayerToRoom,
+    getPlayerNumber,
+    isRoomReady,
+    setPlayerWord,
+    setProposedHint,
+    startGameRoom,
+} from './gameLogic';
 import { callCommit, callList } from './gameAPI';
 
 export type StrawberryGame = Readonly<{
@@ -157,4 +166,35 @@ export function useStartGame(room: StartingPhase): (() => void) | null {
         return () => abortController.abort();
     }, [roomName, stateVersion, room, shouldStartGame, setShouldStartGame, canStart]);
     return canStart ? () => setShouldStartGame(true) : null;
+}
+
+export function useProposeHint(room: ProposingHintPhase): ((specs: HintSpecs) => void) | null {
+    const { roomName, stateVersion } = useStrawberryGame()!;
+    const playerName = useContext(PlayerNameContext);
+    if (playerName == null) {
+        throw new Error("PlayerNameContext not provided");
+    }
+    const [toPropose, setToPropose] = useState<HintSpecs | null>(null);
+    const canPropose = getPlayerNumber(room, playerName);
+    // TODO: factor out this pattern
+    useEffect(() => {
+        if (toPropose == null) return;
+        if (!canPropose) {
+            setToPropose(null);
+            return;
+        }
+        const abortController = new AbortController();
+        callCommit(roomName, stateVersion, setProposedHint(room, playerName, toPropose), abortController.signal)
+            .then((response) => {
+                if (response.success) {
+                    setToPropose(null);
+                }
+            })
+            .catch((reason) => {
+                if (abortController.signal.aborted) return;
+                console.error(reason);
+            });
+        return () => abortController.abort();
+    });
+    return canPropose ? (specs) => setToPropose(specs) : null;
 }
