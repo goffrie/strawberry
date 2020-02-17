@@ -157,3 +157,14 @@ export function setProposedHint(room: ProposingHintPhase, playerName: string, sp
         },
     };
 }
+
+export function giveHint(room: ProposingHintPhase, playerName: string, hint: Hint): ResolvingHintPhase {
+    return {
+        ...room,
+        activeHint: {
+            state: ActiveHintState.RESOLVING,
+            hint,
+            playerActions: {},
+        },
+    };
+}
