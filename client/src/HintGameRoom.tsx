@@ -15,7 +15,7 @@ function HintGameRoom({hintingGameState}: {hintingGameState: HintingPhase}) {
     return <div className='gameContainer'>
         <HintGameRoomSidebar hintingGameState={hintingGameState} />
         <div className='flexColumnContainer'>
-            okok
+            potato?
         </div>
     </div>;
 }
@@ -43,11 +43,12 @@ function HintGameRoomSidebar({hintingGameState}: {hintingGameState: HintingPhase
     </div>
 }
 
-function DummiesSection({dummies}: {dummies: Array<Dummy>}) {
+function DummiesSection({dummies}: {dummies: readonly Dummy[]}) {
+    return <></>;
 
 }
 
-function BonusesSection({bonuses}: {bonuses: Array<Letter>}) {
+function BonusesSection({bonuses}: {bonuses: readonly Letter[]}) {
     return <>
         Bonuses
         <div className='flex'>
