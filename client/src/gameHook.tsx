@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { delay } from './utils';
 import { Hint } from './gameTypes';
-import { RoomState, StartingPhase, HintingPhase, ProposingHintPhase } from './gameState';
+import { RoomState, StartingPhase, HintingPhase, ProposingHintPhase, ResolvingHintPhase } from './gameState';
 import {
     MAX_PLAYERS,
     addPlayerToRoom,
     getPlayerNumber,
+    giveHint,
     isRoomReady,
     setPlayerWord,
     setProposedHint,
@@ -169,5 +170,19 @@ export function useProposeHint(room: ProposingHintPhase): ((hint: Hint) => void)
     }
     const allowed = getPlayerNumber(room, playerName) != null;
     const mutate = useMutateGame(room, allowed, proposeHintMutator);
+    return allowed ? (hint) => mutate({playerName, hint}) : null;
+}
+
+function giveHintMutator(room: ProposingHintPhase, {playerName, hint}: {playerName: string, hint: Hint}): ResolvingHintPhase {
+    return giveHint(room, playerName, hint);
+}
+
+export function useGiveHint(room: ProposingHintPhase): ((hint: Hint) => void) | null {
+    const playerName = useContext(PlayerNameContext);
+    if (playerName == null) {
+        throw new Error("PlayerNameContext not provided");
+    }
+    const allowed = getPlayerNumber(room, playerName) != null;
+    const mutate = useMutateGame(room, allowed, giveHintMutator);
     return allowed ? (hint) => mutate({playerName, hint}) : null;
 }
