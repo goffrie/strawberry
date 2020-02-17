@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { delay } from './utils';
 import { HintSpecs } from './gameTypes';
-import { RoomState, StartingPhase, ProposingHintPhase } from './gameState';
+import { RoomState, StartingPhase, HintingPhase, ProposingHintPhase } from './gameState';
 import {
     MAX_PLAYERS,
     addPlayerToRoom,
@@ -101,100 +101,73 @@ export function useJoinRoom(room: StartingPhase): JoinRoomStatus {
     return status;
 }
 
-export function useInputWord(room: StartingPhase): [string | null, (newWord: string | null) => void] {
+function useMutateGame<Room, Mutation>(room: Room, allowed: boolean, mutator: (room: Room, mutation: Mutation) => RoomState): (arg: Mutation) => void {
     const { roomName, stateVersion } = useStrawberryGame()!;
+    const [mutation, setMutation] = useState<Mutation | null>(null);
+    useEffect(() => {
+        if (mutation == null) return;
+        if (!allowed) {
+            setMutation(null);
+        }
+        const newRoom = mutator(room, mutation);
+        // TODO: check room != newRoom
+        const abortController = new AbortController();
+        callCommit(roomName, stateVersion, newRoom, abortController.signal)
+            .then((response) => {
+                if (response.success) {
+                    setMutation(null);
+                } else {
+                    console.log("commit failed; race condition occurred");
+                }
+            })
+            .catch((reason) => {
+                if (!abortController.signal.aborted) {
+                    console.error(reason);
+                }
+            });
+    }, [roomName, stateVersion, room, allowed, mutator, mutation]);
+    return setMutation;
+}
+
+function inputWordMutator(room: StartingPhase, {playerName, word}: {playerName: string, word: string | null}): StartingPhase {
+    return setPlayerWord(room, playerName, word);
+}
+
+export function useInputWord(room: StartingPhase): (newWord: string | null) => void {
     const playerName = useContext(PlayerNameContext);
     if (playerName == null) {
         throw new Error("PlayerNameContext not provided");
     }
-    const [transition, setTransition] = useState<(Readonly<{ from: string | null, to: string | null }> | null)>(null);
-    useEffect(() => {
-        if (transition == null) return;
-        if (!room.players.some((player) => player.name === playerName && player.word === transition.from)) return;
-        const abortController = new AbortController();
-        callCommit(roomName, stateVersion, setPlayerWord(room, playerName, transition.to), abortController.signal)
-            .then((response) => {
-                if (response.success) {
-                    setTransition(null);
-                }
-            })
-            .catch((reason) => {
-                if (abortController.signal.aborted) return;
-                console.error(reason);
-            });
-        return () => abortController.abort();
-    }, [roomName, room, stateVersion, playerName, transition]);
-    for (const player of room.players) {
-        if (player.name === playerName) {
-            let word = player.word;
-            if (transition != null && word === transition.from) {
-                word = transition.to;
-            }
-            return [word, (newWord) => {
-                setTransition({ from: player.word, to: newWord });
-            }];
+    const allowed = room.players.some(player => player.name === playerName);
+    const mutate = useMutateGame(room, allowed, inputWordMutator);
+    return (word) => {
+        if (!allowed) {
+            throw new Error("attempting to set word but we're not in the game");
         }
-    }
-    // not in the game!
-    return [null, (_) => {
-        throw new Error("attempting to set word but we're not in the game");
-    }];
+        mutate({playerName, word});
+    };
+}
+
+function startGameMutator(room: StartingPhase, _: {}): HintingPhase {
+    return startGameRoom(room);
 }
 
 export function useStartGame(room: StartingPhase): (() => void) | null {
-    const { roomName, stateVersion } = useStrawberryGame()!;
-    const [shouldStartGame, setShouldStartGame] = useState(false);
-    const canStart = isRoomReady(room);
-    useEffect(() => {
-        if (!shouldStartGame) return;
-        if (!canStart) {
-            // cancel request
-            setShouldStartGame(false);
-            return;
-        }
-        const abortController = new AbortController();
-        callCommit(roomName, stateVersion, startGameRoom(room), abortController.signal)
-            .then((response) => {
-                if (response.success) {
-                    setShouldStartGame(false);
-                }
-            })
-            .catch((reason) => {
-                if (abortController.signal.aborted) return;
-                console.error(reason);
-            });
-        return () => abortController.abort();
-    }, [roomName, stateVersion, room, shouldStartGame, setShouldStartGame, canStart]);
-    return canStart ? () => setShouldStartGame(true) : null;
+    const allowed = isRoomReady(room);
+    const mutate = useMutateGame(room, allowed, startGameMutator);
+    return allowed ? () => mutate({}) : null;
+}
+
+function proposeHintMutator(room: ProposingHintPhase, {playerName, specs}: {playerName: string, specs: HintSpecs}): ProposingHintPhase {
+    return setProposedHint(room, playerName, specs);
 }
 
 export function useProposeHint(room: ProposingHintPhase): ((specs: HintSpecs) => void) | null {
-    const { roomName, stateVersion } = useStrawberryGame()!;
     const playerName = useContext(PlayerNameContext);
     if (playerName == null) {
         throw new Error("PlayerNameContext not provided");
     }
-    const [toPropose, setToPropose] = useState<HintSpecs | null>(null);
-    const canPropose = getPlayerNumber(room, playerName);
-    // TODO: factor out this pattern
-    useEffect(() => {
-        if (toPropose == null) return;
-        if (!canPropose) {
-            setToPropose(null);
-            return;
-        }
-        const abortController = new AbortController();
-        callCommit(roomName, stateVersion, setProposedHint(room, playerName, toPropose), abortController.signal)
-            .then((response) => {
-                if (response.success) {
-                    setToPropose(null);
-                }
-            })
-            .catch((reason) => {
-                if (abortController.signal.aborted) return;
-                console.error(reason);
-            });
-        return () => abortController.abort();
-    }, [toPropose, canPropose, roomName, stateVersion, room, playerName]);
-    return canPropose ? (specs) => setToPropose(specs) : null;
+    const allowed = getPlayerNumber(room, playerName) != null;
+    const mutate = useMutateGame(room, allowed, proposeHintMutator);
+    return allowed ? (specs) => mutate({playerName, specs}) : null;
 }

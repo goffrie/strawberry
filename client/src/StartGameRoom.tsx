@@ -45,13 +45,14 @@ function StartGameRoomMain({startingGameState}: {startingGameState: StartingPhas
     const [inputWord, setInputWord] = useState('');
     const [errorToRender, setErrorToRender] = useState('');
 
-    const [committedWord, setCommittedWord] = useInputWord(startingGameState);
+    const setCommittedWord = useInputWord(startingGameState);
 
     const filteredPlayers = startingGameState.players.filter(player => player.name === username);
     const playerIfExists = filteredPlayers.length !== 0 && filteredPlayers[0];
     const isSpectator = !playerIfExists;
 
-    const playerNeedsToInputWord = playerIfExists && committedWord == null;
+    // TODO: maybe prevent double-input?
+    const playerNeedsToInputWord = playerIfExists && playerIfExists.word == null;
 
     let isInputWordValid = false;
     // note: we don't always render this (only rendered after a submit until next keystroke), but compute it here
