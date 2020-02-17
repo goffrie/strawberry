@@ -12,6 +12,7 @@ import {
     PlayerWithCardsInHand
 } from './Cards';
 import {specsOfHint} from './gameLogic';
+import { deepEqual } from './utils';
 
 function HintGameRoom({hintingGameState}: {hintingGameState: HintingPhase}) {
     const {username} = usePlayerContext();
@@ -145,9 +146,8 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
     const {username, player, playerNumber} = usePlayerContext();
 
     const [stagedHint, setStagedHint] = useState(null as Hint | null);
-    const [canSubmitHint, setCanSubmitHint] = useState(false);
 
-    const callProposeHint = useProposeHint(hintingGameState);
+    const [nextProposedHint, callProposeHint] = useProposeHint(hintingGameState);
 
     const stagedHintSentence = stagedHint !== null && getHintSentence(stagedHint);
 
@@ -158,10 +158,11 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
         proposeText += ` (current: ${proposedWord})`;
     }
 
+    const canSubmitHint = deepEqual(stagedHint, proposedHint) && nextProposedHint === undefined;
+
     const addToStagedHint = (letterAndSource: LetterAndSource) => {
         const newHint = addLetterAndSourceToHint(stagedHint, letterAndSource, playerNumber!);
         setStagedHint(newHint);
-        setCanSubmitHint(false);
     };
 
     return <>
@@ -180,7 +181,6 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
             <div style={{position: 'absolute', top: '0px', right: '0px', padding: '5px'}}>
                 <LinkButton onClick={() => {
                     setStagedHint(null);
-                    setCanSubmitHint(false);
                 }} isDisabled={stagedHint === null}>Clear</LinkButton>
             </div>
         </div>

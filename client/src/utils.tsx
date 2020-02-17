@@ -14,3 +14,28 @@ export function shuffle<T>(list: Readonly<ArrayLike<T>>): T[] {
     }
     return array;
 }
+
+// good enough for json
+export function deepEqual(x: any, y: any): boolean {
+    if (x === y) return true;
+    if (x == null || y == null) return false;
+    if (typeof x == "object" && typeof y == "object") {
+        if (Array.isArray(x) && Array.isArray(y)) {
+            if (x.length !== y.length) return false;
+            for (let i = 0; i < x.length; i++) {
+                if (!deepEqual(x[i], y[i])) return false;
+            }
+            return true;
+        } else {
+            let xk = Object.keys(x);
+            let yk = Object.keys(y);
+            if (xk.length !== yk.length) return false;
+            for (const key of xk) {
+                if (!Object.prototype.hasOwnProperty.call(y, key)) return false;
+                if (!deepEqual(x[key], y[key])) return false;
+            }
+            return true;
+        }
+    }
+    return false;
+}

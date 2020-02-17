@@ -212,18 +212,18 @@ export function useStartGame(room: StartingPhase): (() => void) | null {
     return allowed ? () => mutate({}) : null;
 }
 
-function proposeHintMutator(room: ProposingHintPhase, {playerName, hint}: {playerName: string, hint: Hint}): ProposingHintPhase {
+function proposeHintMutator(room: ProposingHintPhase, {playerName, hint}: {playerName: string, hint: Hint | null}): ProposingHintPhase {
     return setProposedHint(room, playerName, hint);
 }
 
-export function useProposeHint(room: ProposingHintPhase): ((hint: Hint) => void) | null {
+export function useProposeHint(room: ProposingHintPhase): [Hint | null | undefined, ((hint: Hint | null) => void) | null] {
     const playerName = useContext(PlayerNameContext);
     if (playerName == null) {
         throw new Error("PlayerNameContext not provided");
     }
     const allowed = getPlayerNumber(room, playerName) != null;
-    const [, mutate] = useMutateGame(room, allowed, proposeHintMutator);
-    return allowed ? (hint) => mutate({playerName, hint}) : null;
+    const [mutation, mutate] = useMutateGame(room, allowed, proposeHintMutator);
+    return [mutation?.hint, allowed ? (hint) => mutate({playerName, hint}) : null];
 }
 
 function giveHintMutator(room: ProposingHintPhase, {playerName, hint}: {playerName: string, hint: Hint}): ResolvingHintPhase {
