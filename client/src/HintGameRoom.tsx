@@ -1,7 +1,8 @@
 import React, {useState, useContext} from 'react';
-import {HintingPhase} from './gameState';
+import {Dummy, HintingPhase} from './gameState';
+import {Letter} from './gameTypes';
 import {PlayerNameContext} from './gameHook';
-import {PlayerWithCardsInHand} from './Cards';
+import {Card, PlayerWithCardsInHand} from './Cards';
 
 function HintGameRoom({hintingGameState}: {hintingGameState: HintingPhase}) {
     const username = useContext(PlayerNameContext);
@@ -37,7 +38,25 @@ function HintGameRoomSidebar({hintingGameState}: {hintingGameState: HintingPhase
                 extraText={`${player.hintsGiven} hint${player.hintsGiven === 1 ? '' : 's'} given`}
             />
         })}
+        {hintingGameState.dummies.length > 0 && <DummiesSection dummies={hintingGameState.dummies} />}
+        {hintingGameState.bonuses.length > 0 && <BonusesSection bonuses={hintingGameState.bonuses} />}
     </div>
+}
+
+function DummiesSection({dummies}: {dummies: Array<Dummy>}) {
+
+}
+
+function BonusesSection({bonuses}: {bonuses: Array<Letter>}) {
+    return <>
+        Bonuses
+        <div className='flex'>
+            {bonuses.map((letter, i) => {
+                return <Card letter={letter} key={i} />
+            })}
+        </div>
+    </>
+
 }
 
 

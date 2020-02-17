@@ -76,6 +76,10 @@
   flex-direction: column;
 }
 
+.flex {
+  display: flex;
+}
+
 .ellipsis {
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -158,10 +162,6 @@
   width: fit-content;
 }
 
-
-.cardsInHand {
-  display: flex;
-}
 
 
 /* GAME LAYOUT STYLES */

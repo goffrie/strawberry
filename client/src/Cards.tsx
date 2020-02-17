@@ -18,7 +18,7 @@ function CardWithAnnotation({letter, playerNumberOrLetter}: {letter: string, pla
 }
 
 function CardsInHand({hand, isForViewingPlayer}: {hand: Hand, isForViewingPlayer: boolean}) {
-    return <div className='cardsInHand'>
+    return <div className='flex'>
         {hand.letters.map((card, i) => {
             if (i === hand.activeIndex) {
                 const letterToDisplay = isForViewingPlayer ? '?' : card;
@@ -71,7 +71,7 @@ function getPlayerNumberOrLetterFromLetterAndSource(letterAndSource: LetterAndSo
 }
 
 function CardsInHint({hint, viewingPlayer}: {hint: Hint, viewingPlayer: PlayerNumber}) {
-    return <div className='cardsInHand'>
+    return <div className='flex'>
         {hint.lettersAndSources.map((letterAndSource, i) => {
 
             const letterToDisplay = letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === viewingPlayer ? '?' : letterAndSource.letter;
