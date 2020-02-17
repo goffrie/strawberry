@@ -162,12 +162,29 @@ export function setProposedHint(room: ProposingHintPhase, playerName: string, hi
     };
 }
 
-export function giveHint(room: ProposingHintPhase, playerName: string, hint: Hint): HintingPhase {
+export function giveHint(room: ProposingHintPhase, hint: Hint): HintingPhase {
+    // Sanity check that the letters used in the hint actually exist.
+    for (const letterAndSource of hint.lettersAndSources) {
+        switch (letterAndSource.sourceType) {
+            case LetterSources.BONUS:
+                if (!room.bonuses.includes(letterAndSource.letter)) throw new Error("illegal hint");
+                break;
+            case LetterSources.DUMMY:
+                if (room.dummies[letterAndSource.dummyNumber-1].currentLetter !== letterAndSource.letter) throw new Error("illegal hint");
+                break;
+            case LetterSources.PLAYER:
+                const player = room.players[letterAndSource.playerNumber-1];
+                if (player.hand.letters[player.hand.activeIndex] !== letterAndSource.letter) throw new Error("illegal hint");
+                break;
+            case LetterSources.WILDCARD: break;
+        }
+    }
+
     // The player `playerName` gives a hint. This sets that hint as the activeHint, moving the game into the ResolvingHintPhase.
     const newRoom: ResolvingHintPhase = {
         ...room,
-        players: room.players.map((player) => {
-            if (player.name === playerName) {
+        players: room.players.map((player, ix) => {
+            if (ix + 1 === hint.givenByPlayer) {
                 return {...player, hintsGiven: player.hintsGiven + 1};
             } else {
                 return player;

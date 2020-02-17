@@ -233,9 +233,9 @@ export function useProposeHint(room: ProposingHintPhase): [Hint | null | undefin
     return [mutation?.hint, allowed ? (hint) => mutate({playerName, hint}) : null];
 }
 
-function giveHintMutator(room: ProposingHintPhase, {hintNumber, playerName, hint}: {hintNumber: number, playerName: string, hint: Hint}): HintingPhase {
-    if (hintNumber != room.hintLog.length) return room; // raced
-    return giveHint(room, playerName, hint);
+function giveHintMutator(room: ProposingHintPhase, {hintNumber, hint}: {hintNumber: number, hint: Hint}): HintingPhase {
+    if (hintNumber !== room.hintLog.length) return room; // raced
+    return giveHint(room, hint);
 }
 
 export function useGiveHint(room: ProposingHintPhase): ((hint: Hint) => void) | null {
@@ -246,7 +246,7 @@ export function useGiveHint(room: ProposingHintPhase): ((hint: Hint) => void) | 
     const hintNumber = room.hintLog.length;
     const allowed = getPlayerNumber(room, playerName) != null;
     const [, mutate] = useMutateGame(room, allowed, giveHintMutator);
-    return allowed ? (hint) => mutate({hintNumber, playerName, hint}) : null;
+    return allowed ? (hint) => mutate({hintNumber, hint}) : null;
 }
 
 function resolveHintMutator(room: ResolvingHintPhase, {playerName, action}: {playerName: string, action: ResolveAction}): HintingPhase {
