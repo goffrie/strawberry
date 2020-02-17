@@ -45,14 +45,17 @@ function StartGameRoomMain({startingGameState}: {startingGameState: StartingPhas
     const [inputWord, setInputWord] = useState('');
     const [errorToRender, setErrorToRender] = useState('');
 
-    const setCommittedWord = useInputWord(startingGameState);
+    const [settingCommittedWord, setCommittedWord] = useInputWord(startingGameState);
 
     const filteredPlayers = startingGameState.players.filter(player => player.name === username);
     const playerIfExists = filteredPlayers.length !== 0 && filteredPlayers[0];
     const isSpectator = !playerIfExists;
 
-    // TODO: maybe prevent double-input?
-    const playerNeedsToInputWord = playerIfExists && playerIfExists.word == null;
+    const playerNeedsToInputWord = playerIfExists && (
+        // if the word has not been committed *and* we are not attempting to commit...
+        (playerIfExists.word == null && settingCommittedWord === undefined)
+        // or if we have attempted to un-commit.
+        || (settingCommittedWord === null));
 
     let isInputWordValid = false;
     // note: we don't always render this (only rendered after a submit until next keystroke), but compute it here
@@ -106,12 +109,10 @@ function StartGameRoomMain({startingGameState}: {startingGameState: StartingPhas
         </div>;
     }
 
-    if (startingGameState.players.length < MIN_PLAYERS) {
-        return <div className='bigText'>🕐 Waiting for players to join...</div>;
-    }
-
     let startGame;
-    if (doStartGame != null) {
+    if (startingGameState.players.length < MIN_PLAYERS) {
+        startGame = <div className='bigText'>🕐 Waiting for players to join...</div>;
+    } else if (doStartGame != null) {
         startGame = <div className='strawberryButton' onClick={doStartGame}>Start game</div>
     } else {
         startGame = <div className='bigText' style={{marginBottom: '20px'}}>🕐 Waiting for other players to enter words...</div>;

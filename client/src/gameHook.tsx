@@ -110,7 +110,7 @@ export function useJoinRoom(room: StartingPhase): JoinRoomStatus {
     return status;
 }
 
-function useMutateGame<Room, Mutation>(room: Room, allowed: boolean, mutator: (room: Room, mutation: Mutation) => RoomState): (arg: Mutation) => void {
+function useMutateGame<Room, Mutation>(room: Room, allowed: boolean, mutator: (room: Room, mutation: Mutation) => RoomState): [Mutation | undefined, (arg: Mutation) => void] {
     const { roomName, stateVersion } = useStrawberryGame()!;
     const [mutation, setMutation] = useState<Mutation | undefined>(undefined);
     useEffect(() => {
@@ -135,26 +135,26 @@ function useMutateGame<Room, Mutation>(room: Room, allowed: boolean, mutator: (r
                 }
             });
     }, [roomName, stateVersion, room, allowed, mutator, mutation]);
-    return setMutation;
+    return [mutation, setMutation];
 }
 
 function inputWordMutator(room: StartingPhase, {playerName, word}: {playerName: string, word: string | null}): StartingPhase {
     return setPlayerWord(room, playerName, word);
 }
 
-export function useInputWord(room: StartingPhase): (newWord: string | null) => void {
+export function useInputWord(room: StartingPhase): [string | null | undefined, (newWord: string | null) => void] {
     const playerName = useContext(PlayerNameContext);
     if (playerName == null) {
         throw new Error("PlayerNameContext not provided");
     }
     const allowed = room.players.some(player => player.name === playerName);
-    const mutate = useMutateGame(room, allowed, inputWordMutator);
-    return (word) => {
+    const [mutation, mutate] = useMutateGame(room, allowed, inputWordMutator);
+    return [mutation?.word, (word) => {
         if (!allowed) {
             throw new Error("attempting to set word but we're not in the game");
         }
         mutate({playerName, word});
-    };
+    }];
 }
 
 function startGameMutator(room: StartingPhase, _: {}): HintingPhase {
@@ -163,7 +163,7 @@ function startGameMutator(room: StartingPhase, _: {}): HintingPhase {
 
 export function useStartGame(room: StartingPhase): (() => void) | null {
     const allowed = isRoomReady(room);
-    const mutate = useMutateGame(room, allowed, startGameMutator);
+    const [, mutate] = useMutateGame(room, allowed, startGameMutator);
     return allowed ? () => mutate({}) : null;
 }
 
@@ -177,7 +177,7 @@ export function useProposeHint(room: ProposingHintPhase): ((hint: Hint) => void)
         throw new Error("PlayerNameContext not provided");
     }
     const allowed = getPlayerNumber(room, playerName) != null;
-    const mutate = useMutateGame(room, allowed, proposeHintMutator);
+    const [, mutate] = useMutateGame(room, allowed, proposeHintMutator);
     return allowed ? (hint) => mutate({playerName, hint}) : null;
 }
 
@@ -191,7 +191,7 @@ export function useGiveHint(room: ProposingHintPhase): ((hint: Hint) => void) | 
         throw new Error("PlayerNameContext not provided");
     }
     const allowed = getPlayerNumber(room, playerName) != null;
-    const mutate = useMutateGame(room, allowed, giveHintMutator);
+    const [, mutate] = useMutateGame(room, allowed, giveHintMutator);
     return allowed ? (hint) => mutate({playerName, hint}) : null;
 }
 
@@ -205,6 +205,6 @@ export function useResolveHint(room: ResolvingHintPhase): ((action: ResolveActio
         throw new Error("PlayerNameContext not provided");
     }
     const allowed = getPlayerNumber(room, playerName) != null;
-    const mutate = useMutateGame(room, allowed, resolveHintMutator);
+    const [, mutate] = useMutateGame(room, allowed, resolveHintMutator);
     return allowed ? (action) => mutate({playerName, action}) : null;
 }
