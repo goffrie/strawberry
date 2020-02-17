@@ -71,6 +71,17 @@
   height: 100%;
 }
 
+.flexColumnContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.ellipsis {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 /* MAIN PAGE STYLES */
 .mainContainer {
   display: flex;

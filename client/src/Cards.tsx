@@ -30,20 +30,25 @@ function CardsInHand({hand, isForViewingPlayer}: {hand: Hand, isForViewingPlayer
     </div>
 }
 
-function PlayerWithCardsInHand({hand, isForViewingPlayer, playerName, playerNumber, shouldHideHand}: {
+function PlayerWithCardsInHand({hand, isForViewingPlayer, playerName, playerNumber, shouldHideHand=false, extraText=''}: {
     hand: Hand,
     isForViewingPlayer: boolean,
     playerName: string,
     playerNumber: number,
-    shouldHideHand: boolean,  // used for layout/sizing reasons
+    shouldHideHand?: boolean,  // used for layout/sizing reasons
+    extraText?: string,
 }) {
     // TODO: later, for end game, separate isForViewingPlayer with shouldHideLetter
     // TODO: render fallback on top of cardsInHand or something so the whitespace doesn't look weird
+    // TODO: dont inline style here
+    // TODO: render top bar better when there are few cards
     return <div style={{display: 'flex', marginBottom: '10px'}}>
         <DisplayNumberOrLetter numberOrLetter={playerNumber}/>
         <div style={{marginLeft: '10px'}}>
-            <div style={{marginLeft: '5px', marginBottom: '5px', lineHeight: '25px'}}>
-                {playerName} {isForViewingPlayer ? <span style={{color: '#777777'}}>(you)</span>: null}
+            <div style={{marginLeft: '5px', marginBottom: '5px', marginRight: '5px', lineHeight: '25px', display: 'flex'}}>
+                <span style={{maxWidth: '150px'}} className='ellipsis'>{playerName}&nbsp;</span>
+                {isForViewingPlayer ? <span style={{color: '#777777'}}>(you)</span>: null}
+                {extraText ? <span style={{flex: 'auto', textAlign: 'right'}}>{extraText}</span> : null}
             </div>
             <div style={shouldHideHand ? {visibility: 'hidden'}: {}}>
                 <CardsInHand hand={hand} isForViewingPlayer={isForViewingPlayer} />
