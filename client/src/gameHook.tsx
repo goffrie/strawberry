@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { delay } from './utils';
-import { HintSpecs } from './gameTypes';
+import { Hint } from './gameTypes';
 import { RoomState, StartingPhase, HintingPhase, ProposingHintPhase } from './gameState';
 import {
     MAX_PLAYERS,
@@ -158,16 +158,16 @@ export function useStartGame(room: StartingPhase): (() => void) | null {
     return allowed ? () => mutate({}) : null;
 }
 
-function proposeHintMutator(room: ProposingHintPhase, {playerName, specs}: {playerName: string, specs: HintSpecs}): ProposingHintPhase {
-    return setProposedHint(room, playerName, specs);
+function proposeHintMutator(room: ProposingHintPhase, {playerName, hint}: {playerName: string, hint: Hint}): ProposingHintPhase {
+    return setProposedHint(room, playerName, hint);
 }
 
-export function useProposeHint(room: ProposingHintPhase): ((specs: HintSpecs) => void) | null {
+export function useProposeHint(room: ProposingHintPhase): ((hint: Hint) => void) | null {
     const playerName = useContext(PlayerNameContext);
     if (playerName == null) {
         throw new Error("PlayerNameContext not provided");
     }
     const allowed = getPlayerNumber(room, playerName) != null;
     const mutate = useMutateGame(room, allowed, proposeHintMutator);
-    return allowed ? (specs) => mutate({playerName, specs}) : null;
+    return allowed ? (hint) => mutate({playerName, hint}) : null;
 }

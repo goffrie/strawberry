@@ -138,16 +138,16 @@ export function getPlayerNumber(room: HintingPhase, playerName: string): PlayerN
     return null;
 }
 
-export function setProposedHint(room: ProposingHintPhase, playerName: string, specs: HintSpecs | null): ProposingHintPhase {
-    const proposedHints: Record<PlayerNumber, HintSpecs> = Object.assign({}, room.activeHint.proposedHints);
+export function setProposedHint(room: ProposingHintPhase, playerName: string, hint: Hint | null): ProposingHintPhase {
+    const proposedHints: Record<PlayerNumber, Hint> = Object.assign({}, room.activeHint.proposedHints);
     const playerNumber = getPlayerNumber(room, playerName);
     if (playerNumber == null) {
         throw new Error("player not in room");
     }
-    if (specs == null) {
+    if (hint == null) {
         delete proposedHints[playerNumber];
     } else {
-        proposedHints[playerNumber] = specs;
+        proposedHints[playerNumber] = hint;
     }
     return {
         ...room,
