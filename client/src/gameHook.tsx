@@ -112,11 +112,11 @@ export function useJoinRoom(room: StartingPhase): JoinRoomStatus {
 
 function useMutateGame<Room, Mutation>(room: Room, allowed: boolean, mutator: (room: Room, mutation: Mutation) => RoomState): (arg: Mutation) => void {
     const { roomName, stateVersion } = useStrawberryGame()!;
-    const [mutation, setMutation] = useState<Mutation | null>(null);
+    const [mutation, setMutation] = useState<Mutation | undefined>(undefined);
     useEffect(() => {
-        if (mutation == null) return;
+        if (mutation === undefined) return;
         if (!allowed) {
-            setMutation(null);
+            setMutation(undefined);
         }
         const newRoom = mutator(room, mutation);
         // TODO: check room != newRoom
@@ -124,7 +124,7 @@ function useMutateGame<Room, Mutation>(room: Room, allowed: boolean, mutator: (r
         callCommit(roomName, stateVersion, newRoom, abortController.signal)
             .then((response) => {
                 if (response.success) {
-                    setMutation(null);
+                    setMutation(undefined);
                 } else {
                     console.log("commit failed; race condition occurred");
                 }
