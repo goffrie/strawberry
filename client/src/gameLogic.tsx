@@ -169,3 +169,34 @@ export function giveHint(room: ProposingHintPhase, playerName: string, hint: Hin
         },
     };
 }
+
+export enum ResolveActionChoice {
+    // The player was not involved, so there is nothing to do.
+    UNINVOLVED = 'uninvolved',
+    // The player already made a choice.
+    DONE = 'done',
+    // The player must choose to flip or not flip their card.
+    FLIP = 'flip',
+    // The player must guess their bonus letter.
+    GUESS = 'guess',
+}
+
+export function whichResolveActionRequired(room: ResolvingHintPhase, playerName: string): ResolveActionChoice {
+    const hint = room.activeHint.hint;
+    const playerNumber = getPlayerNumber(room, playerName);
+    if (playerNumber == null ||
+        !hint.lettersAndSources.some((letterAndSource) => letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === playerNumber)) {
+        return ResolveActionChoice.UNINVOLVED;
+    }
+    if (room.activeHint.playerActions.some((action) => action.player === playerNumber)) {
+        return ResolveActionChoice.DONE;
+    }
+    const handLength = room.players[playerNumber-1].hand.letters.length;
+    if (room.wordLength !== handLength) {
+        if (handLength !== room.wordLength + 1) {
+            throw new Error("Inconsistent state: hand has illegal length " + handLength);
+        }
+        return ResolveActionChoice.GUESS;
+    }
+    return ResolveActionChoice.FLIP;
+}
