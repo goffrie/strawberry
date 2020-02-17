@@ -158,7 +158,7 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
         proposeText += ` (current: ${proposedWord})`;
     }
 
-    const canSubmitHint = deepEqual(stagedHint, proposedHint) && nextProposedHint === undefined;
+    const canSubmitHint = stagedHint != null && deepEqual(stagedHint, proposedHint) && nextProposedHint === undefined;
 
     const addToStagedHint = (letterAndSource: LetterAndSource) => {
         const newHint = addLetterAndSourceToHint(stagedHint, letterAndSource, playerNumber!);
