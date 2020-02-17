@@ -5,33 +5,33 @@ export enum RoomPhase {
     HINT = 'hint',
 };
 
-export type StartingPhasePlayer = Readonly<{
-    name: string,
+export interface StartingPhasePlayer {
+    readonly name: string,
     // The word this player is *choosing*. Length must be equal to
     // `wordLength`.
-    word: string | null,
-}>;
+    readonly word: string | null,
+}
 
 // The initial phase of the game, in which players can join and choose their
 // words.
-export type StartingPhase = Readonly<{
-    phase: RoomPhase.START,
-    wordLength: number,
-    players: readonly StartingPhasePlayer[],
-}>;
+export interface StartingPhase {
+    readonly phase: RoomPhase.START,
+    readonly wordLength: number,
+    readonly players: readonly StartingPhasePlayer[],
+}
 
-export type HintingPhasePlayer = Readonly<{
-    name: string,
-    hand: Hand,
-    hintsGiven: number,
-}>;
+export interface HintingPhasePlayer {
+    readonly name: string,
+    readonly hand: Hand,
+    readonly hintsGiven: number,
+}
 
-export type Dummy = Readonly<{
-    currentLetter: Letter,
+export interface Dummy {
+    readonly currentLetter: Letter,
     // After the dummy is used this many times, an extra hint will be given.
     // Goes negative afterward.
-    untilFreeHint: number,
-}>;
+    readonly untilFreeHint: number,
+}
 
 export enum ResolveActionKind {
     NONE = 'none',
@@ -53,26 +53,30 @@ export enum ActiveHintState {
     RESOLVING,
 }
 
-export type ActiveHint = Readonly<{
-    state: ActiveHintState.PROPOSING,
-    proposedHints: Readonly<Record<PlayerNumber, HintSpecs>>,
-}> | Readonly<{
-    state: ActiveHintState.RESOLVING,
-    hint: Hint,
-    playerActions: Readonly<Record<PlayerNumber, ResolveAction>>,
-}>;
+export interface ProposingHint {
+    readonly state: ActiveHintState.PROPOSING,
+    readonly proposedHints: Readonly<Record<PlayerNumber, HintSpecs>>,
+}
+
+export interface ResolvingHint {
+    readonly state: ActiveHintState.RESOLVING,
+    readonly hint: Hint,
+    readonly playerActions: Readonly<Record<PlayerNumber, ResolveAction>>,
+}
+
+export type ActiveHint = ProposingHint | ResolvingHint;
 
 // The main phase of the game, in which players give hints and flip over their
 // cards.
-export type HintingPhase = Readonly<{
-    phase: RoomPhase.HINT,
-    players: readonly HintingPhasePlayer[],
-    dummies: readonly Dummy[],
-    bonuses: readonly Letter[],
-    hintsRemaining: number,
+export interface HintingPhase {
+    readonly phase: RoomPhase.HINT,
+    readonly players: readonly HintingPhasePlayer[],
+    readonly dummies: readonly Dummy[],
+    readonly bonuses: readonly Letter[],
+    readonly hintsRemaining: number,
     // Hints that have previously been given and resolved.
-    hintLog: readonly Hint[],
-    activeHint: ActiveHint,
-}>;
+    readonly hintLog: readonly Hint[],
+    readonly activeHint: ActiveHint,
+}
 
 export type RoomState = StartingPhase | HintingPhase;

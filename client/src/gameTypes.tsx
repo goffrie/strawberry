@@ -1,10 +1,10 @@
 export type PlayerNumber = number;
 export type Letter = string;
 
-export type Hand = Readonly<{
+export interface Hand {
     letters: readonly Letter[];
     activeIndex: number; // -1 if no active card
-}>;
+}
 
 export enum LetterSources {
     PLAYER = 'player',
@@ -25,15 +25,15 @@ export type LetterAndSource = Readonly<{
     sourceType: LetterSources.WILDCARD,
 }>;
 
-export type Hint = Readonly<{
-    givenByPlayer: PlayerNumber;
-    lettersAndSources: Array<LetterAndSource>;
-}>;
+export interface Hint {
+    readonly givenByPlayer: PlayerNumber;
+    readonly lettersAndSources: Array<LetterAndSource>;
+}
 
-export type HintSpecs = Readonly<{
+export interface HintSpecs {
     length: number,
     players: number,
     wildcard: boolean,
     dummies: number,
     bonuses: number,
-}>;
+}
