@@ -62,7 +62,7 @@ export function usePlayerContext(): {
     room.gameState.players.forEach((p, i) => {
         if (p.name === username) {
             player = p;
-            playerNumber = i;
+            playerNumber = i + 1;
         }
     });
 
