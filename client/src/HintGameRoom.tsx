@@ -93,7 +93,7 @@ function plural(n: number): string {
 function getHintSentence(hint: Hint): string {
     const specs = specsOfHint(hint);
 
-    let sentence = `${specs.length} letter${plural(specs.length)}, ${specs.players} player${plural(specs.length)}, ${specs.wildcard ? '' : 'no '}wildcard`;
+    let sentence = `${specs.length} letter${plural(specs.length)}, ${specs.players} player${plural(specs.players)}, ${specs.wildcard ? '' : 'no '}wildcard`;
 
     if (specs.dummies > 0) {
         sentence += `, ${specs.dummies} ${specs.dummies === 1 ? 'dummy' : 'dummies'}`;
