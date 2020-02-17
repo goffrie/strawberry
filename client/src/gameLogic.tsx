@@ -1,5 +1,5 @@
 import { ActiveHintState, StartingPhase, RoomPhase, HintingPhase } from './gameState';
-import { Letter } from './gameTypes';
+import { Letter, Hint, HintSpecs, LetterSources } from './gameTypes';
 import { shuffle } from './utils';
 
 export const MIN_PLAYERS: number = 2;
@@ -95,22 +95,22 @@ export function startGameRoom(room: StartingPhase): HintingPhase {
 }
 
 export function specsOfHint(hint: Hint): HintSpecs {
-    const players = {};
-    const dummies = {};
-    const bonuses = {};
+    const players: Record<number, boolean> = {};
+    const dummies: Record<number, boolean> = {};
+    const bonuses: Record<Letter, boolean> = {};
     let wildcard = false;
     for (const l of hint.lettersAndSources) {
         switch (l.sourceType) {
             case LetterSources.PLAYER:
                 players[l.playerNumber] = true;
                 break;
-            case LetterSource.WILDCARD:
+            case LetterSources.WILDCARD:
                 wildcard = true;
                 break;
-            case LetterSource.DUMMY:
+            case LetterSources.DUMMY:
                 dummies[l.dummyNumber] = true;
                 break;
-            case LetterSource.BONUS:
+            case LetterSources.BONUS:
                 bonuses[l.letter] = true;
                 break;
         }
@@ -120,6 +120,6 @@ export function specsOfHint(hint: Hint): HintSpecs {
         players: Object.keys(players).length,
         wildcard,
         dummies: Object.keys(dummies).length,
-        bonuss: Object.keys(bonuses).length,
+        bonuses: Object.keys(bonuses).length,
     };
 }

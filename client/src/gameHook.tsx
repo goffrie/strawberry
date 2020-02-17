@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { delay } from './utils';
 import { RoomState, StartingPhase } from './gameState';
-import { MAX_PLAYERS, setPlayerWord, addPlayerToRoom } from './gameLogic';
+import { MAX_PLAYERS, setPlayerWord, addPlayerToRoom, isRoomReady, startGameRoom } from './gameLogic';
 import { callCommit, callList } from './gameAPI';
 
 export type StrawberryGame = Readonly<{
@@ -13,7 +13,7 @@ export type StrawberryGame = Readonly<{
 export const RoomContext = React.createContext<StrawberryGame | null>(null);
 export const PlayerNameContext = React.createContext<string>("");
 
-export function StrawberryGameProvider({roomName, children}: {roomName: string, children: React.ReactNode}) {
+export function StrawberryGameProvider({ roomName, children }: { roomName: string, children: React.ReactNode }) {
     const game = useListStrawberryGame(roomName);
     return <RoomContext.Provider value={game}>
         {children}
@@ -71,7 +71,7 @@ export enum JoinRoomStatus {
 }
 
 export function useJoinRoom(room: StartingPhase): JoinRoomStatus {
-    const {roomName, stateVersion} = useStrawberryGame()!;
+    const { roomName, stateVersion } = useStrawberryGame()!;
     const playerName = useContext(PlayerNameContext);
     if (playerName == null) {
         throw new Error("PlayerNameContext not provided");
@@ -93,12 +93,12 @@ export function useJoinRoom(room: StartingPhase): JoinRoomStatus {
 }
 
 export function useInputWord(room: StartingPhase): [string | null, (newWord: string | null) => void] {
-    const {roomName, stateVersion} = useStrawberryGame()!;
+    const { roomName, stateVersion } = useStrawberryGame()!;
     const playerName = useContext(PlayerNameContext);
     if (playerName == null) {
         throw new Error("PlayerNameContext not provided");
     }
-    const [transition, setTransition] = useState<(Readonly<{from: string | null, to: string | null}> | null)>(null);
+    const [transition, setTransition] = useState<(Readonly<{ from: string | null, to: string | null }> | null)>(null);
     useEffect(() => {
         if (transition == null) return;
         if (!room.players.some((player) => player.name === playerName && player.word === transition.from)) return;
@@ -110,6 +110,7 @@ export function useInputWord(room: StartingPhase): [string | null, (newWord: str
                 }
             })
             .catch((reason) => {
+                if (abortController.signal.aborted) return;
                 console.error(reason);
             });
         return () => abortController.abort();
@@ -121,7 +122,7 @@ export function useInputWord(room: StartingPhase): [string | null, (newWord: str
                 word = transition.to;
             }
             return [word, (newWord) => {
-                setTransition({from: player.word, to: newWord});
+                setTransition({ from: player.word, to: newWord });
             }];
         }
     }
@@ -129,4 +130,31 @@ export function useInputWord(room: StartingPhase): [string | null, (newWord: str
     return [null, (_) => {
         throw new Error("attempting to set word but we're not in the game");
     }];
+}
+
+export function useStartGame(room: StartingPhase): (() => void) | null {
+    const { roomName, stateVersion } = useStrawberryGame()!;
+    const [shouldStartGame, setShouldStartGame] = useState(false);
+    const canStart = isRoomReady(room);
+    useEffect(() => {
+        if (!shouldStartGame) return;
+        if (!canStart) {
+            // cancel request
+            setShouldStartGame(false);
+            return;
+        }
+        const abortController = new AbortController();
+        callCommit(roomName, stateVersion, startGameRoom(room), abortController.signal)
+            .then((response) => {
+                if (response.success) {
+                    setShouldStartGame(false);
+                }
+            })
+            .catch((reason) => {
+                if (abortController.signal.aborted) return;
+                console.error(reason);
+            });
+        return () => abortController.abort();
+    }, [roomName, stateVersion, room, shouldStartGame, setShouldStartGame, canStart]);
+    return canStart ? () => setShouldStartGame(true) : null;
 }

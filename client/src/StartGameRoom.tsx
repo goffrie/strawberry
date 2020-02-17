@@ -1,8 +1,8 @@
 import React, {useState, useContext} from 'react';
 import {StartingPhase} from './gameState';
 import {PlayerWithCardsInHand} from './Cards';
-import {LETTERS, MIN_PLAYERS, isRoomReady} from './gameLogic';
-import {useJoinRoom, PlayerNameContext, useInputWord} from './gameHook';
+import {LETTERS, MIN_PLAYERS} from './gameLogic';
+import {useJoinRoom, PlayerNameContext, useInputWord, useStartGame} from './gameHook';
 
 function StartGameRoom({startingGameState}: {startingGameState: StartingPhase}) {
     return <div className='gameContainer'>
@@ -40,6 +40,7 @@ function StartGameRoomSidebar({startingGameState}: {startingGameState: StartingP
 function StartGameRoomMain({startingGameState}: {startingGameState: StartingPhase}) {
     const username = useContext(PlayerNameContext);
     const joinStatus = useJoinRoom(startingGameState);
+    const doStartGame = useStartGame(startingGameState);
 
     const [inputWord, setInputWord] = useState('');
     const [errorToRender, setErrorToRender] = useState('');
@@ -51,7 +52,6 @@ function StartGameRoomMain({startingGameState}: {startingGameState: StartingPhas
     const isSpectator = !playerIfExists;
 
     const playerNeedsToInputWord = playerIfExists && committedWord == null;
-    const isGameReady = isRoomReady(startingGameState);
 
     let isInputWordValid = false;
     // note: we don't always render this (only rendered after a submit until next keystroke), but compute it here
@@ -70,7 +70,7 @@ function StartGameRoomMain({startingGameState}: {startingGameState: StartingPhas
     }
 
     if (isSpectator) {
-        if (isGameReady) {
+        if (doStartGame != null) {
             return <div className='bigText'>🕐 Waiting for game to start...</div>
         } else {
             return <div className='bigText'>🕐 Waiting for players to decide on words...</div>
@@ -110,10 +110,8 @@ function StartGameRoomMain({startingGameState}: {startingGameState: StartingPhas
     }
 
     let startGame;
-    if (isGameReady) {
-        startGame = <div className='strawberryButton' onClick={() => {
-            // TODO
-        }}>Start game</div>
+    if (doStartGame != null) {
+        startGame = <div className='strawberryButton' onClick={doStartGame}>Start game</div>
     } else {
         startGame = <div className='bigText'>🕐 Waiting for other players to enter words...</div>;
     }
