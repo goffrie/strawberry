@@ -1,7 +1,7 @@
 import React, {useContext, useState} from 'react';
-import {ActiveHintState, Dummy, HintingPhase, ProposingHint} from './gameState';
+import {ActiveHintState, Dummy, HintingPhase, ProposingHint, ProposingHintPhase, isProposing} from './gameState';
 import {Hint, Letter, LetterAndSource, LetterSources, PlayerNumber} from './gameTypes';
-import {PlayerNameContext, usePlayerContext} from './gameHook';
+import {PlayerNameContext, usePlayerContext, useProposeHint} from './gameHook';
 import {
     Card,
     CardsFromLettersAndSources,
@@ -81,11 +81,7 @@ function HintGameRoomLog({hintingGameState}: {hintingGameState: HintingPhase}) {
 
 
         <span className='hintLogTitle'>Hint {activeHintNumber} / {totalHintsAvailable}</span>
-        {hintingGameState.activeHint.state === ActiveHintState.PROPOSING && <ProposingHintComponent
-            hintingGameState={hintingGameState}
-            // TODO: don't pass both (pass both rn for types)
-            proposingHint={hintingGameState.activeHint}
-        />}
+        {isProposing(hintingGameState) && <ProposingHintComponent hintingGameState={hintingGameState} />}
     </div>
 }
 
@@ -109,19 +105,19 @@ function getHintSentence(hint: Hint): string {
 }
 
 
-function ProposingHintComponent({hintingGameState, proposingHint}: {hintingGameState: HintingPhase, proposingHint: ProposingHint}) {
+function ProposingHintComponent({hintingGameState}: {hintingGameState: ProposingHintPhase}) {
     const {username, isSpectator, player} = usePlayerContext();
 
     return <>
         <span className='hintLogLine'>Players are proposing hints.</span>
         {hintingGameState.players.map((player, i) => {
-            const proposedHint = proposingHint.proposedHints[i + 1];
+            const proposedHint = hintingGameState.activeHint.proposedHints[i + 1];
             const sentence = proposedHint && getHintSentence(proposedHint);
             return <span className='hintLogLine'>
                 {player.name} {proposedHint ? `has proposed: ${sentence}.` : 'has not proposed a hint.'}
             </span>;
         })}
-        {!isSpectator && <HintComposer hintingGameState={hintingGameState} proposingHint={proposingHint} />}
+        {!isSpectator && <HintComposer hintingGameState={hintingGameState} />}
     </>;
 }
 
@@ -145,7 +141,7 @@ function addLetterAndSourceToHint(hint: Hint | null, letterAndSource: LetterAndS
     }
 }
 
-function HintComposer({hintingGameState, proposingHint}: {hintingGameState: HintingPhase, proposingHint: ProposingHint}) {
+function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}) {
     const {username, player, playerNumber} = usePlayerContext();
 
     const [stagedHint, setStagedHint] = useState(null as Hint | null);
@@ -153,7 +149,7 @@ function HintComposer({hintingGameState, proposingHint}: {hintingGameState: Hint
 
     const stagedHintSentence = stagedHint !== null && getHintSentence(stagedHint);
 
-    const proposedHint = proposingHint.proposedHints[playerNumber!];
+    const proposedHint = hintingGameState.activeHint.proposedHints[playerNumber!];
     const proposedWord = proposedHint && proposedHint.lettersAndSources.map(letterAndSource => letterAndSource.letter).join('').toUpperCase();
     let proposeText = 'Propose hint';
     if (proposedWord) {
@@ -171,7 +167,6 @@ function HintComposer({hintingGameState, proposingHint}: {hintingGameState: Hint
         <span className='hintLogLine italics'>Available letters (click to use): </span>
         <AvailableCards
             hintingGameState={hintingGameState}
-            proposingHint={proposingHint}
             playerNumber={playerNumber!}
             addToStagedHint={addToStagedHint}
         />
@@ -199,9 +194,8 @@ function HintComposer({hintingGameState, proposingHint}: {hintingGameState: Hint
     </>
 }
 
-function AvailableCards({hintingGameState, proposingHint, playerNumber, addToStagedHint}: {
-    hintingGameState: HintingPhase,
-    proposingHint: ProposingHint,
+function AvailableCards({hintingGameState, playerNumber, addToStagedHint}: {
+    hintingGameState: ProposingHintPhase,
     playerNumber: PlayerNumber,
     addToStagedHint: (letterAndSource: LetterAndSource) => void,
 }) {

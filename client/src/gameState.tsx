@@ -97,4 +97,12 @@ export interface HintingPhase {
 export type ProposingHintPhase = HintingPhase & { readonly activeHint: ProposingHint };
 export type ResolvingHintPhase = HintingPhase & { readonly activeHint: ResolvingHint };
 
+// TODO: ugh fix this
+export function isProposing(phase: HintingPhase): phase is ProposingHintPhase {
+    return phase.activeHint.state === ActiveHintState.PROPOSING;
+}
+export function isResolving(phase: HintingPhase): phase is ResolvingHintPhase {
+    return phase.activeHint.state === ActiveHintState.RESOLVING;
+}
+
 export type RoomState = StartingPhase | HintingPhase;
