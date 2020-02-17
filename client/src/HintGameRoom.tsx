@@ -161,7 +161,6 @@ function HintComposer({hintingGameState, proposingHint}: {hintingGameState: Hint
     }
 
     const addToStagedHint = (letterAndSource: LetterAndSource) => {
-        console.log('addToStagedHint');
         const newHint = addLetterAndSourceToHint(stagedHint, letterAndSource, playerNumber!);
         setStagedHint(newHint);
         setCanSubmitHint(false);
@@ -237,8 +236,6 @@ function AvailableCards({hintingGameState, proposingHint, playerNumber, addToSta
         sourceType: LetterSources.WILDCARD,
         letter: '*',
     });
-
-    console.log(lettersAndSources);
 
     return <div className='hintLogLine' style={{marginLeft: '12px'}}>
         <CardsFromLettersAndSources lettersAndSources={lettersAndSources} viewingPlayer={playerNumber} onClick={addToStagedHint} />
