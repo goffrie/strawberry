@@ -1,7 +1,7 @@
 import React, {useContext, useState} from 'react';
 import {ActiveHintState, Dummy, HintingPhase, ProposingHint, ProposingHintPhase, isProposing} from './gameState';
 import {Hint, Letter, LetterAndSource, LetterSources, PlayerNumber} from './gameTypes';
-import {PlayerNameContext, usePlayerContext, useProposeHint} from './gameHook';
+import {PlayerNameContext, usePlayerContext, useProposeHint, useGiveHint} from './gameHook';
 import {
     Card,
     CardsFromLettersAndSources,
@@ -114,7 +114,7 @@ function ProposingHintComponent({hintingGameState}: {hintingGameState: Proposing
         {hintingGameState.players.map((player, i) => {
             const proposedHint = hintingGameState.activeHint.proposedHints[i + 1];
             const sentence = proposedHint && getHintSentence(proposedHint);
-            return <span className='hintLogLine'>
+            return <span className='hintLogLine' key={i}>
                 {player.name} {proposedHint ? `has proposed: ${sentence}.` : 'has not proposed a hint.'}
             </span>;
         })}
@@ -149,6 +149,7 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
     const [stagedHint, setStagedHint] = useState<Hint | null>(proposedHint);
 
     const [nextProposedHint, callProposeHint] = useProposeHint(hintingGameState);
+    const callSubmitHint = useGiveHint(hintingGameState);
 
     const stagedHintSentence = stagedHint !== null && getHintSentence(stagedHint);
 
@@ -164,6 +165,15 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
         const newHint = addLetterAndSourceToHint(stagedHint, letterAndSource, playerNumber!);
         setStagedHint(newHint);
     };
+
+    const submit = () => {
+        if (stagedHint != null
+            && canSubmitHint
+            && callSubmitHint != null) {
+            callSubmitHint(stagedHint);
+            setStagedHint(null);
+        }
+    }
 
     return <>
         <span className='hintLogLine' />
@@ -189,7 +199,7 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
             <span style={{flex: 'auto', textAlign: 'right'}}>
                 <LinkButton isDisabled={stagedHint == null && callProposeHint != null} onClick={() => stagedHint != null && callProposeHint != null && callProposeHint(stagedHint)}>{proposeText}</LinkButton>
                 <span style={{marginLeft: '10px'}} />
-                <LinkButton isDisabled={!canSubmitHint}>Submit hint</LinkButton>
+                <LinkButton isDisabled={!canSubmitHint} onClick={submit}>Submit hint</LinkButton>
             </span>
 
         </div>
