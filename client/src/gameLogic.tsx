@@ -143,7 +143,7 @@ export function getPlayerNumber(room: HintingPhase, playerName: string): PlayerN
 }
 
 export function setProposedHint(room: ProposingHintPhase, playerName: string, hint: Hint | null): ProposingHintPhase {
-    const proposedHints: Record<PlayerNumber, Hint> = Object.assign({}, room.activeHint.proposedHints);
+    const proposedHints: Record<PlayerNumber, Hint> = {...room.activeHint.proposedHints};
     const playerNumber = getPlayerNumber(room, playerName);
     if (playerNumber == null) {
         throw new Error("player not in room");
