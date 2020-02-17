@@ -72,6 +72,7 @@ export function setPlayerWord(room: StartingPhase, playerName: string, word: str
 export function startGameRoom(room: StartingPhase): HintingPhase {
     return {
         phase: RoomPhase.HINT,
+        wordLength: room.wordLength,
         players: room.players.map((player, index) => {
             // each player receives the previous player's word
             const word = room.players[(index + room.players.length - 1) % room.players.length].word;

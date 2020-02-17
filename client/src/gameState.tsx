@@ -84,6 +84,7 @@ export interface HintLogEntry {
 // cards.
 export interface HintingPhase {
     readonly phase: RoomPhase.HINT,
+    readonly wordLength: number,
     readonly players: readonly HintingPhasePlayer[],
     readonly dummies: readonly Dummy[],
     readonly bonuses: readonly Letter[],
