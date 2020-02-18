@@ -93,7 +93,7 @@ function StartGameRoomMain({startingGameState}: {startingGameState: StartingPhas
                 }
             }}>
                 <input
-                    className='strawberryInput'
+                    className='strawberryInput strawberryInputBig'
                     value={inputWord}
                     style={{
                         // hack so it only turns green when valid

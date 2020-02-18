@@ -15,8 +15,7 @@
   }
 }
 
-.strawberryInput {
-  border: 2px solid #D20B0B;
+.strawberryInputBig {
   height: 40px;
   line-height: 40px;
   font-size: 40px;
@@ -24,6 +23,18 @@
 
   padding: 10px;
   margin-top: 20px;
+}
+
+.strawberryInputSmall {
+  text-align: center;
+  width: 20px;
+  margin-left: 5px;
+  margin-top: -5px;
+  font-size: 16px;
+}
+
+.strawberryInput {
+  border: 2px solid #D20B0B;
   outline: none;
 }
 

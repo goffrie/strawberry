@@ -329,11 +329,34 @@ function ResolvingHintComponent({hintingGameState}: {hintingGameState: Resolving
 }
 
 function FlipResolve() {
-    return <>todo</>;
+    return <>
+        <span className='italics'>Would you like to flip your card?&nbsp;</span>
+        <span className='strawberryLinkButton' onClick={() => {
+            // TODO: yes
+        }}>Yes</span>
+        &nbsp;/&nbsp;
+        <span className='strawberryLinkButton' onClick={() => {
+            // TODO: no
+        }}>No</span></>;
 }
 
 function GuessResolve() {
-    return <>todo</>;
+    const [guess, setGuess] = useState('');
+    return <>
+        <span className='italics'>Guess the value of your bonus card: </span>
+        <form onSubmit={e => {
+            e.preventDefault();
+            // TODO: submit guess
+        }}>
+            <input
+                className='strawberryInput strawberryInputSmall'
+                value={guess}
+                onChange={(e) => {
+                    setGuess(e.target.value.substr(e.target.value.length - 1, 1));
+                }}
+            />
+        </form>
+    </>;
 }
 
 export {HintGameRoom};
