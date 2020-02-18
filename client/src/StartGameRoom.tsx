@@ -3,6 +3,7 @@ import {StartingPhase} from './gameState';
 import {PlayerWithCardsInHand} from './Cards';
 import {LETTERS, MIN_PLAYERS} from './gameLogic';
 import {useJoinRoom, PlayerNameContext, useInputWord, useStartGame} from './gameHook';
+import { LinkButton } from './LinkButton';
 
 function StartGameRoom({startingGameState}: {startingGameState: StartingPhase}) {
     return <div className='gameContainer'>
@@ -121,7 +122,7 @@ function StartGameRoomMain({startingGameState}: {startingGameState: StartingPhas
 
     return <div className='strawberryCenter'>
         {startGame}
-        <span className='strawberryLinkButton' onClick={() => setCommittedWord(null)}>Change my word</span>
+        <LinkButton onClick={() => setCommittedWord(null)}>Change my word</LinkButton>
     </div>;
 }
 

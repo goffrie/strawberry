@@ -42,7 +42,7 @@ function UsernameInput({setUsername}: {setUsername: setUsernameFn}) {
 function StartNewGame({createGame}: {createGame: createGameFn}) {
     const [wordLength, setWordLength] = useState(5);
     return <div style={{textAlign: 'center'}}>
-        <div className='strawberryButton' onClick={() => createGame(wordLength)}>Start new game</div>
+        <button className='strawberryButton' onClick={() => createGame(wordLength)}>Start new game</button>
 
         <div className='wordLengthControl'>
             <select className='wordLengthSelect' value={wordLength} onChange={(e) => {setWordLength(Number(e.target.value))}}>

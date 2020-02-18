@@ -21,6 +21,7 @@ import {
 } from './Cards';
 import {ResolveActionChoice, specsOfHint, whichResolveActionRequired, playersWithOutstandingAction, LETTERS} from './gameLogic';
 import {deepEqual} from './utils';
+import { LinkButton } from './LinkButton';
 
 function HintGameRoom({hintingGameState}: {hintingGameState: HintingPhase}) {
     const {username} = usePlayerContext();
@@ -143,12 +144,6 @@ function ProposingHintComponent({hintingGameState}: {hintingGameState: Proposing
         })}
         {!isSpectator && <HintComposer hintingGameState={hintingGameState} />}
     </>;
-}
-
-function LinkButton({children, onClick, isDisabled}: {children: React.ReactNode, onClick?: () => void, isDisabled: boolean}) {
-    return <span className={isDisabled ? 'strawberryLinkButtonDisabled' : 'strawberryLinkButton'} onClick={isDisabled ? undefined : onClick}>
-        {children}
-    </span>
 }
 
 function addLetterAndSourceToHint(hint: Hint | null, letterAndSource: LetterAndSource, playerNumber: PlayerNumber): Hint {
@@ -344,19 +339,19 @@ function FlipResolve({playerNumber, hintingGameState}: {playerNumber: PlayerNumb
     if (resolveFn === null) throw new Error('illegal');
     return <>
         <span className='italics'>Would you like to flip your card?&nbsp;</span>
-        <span className='strawberryLinkButton' onClick={() => {
+        <LinkButton onClick={() => {
             resolveFn({
                 player: playerNumber,
                 kind: ResolveActionKind.FLIP,
             });
-        }}>Yes</span>
+        }}>Yes</LinkButton>
         &nbsp;/&nbsp;
-        <span className='strawberryLinkButton' onClick={() => {
+        <LinkButton onClick={() => {
             resolveFn({
                 player: playerNumber,
                 kind: ResolveActionKind.NONE,
             });
-        }}>No</span></>;
+        }}>No</LinkButton></>;
 }
 
 function GuessResolve({player, playerNumber, hintingGameState}: {player: HintingPhasePlayer, playerNumber: PlayerNumber, hintingGameState: ResolvingHintPhase}) {

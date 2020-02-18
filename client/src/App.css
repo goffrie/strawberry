@@ -42,15 +42,28 @@
   border: 2px solid #19AF00;
 }
 
+/* reset default styles on buttons */
+button {
+  background: none;
+  border: 0 none;
+  border-radius: 0;
+  font-family: inherit;
+  font-size: 100%;
+  line-height: 1.15;
+  margin: 0;
+}
+
 .strawberryButton {
+  display: block;
+  box-sizing: border-box;
   font-size: 40px;
-  height: 40px;
+  height: 65px;
   line-height: 40px;
   padding: 10px 10px 15px 10px;
   border: 2px solid #D20B0B;
   margin-bottom: 20px;
   cursor: pointer;
-  width: 300px;  /* so it doesn't change width on italicise */
+  width: 330px;  /* so it doesn't change width on italicise */
   text-align: center;
 }
 
@@ -60,6 +73,8 @@
 }
 
 .strawberryLinkButtonDisabled {
+  background: none;
+  border: none;
   border-bottom: 2px solid #777777;
   cursor: default;
   padding-bottom: 2px;
@@ -71,7 +86,7 @@
   padding-bottom: 2px;
 }
 
-.strawberryLinkButton:hover {
+.strawberryLinkButton:hover, .strawberryLinkButton:active {
   border-bottom: 2px solid #19AF00;
   font-style: italic;
 }
