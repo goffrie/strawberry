@@ -243,6 +243,7 @@
   flex: auto;
   flex-direction: column;
   padding: 20px;
+  box-sizing: border-box;
 }
 
 .hintLogTitle {
@@ -254,15 +255,12 @@
   margin-bottom: 15px;
 }
 
-.hintLogDivider {
-
-}
-
 .hintLogGuessBox {
   border: 2px solid #D20B0B;
   padding: 10px;
   margin-bottom: 15px;
   overflow: auto; /* awwww yeah side scrolling */
+  min-height: fit-content;
 }
 
 .hintLogGuessBox:hover {

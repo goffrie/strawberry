@@ -4,7 +4,7 @@ import {
     HintingPhase, HintingPhasePlayer,
     isProposing,
     isResolving,
-    ProposingHintPhase,
+    ProposingHintPhase, ResolveAction,
     ResolveActionKind,
     ResolvingHintPhase
 } from './gameState';
@@ -82,12 +82,27 @@ function BonusesSection({bonuses}: {bonuses: readonly Letter[]}) {
 }
 
 function HintGameRoomLog({hintingGameState}: {hintingGameState: HintingPhase}) {
-    const username = useContext(PlayerNameContext);
+    const {playerNumber} = usePlayerContext();
+
     const activeHintNumber = hintingGameState.hintLog.length + 1;
     const totalHintsAvailable = activeHintNumber + hintingGameState.hintsRemaining;
-    // TODO: render log when there are things to render
     return <div className='hintLog'>
-
+        {hintingGameState.hintLog.map((logEntry, i) => {
+            const wasViewingPlayerInHint = playerNumber !== null && logEntry.hint.lettersAndSources.some(letterAndSource => {
+                return letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === playerNumber;
+            });
+            const playerCardUsed = wasViewingPlayerInHint ? logEntry.activeIndexes[playerNumber!] : null;
+            return <React.Fragment key={i}>
+                <span className='hintLogTitle' key={i}>Hint {i + 1} / {logEntry.totalHints}</span>
+                <HintInLog
+                    hint={logEntry.hint}
+                    playerActions={logEntry.playerActions}
+                    playerCardUsed={playerCardUsed}
+                    players={hintingGameState.players}
+                />
+                <span className='hintLogLine' />
+            </React.Fragment>
+        })}
         <span className='hintLogTitle'>Hint {activeHintNumber} / {totalHintsAvailable}</span>
         {isProposing(hintingGameState) && <ProposingHintComponent hintingGameState={hintingGameState} />}
         {isResolving(hintingGameState) && <ResolvingHintComponent hintingGameState={hintingGameState} />}
@@ -256,23 +271,20 @@ function AvailableCards({hintingGameState, playerNumber, addToStagedHint}: {
     </div>
 }
 
-function ResolvingHintComponent({hintingGameState}: {hintingGameState: ResolvingHintPhase}) {
-    const {username, player, playerNumber} = usePlayerContext();
+function HintInLog({hint, playerActions, playerCardUsed, players}: {
+    hint: Hint,
+    playerActions: readonly ResolveAction[],
+    playerCardUsed: null | number,
+    players: readonly HintingPhasePlayer[],
+}) {
+    const {playerNumber} = usePlayerContext();
 
-    const activeHint = hintingGameState.activeHint;
-
-    const resolveActionRequired = whichResolveActionRequired(hintingGameState, username);
-    // Compute whether a card of the player's was used (based on activeIndex and whether they flipped) to render.
-    const isPlayerCardUsedInHint = resolveActionRequired !== ResolveActionChoice.UNINVOLVED;
-    const playerCardUsed = isPlayerCardUsedInHint ? hintingGameState.activeHint.activeIndexes[playerNumber! - 1] : null;
-
-    // TODO: refactor some of this to share with hint log
     let playerNamesByNumber: Record<PlayerNumber, string> = {};
-    hintingGameState.players.forEach((player, i) => {
+    players.forEach((player, i) => {
         playerNamesByNumber[i + 1] = player.name;
     });
 
-    let playerActionStrings = hintingGameState.activeHint.playerActions.map(playerAction => {
+    let playerActionStrings = playerActions.map(playerAction => {
         const actingPlayerName = playerNamesByNumber[playerAction.player];
 
         switch (playerAction.kind) {
@@ -290,20 +302,35 @@ function ResolvingHintComponent({hintingGameState}: {hintingGameState: Resolving
         }
     });
 
-    const waitingOnPlayers = playersWithOutstandingAction(hintingGameState.activeHint);
-    const waitingOnPlayerNames = hintingGameState.players.filter((player, i) => waitingOnPlayers.has(i+1)).map((player) => player.name);
-
+    // TODO: marginLeft -12 if want to align cards with hint construction
     return <>
-        <span className='hintLogLine'>{playerNamesByNumber[activeHint.hint.givenByPlayer]} gave a hint: {getHintSentence(activeHint.hint)}</span>
-        <div className='hintLogLine'>
-            <CardsInHint hint={activeHint.hint} viewingPlayer={playerNumber!} />
+        <span className='hintLogLine'>{playerNamesByNumber[hint.givenByPlayer]} gave a hint: {getHintSentence(hint)}</span>
+        <div className='hintLogLine' style={{marginLeft: '-5px'}}>
+            <CardsInHint hint={hint} viewingPlayer={playerNumber!} />
         </div>
         {playerCardUsed !== null && <span className='hintLogLine'>Your position {playerCardUsed + 1} card was used.</span>}
 
         {playerActionStrings.map((str, i) => {
             return <span className='hintLogLine' key={i}>{str}</span>;
         })}
+    </>;
+}
 
+function ResolvingHintComponent({hintingGameState}: {hintingGameState: ResolvingHintPhase}) {
+    const {username, player, playerNumber} = usePlayerContext();
+
+    const activeHint = hintingGameState.activeHint;
+
+    const resolveActionRequired = whichResolveActionRequired(hintingGameState, username);
+    // Compute whether a card of the player's was used (based on activeIndex and whether they flipped) to render.
+    const isPlayerCardUsedInHint = resolveActionRequired !== ResolveActionChoice.UNINVOLVED;
+    const playerCardUsed = isPlayerCardUsedInHint ? hintingGameState.activeHint.activeIndexes[playerNumber! - 1] : null;
+
+    const waitingOnPlayers = playersWithOutstandingAction(hintingGameState.activeHint);
+    const waitingOnPlayerNames = hintingGameState.players.filter((player, i) => waitingOnPlayers.has(i+1)).map((player) => player.name);
+
+    return <>
+        <HintInLog hint={activeHint.hint} playerActions={activeHint.playerActions} playerCardUsed={playerCardUsed} players={hintingGameState.players} />
         <span className='hintLogLine flex'>
             {resolveActionRequired === ResolveActionChoice.FLIP && <FlipResolve playerNumber={playerNumber!} hintingGameState={hintingGameState} />}
             {resolveActionRequired === ResolveActionChoice.GUESS && <GuessResolve player={player!} playerNumber={playerNumber!} hintingGameState={hintingGameState} />}
