@@ -261,19 +261,10 @@ function ResolvingHintComponent({hintingGameState}: {hintingGameState: Resolving
 
     const activeHint = hintingGameState.activeHint;
 
+    const resolveActionRequired = whichResolveActionRequired(hintingGameState, username);
     // Compute whether a card of the player's was used (based on activeIndex and whether they flipped) to render.
-    const isPlayerCardUsedInHint = activeHint.hint.lettersAndSources.some(letterAndSource => {
-        return letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === playerNumber;
-    });
-
-    let playerCardUsed = null;
-    if (isPlayerCardUsedInHint) {
-        const didPlayerFlip = hintingGameState.activeHint.playerActions.some(playerAction => {
-            return playerAction.kind === ResolveActionKind.FLIP && playerAction.player === playerNumber;
-        });
-
-        playerCardUsed = didPlayerFlip ? player!.hand.activeIndex - 1 : player!.hand.activeIndex;
-    }
+    const isPlayerCardUsedInHint = resolveActionRequired !== ResolveActionChoice.UNINVOLVED;
+    const playerCardUsed = isPlayerCardUsedInHint ? hintingGameState.activeHint.activeIndexes[playerNumber! - 1] : null;
 
     // TODO: refactor some of this to share with hint log
     let playerNamesByNumber: Record<PlayerNumber, string> = {};
@@ -298,8 +289,6 @@ function ResolvingHintComponent({hintingGameState}: {hintingGameState: Resolving
                 return '';
         }
     });
-
-    const resolveActionRequired = whichResolveActionRequired(hintingGameState, username);
 
     const waitingOnPlayerNames: string[] = [];
     hintingGameState.players.forEach(player => {
