@@ -291,7 +291,7 @@ function HintInLog({hint, playerActions, playerCardUsed, players}: {
             case ResolveActionKind.NONE:
                 return `${actingPlayerName} did not flip their card.`;
             case ResolveActionKind.FLIP:
-                return `${actingPlayerName} did flipped their card.`;
+                return `${actingPlayerName} flipped their card.`;
             case ResolveActionKind.GUESS:
                 if (playerAction.actual === playerAction.guess) {
                     return `${actingPlayerName} correctly guessed ${playerAction.actual}.`;
