@@ -19,7 +19,7 @@ import {
     DisplayNumberOrLetterWithTextAndCards,
     PlayerWithCardsInHand
 } from './Cards';
-import {ResolveActionChoice, specsOfHint, whichResolveActionRequired} from './gameLogic';
+import {ResolveActionChoice, specsOfHint, whichResolveActionRequired, playersWithOutstandingAction} from './gameLogic';
 import {deepEqual} from './utils';
 
 function HintGameRoom({hintingGameState}: {hintingGameState: HintingPhase}) {
@@ -290,13 +290,8 @@ function ResolvingHintComponent({hintingGameState}: {hintingGameState: Resolving
         }
     });
 
-    const waitingOnPlayerNames: string[] = [];
-    hintingGameState.players.forEach(player => {
-        const resolveActionRequired = whichResolveActionRequired(hintingGameState, username);
-        if (resolveActionRequired === ResolveActionChoice.FLIP || resolveActionRequired === ResolveActionChoice.GUESS) {
-            waitingOnPlayerNames.push(player.name);
-        }
-    });
+    const waitingOnPlayers = playersWithOutstandingAction(hintingGameState.activeHint);
+    const waitingOnPlayerNames = hintingGameState.players.filter((player, i) => waitingOnPlayers.has(i+1)).map((player) => player.name);
 
     return <>
         <span className='hintLogLine'>{playerNamesByNumber[activeHint.hint.givenByPlayer]} gave a hint: {getHintSentence(activeHint.hint)}</span>

@@ -200,7 +200,7 @@ export function giveHint(room: ProposingHintPhase, hint: Hint): HintingPhase {
     };
     // It's possible no players were actually involved in the hint. In that case we immediately finish the resolving phase.
     // TODO: is this actually legal?
-    if (allPlayersHaveActed(newRoom.activeHint)) {
+    if (playersWithOutstandingAction(newRoom.activeHint).size === 0) {
         return fullyResolveHint(newRoom);
     } else {
         return newRoom;
@@ -238,7 +238,7 @@ export function whichResolveActionRequired(room: ResolvingHintPhase, playerName:
     return ResolveActionChoice.FLIP;
 }
 
-function allPlayersHaveActed(activeHint: ResolvingHint): boolean {
+export function playersWithOutstandingAction(activeHint: ResolvingHint): Set<PlayerNumber> {
     const hint = activeHint.hint;
     const playerNumbers: Set<PlayerNumber> = new Set();
     for (const letterAndSource of hint.lettersAndSources) {
@@ -246,7 +246,10 @@ function allPlayersHaveActed(activeHint: ResolvingHint): boolean {
             playerNumbers.add(letterAndSource.playerNumber);
         }
     }
-    return playerNumbers.size === activeHint.playerActions.length;
+    for (const action of activeHint.playerActions) {
+        playerNumbers.delete(action.player);
+    }
+    return playerNumbers;
 }
 
 function applyResolution(room: ResolvingHintPhase, action: ResolveAction): ResolvingHintPhase {
@@ -348,7 +351,7 @@ export function performResolveAction(room: ResolvingHintPhase, action: ResolveAc
         }
     };
     newRoom = applyResolution(newRoom, action);
-    if (allPlayersHaveActed(newRoom.activeHint)) {
+    if (playersWithOutstandingAction(newRoom.activeHint).size === 0) {
         return fullyResolveHint(newRoom);
     } else {
         return newRoom;
