@@ -1,7 +1,7 @@
 import React, {useContext, useEffect, useState} from 'react';
 import {
     Dummy,
-    HintingPhase,
+    HintingPhase, HintingPhasePlayer,
     isProposing,
     isResolving,
     ProposingHintPhase,
@@ -9,7 +9,7 @@ import {
     ResolvingHintPhase
 } from './gameState';
 import {Hint, Letter, LetterAndSource, LetterSources, PlayerNumber} from './gameTypes';
-import {PlayerNameContext, useGiveHint, usePlayerContext, useProposeHint} from './gameHook';
+import {PlayerNameContext, useGiveHint, usePlayerContext, useProposeHint, useResolveHint} from './gameHook';
 import {
     Card,
     CardsFromLettersAndSources,
@@ -321,32 +321,50 @@ function ResolvingHintComponent({hintingGameState}: {hintingGameState: Resolving
         })}
 
         <span className='hintLogLine flex'>
-            {resolveActionRequired === ResolveActionChoice.FLIP && <FlipResolve />}
-            {resolveActionRequired === ResolveActionChoice.GUESS && <GuessResolve />}
+            {resolveActionRequired === ResolveActionChoice.FLIP && <FlipResolve playerNumber={playerNumber!} hintingGameState={hintingGameState} />}
+            {resolveActionRequired === ResolveActionChoice.GUESS && <GuessResolve player={player!} playerNumber={playerNumber!} hintingGameState={hintingGameState} />}
             {waitingOnPlayerNames.length > 0 && <span className='flexAlignRight italics'>Waiting on: {waitingOnPlayerNames.join(', ')}</span>}
         </span>
     </>;
 }
 
-function FlipResolve() {
+function FlipResolve({playerNumber, hintingGameState}: {playerNumber: PlayerNumber, hintingGameState: ResolvingHintPhase}) {
+    const resolveFn = useResolveHint(hintingGameState);
+    if (resolveFn === null) throw new Error('illegal');
     return <>
         <span className='italics'>Would you like to flip your card?&nbsp;</span>
         <span className='strawberryLinkButton' onClick={() => {
-            // TODO: yes
+            resolveFn({
+                player: playerNumber,
+                kind: ResolveActionKind.FLIP,
+            });
         }}>Yes</span>
         &nbsp;/&nbsp;
         <span className='strawberryLinkButton' onClick={() => {
-            // TODO: no
+            resolveFn({
+                player: playerNumber,
+                kind: ResolveActionKind.NONE,
+            });
         }}>No</span></>;
 }
 
-function GuessResolve() {
+function GuessResolve({player, playerNumber, hintingGameState}: {player: HintingPhasePlayer, playerNumber: PlayerNumber, hintingGameState: ResolvingHintPhase}) {
     const [guess, setGuess] = useState('');
+    const resolveFn = useResolveHint(hintingGameState);
+    if (resolveFn === null) throw new Error('illegal');
     return <>
         <span className='italics'>Guess the value of your bonus card: </span>
         <form onSubmit={e => {
-            e.preventDefault();
-            // TODO: submit guess
+            if (guess !== '') {
+                if (guess.length !== 1) throw new Error('how did you guess more than one letter');
+                e.preventDefault();
+                resolveFn({
+                    player: playerNumber,
+                    kind: ResolveActionKind.GUESS,
+                    guess,
+                    actual: player.hand.letters[player.hand.activeIndex],
+                });
+            }
         }}>
             <input
                 className='strawberryInput strawberryInputSmall'
