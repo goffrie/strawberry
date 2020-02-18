@@ -35,7 +35,7 @@ function UsernameInput({setUsername}: {setUsername: setUsernameFn}) {
             setUsername(input);
         }
     }}>
-        <input className='strawberryInput strawberryInputBig' value={input} onChange={(e) => setInput(e.target.value)} />
+        <input className='strawberryInput strawberryInputBig' value={input} onChange={(e) => setInput(e.target.value)} autoFocus />
     </form>
 }
 

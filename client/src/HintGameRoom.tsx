@@ -384,6 +384,7 @@ function GuessResolve({player, playerNumber, hintingGameState}: {player: Hinting
                     const letter = e.target.value.substr(e.target.value.length - 1, 1).toUpperCase();
                     setGuess(LETTERS.includes(letter) ? letter : '');
                 }}
+                autoFocus
             />
         </form>
     </>;

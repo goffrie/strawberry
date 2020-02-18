@@ -103,6 +103,7 @@ function StartGameRoomMain({startingGameState}: {startingGameState: StartingPhas
                         setInputWord(e.target.value);
                         setErrorToRender('');
                     }}
+                    autoFocus
                 />
             </form>
             <div className='gameStartWordErrorMessage'>{errorToRender}</div>
