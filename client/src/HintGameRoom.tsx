@@ -366,9 +366,9 @@ function GuessResolve({player, playerNumber, hintingGameState}: {player: Hinting
     return <>
         <span className='italics'>Guess the value of your bonus card: </span>
         <form onSubmit={e => {
+            e.preventDefault();
             if (guess !== '') {
                 if (guess.length !== 1) throw new Error('how did you guess more than one letter');
-                e.preventDefault();
                 resolveFn({
                     player: playerNumber,
                     kind: ResolveActionKind.GUESS,
