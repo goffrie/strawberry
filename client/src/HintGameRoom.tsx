@@ -196,7 +196,7 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
         </div>
         <div className='flex hintLogLine'>
             {stagedHint !== null && <span className='italics'>{stagedHintSentence}</span>}
-            <span style={{flex: 'auto', textAlign: 'right'}}>
+            <span className='flexAlignRight'>
                 <LinkButton isDisabled={stagedHint == null && callProposeHint != null} onClick={() => stagedHint != null && callProposeHint != null && callProposeHint(stagedHint)}>{proposeText}</LinkButton>
                 <span style={{marginLeft: '10px'}} />
                 <LinkButton isDisabled={!canSubmitHint} onClick={submit}>Submit hint</LinkButton>

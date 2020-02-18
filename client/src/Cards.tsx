@@ -58,7 +58,7 @@ function PlayerWithCardsInHand({hand, isForViewingPlayer, playerName, playerNumb
     const topText = <>
         <span style={{maxWidth: '150px'}} className='ellipsis'>{playerName}&nbsp;</span>
         {isForViewingPlayer ? <span style={{color: '#777777'}}>(you)</span>: null}
-        {extraText ? <span style={{flex: 'auto', textAlign: 'right'}}>{extraText}</span> : null}
+        {extraText ? <span className='flexAlignRight'>{extraText}</span> : null}
     </>;
 
     const cardsToRender = <CardsInHand hand={hand} isForViewingPlayer={isForViewingPlayer} />;

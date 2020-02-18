@@ -86,6 +86,11 @@
   display: flex;
 }
 
+.flexAlignRight {
+  flex: auto;
+  text-align: right;
+}
+
 .ellipsis {
   text-overflow: ellipsis;
   white-space: nowrap;
