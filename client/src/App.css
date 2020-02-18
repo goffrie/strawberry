@@ -67,7 +67,7 @@ button {
   text-align: center;
 }
 
-.strawberryButton:hover {
+.strawberryButton:hover, .strawberryButton:focus {
   border: 2px solid #19AF00;
   font-style: italic;
 }
@@ -86,7 +86,7 @@ button {
   padding-bottom: 2px;
 }
 
-.strawberryLinkButton:hover, .strawberryLinkButton:active {
+.strawberryLinkButton:hover, .strawberryLinkButton:focus {
   border-bottom: 2px solid #19AF00;
   font-style: italic;
 }
