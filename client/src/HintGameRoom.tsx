@@ -94,17 +94,17 @@ function HintGameRoomLog({hintingGameState}: {hintingGameState: HintingPhase}) {
             });
             const playerCardUsed = wasViewingPlayerInHint ? logEntry.activeIndexes[playerNumber! - 1] : null;
             return <React.Fragment key={i}>
-                <span className='hintLogTitle' key={i}>Hint {i + 1} / {logEntry.totalHints}</span>
+                <div className='hintLogTitle' key={i}>Hint {i + 1} / {logEntry.totalHints}</div>
                 <HintInLog
                     hint={logEntry.hint}
                     playerActions={logEntry.playerActions}
                     playerCardUsed={playerCardUsed}
                     players={hintingGameState.players}
                 />
-                <span className='hintLogLine' />
+                <div className='hintLogLine' />
             </React.Fragment>
         })}
-        <span className='hintLogTitle'>Hint {activeHintNumber} / {totalHintsAvailable}</span>
+        <div className='hintLogTitle'>Hint {activeHintNumber} / {totalHintsAvailable}</div>
         {isProposing(hintingGameState) && <ProposingHintComponent hintingGameState={hintingGameState} />}
         {isResolving(hintingGameState) && <ResolvingHintComponent hintingGameState={hintingGameState} />}
     </div>
@@ -134,13 +134,13 @@ function ProposingHintComponent({hintingGameState}: {hintingGameState: Proposing
     const {username, isSpectator, player} = usePlayerContext();
 
     return <>
-        <span className='hintLogLine'>Players are proposing hints.</span>
+        <div className='hintLogLine'>Players are proposing hints.</div>
         {hintingGameState.players.map((player, i) => {
             const proposedHint = hintingGameState.activeHint.proposedHints[i + 1];
             const sentence = proposedHint && getHintSentence(proposedHint);
-            return <span className='hintLogLine' key={i}>
+            return <div className='hintLogLine' key={i}>
                 {player.name} {proposedHint ? `has proposed: ${sentence}.` : 'has not proposed a hint.'}
-            </span>;
+            </div>;
         })}
         {!isSpectator && <HintComposer hintingGameState={hintingGameState} />}
     </>;
@@ -202,8 +202,8 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
     }
 
     return <>
-        <span className='hintLogLine' />
-        <span className='hintLogLine italics'>Available letters (click to use): </span>
+        <div className='hintLogLine' />
+        <div className='hintLogLine italics'>Available letters (click to use): </div>
         <AvailableCards
             hintingGameState={hintingGameState}
             playerNumber={playerNumber!}
@@ -307,14 +307,14 @@ function HintInLog({hint, playerActions, playerCardUsed, players}: {
 
     // TODO: marginLeft -12 if want to align cards with hint construction
     return <>
-        <span className='hintLogLine'>{playerNamesByNumber[hint.givenByPlayer]} gave a hint: {getHintSentence(hint)}</span>
+        <div className='hintLogLine'>{playerNamesByNumber[hint.givenByPlayer]} gave a hint: {getHintSentence(hint)}</div>
         <div className='hintLogLine' style={{marginLeft: '-5px'}}>
             <CardsInHint hint={hint} viewingPlayer={playerNumber!} />
         </div>
-        {playerCardUsed !== null && <span className='hintLogLine'>Your position {playerCardUsed + 1} card was used.</span>}
+        {playerCardUsed !== null && <div className='hintLogLine'>Your position {playerCardUsed + 1} card was used.</div>}
 
         {playerActionStrings.map((str, i) => {
-            return <span className='hintLogLine' key={i}>{str}</span>;
+            return <div className='hintLogLine' key={i}>{str}</div>;
         })}
     </>;
 }
@@ -334,11 +334,11 @@ function ResolvingHintComponent({hintingGameState}: {hintingGameState: Resolving
 
     return <>
         <HintInLog hint={activeHint.hint} playerActions={activeHint.playerActions} playerCardUsed={playerCardUsed} players={hintingGameState.players} />
-        <span className='hintLogLine flex'>
+        <div className='hintLogLine flex'>
             {resolveActionRequired === ResolveActionChoice.FLIP && <FlipResolve playerNumber={playerNumber!} hintingGameState={hintingGameState} />}
             {resolveActionRequired === ResolveActionChoice.GUESS && <GuessResolve player={player!} playerNumber={playerNumber!} hintingGameState={hintingGameState} />}
             {waitingOnPlayerNames.length > 0 && <span className='flexAlignRight italics'>Waiting on: {waitingOnPlayerNames.join(', ')}</span>}
-        </span>
+        </div>
     </>;
 }
 

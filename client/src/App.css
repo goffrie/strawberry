@@ -256,9 +256,7 @@ button {
 .hintLog {
   height: 100%;
   overflow: auto;
-  display: flex;
   flex: auto;
-  flex-direction: column;
   padding: 20px;
   box-sizing: border-box;
 }
@@ -276,8 +274,7 @@ button {
   border: 2px solid #D20B0B;
   padding: 10px 0px 10px 10px;
   margin-bottom: 15px;
-  overflow: auto; /* awwww yeah side scrolling */
-  min-height: fit-content;
+  overflow-x: auto; /* awwww yeah side scrolling */
   display: flex;
 }
 
