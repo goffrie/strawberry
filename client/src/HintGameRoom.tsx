@@ -1,7 +1,15 @@
-import React, {useContext, useState} from 'react';
-import {ActiveHintState, Dummy, HintingPhase, ProposingHint, ProposingHintPhase, isProposing} from './gameState';
+import React, {useContext, useEffect, useState} from 'react';
+import {
+    Dummy,
+    HintingPhase,
+    isProposing,
+    isResolving,
+    ProposingHintPhase,
+    ResolveActionKind,
+    ResolvingHintPhase
+} from './gameState';
 import {Hint, Letter, LetterAndSource, LetterSources, PlayerNumber} from './gameTypes';
-import {PlayerNameContext, usePlayerContext, useProposeHint, useGiveHint} from './gameHook';
+import {PlayerNameContext, useGiveHint, usePlayerContext, useProposeHint} from './gameHook';
 import {
     Card,
     CardsFromLettersAndSources,
@@ -11,8 +19,8 @@ import {
     DisplayNumberOrLetterWithTextAndCards,
     PlayerWithCardsInHand
 } from './Cards';
-import {specsOfHint} from './gameLogic';
-import { deepEqual } from './utils';
+import {ResolveActionChoice, specsOfHint, whichResolveActionRequired} from './gameLogic';
+import {deepEqual} from './utils';
 
 function HintGameRoom({hintingGameState}: {hintingGameState: HintingPhase}) {
     const {username} = usePlayerContext();
@@ -80,9 +88,9 @@ function HintGameRoomLog({hintingGameState}: {hintingGameState: HintingPhase}) {
     // TODO: render log when there are things to render
     return <div className='hintLog'>
 
-
         <span className='hintLogTitle'>Hint {activeHintNumber} / {totalHintsAvailable}</span>
         {isProposing(hintingGameState) && <ProposingHintComponent hintingGameState={hintingGameState} />}
+        {isResolving(hintingGameState) && <ResolvingHintComponent hintingGameState={hintingGameState} />}
     </div>
 }
 
@@ -246,6 +254,85 @@ function AvailableCards({hintingGameState, playerNumber, addToStagedHint}: {
     return <div className='hintLogLine' style={{marginLeft: '12px'}}>
         <CardsFromLettersAndSources lettersAndSources={lettersAndSources} viewingPlayer={playerNumber} onClick={addToStagedHint} />
     </div>
+}
+
+function ResolvingHintComponent({hintingGameState}: {hintingGameState: ResolvingHintPhase}) {
+    const {username, player, playerNumber} = usePlayerContext();
+
+    const activeHint = hintingGameState.activeHint;
+
+    const [playerCardUsed, setPlayerCardUsed] = useState(null as null | number);
+    console.log(hintingGameState.activeHint.playerActions);
+
+    // TODO: this is buggy if the player reloads after flipping.
+    // Instead, compute this based on activeIndex and whether they have flipped.
+    useEffect(() => {
+        // Store playerCardUsed as an effect so that we render the correct index even after the player has flipped.
+        const isPlayerCardUsedInHint = activeHint.hint.lettersAndSources.some(letterAndSource => {
+            return letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === playerNumber;
+        });
+        if (isPlayerCardUsedInHint) {
+            setPlayerCardUsed(player!.hand.activeIndex);
+        }
+    }, []);
+
+    // TODO: refactor some of this to share with hint log
+    let playerNamesByNumber: Record<PlayerNumber, string> = {};
+    hintingGameState.players.forEach((player, i) => {
+        playerNamesByNumber[i + 1] = player.name;
+    });
+
+    let playerActionStrings = hintingGameState.activeHint.playerActions.map(playerAction => {
+        const actingPlayerName = playerNamesByNumber[playerAction.player];
+
+        switch (playerAction.kind) {
+            case ResolveActionKind.NONE:
+                return `${actingPlayerName} did not flip their card.`;
+            case ResolveActionKind.FLIP:
+                return `${actingPlayerName} did flipped their card.`;
+            case ResolveActionKind.GUESS:
+                if (playerAction.actual === playerAction.guess) {
+                    return `${actingPlayerName} correctly guessed ${playerAction.actual}.`;
+                }
+                return `${actingPlayerName} incorrectly guessed ${playerAction.guess} (actual: ${playerAction.actual}).`;
+        }
+    });
+
+    const resolveActionRequired = whichResolveActionRequired(hintingGameState, username);
+
+    const waitingOnPlayerNames: string[] = [];
+    hintingGameState.players.forEach(player => {
+        const resolveActionRequired = whichResolveActionRequired(hintingGameState, username);
+        if (resolveActionRequired === ResolveActionChoice.FLIP || resolveActionRequired === ResolveActionChoice.GUESS) {
+            waitingOnPlayerNames.push(player.name);
+        }
+    });
+
+    return <>
+        <span className='hintLogLine'>{playerNamesByNumber[activeHint.hint.givenByPlayer]} gave a hint: {getHintSentence(activeHint.hint)}</span>
+        <div className='hintLogLine'>
+            <CardsInHint hint={activeHint.hint} viewingPlayer={playerNumber!} />
+        </div>
+        {playerCardUsed !== null && <span className='hintLogLine'>Your position {playerCardUsed + 1} card was used.</span>}
+
+        {playerActionStrings.map((str, i) => {
+            return <span className='hintLogLine' key={i}>{str}</span>;
+        })}
+
+        <span className='hintLogLine flex'>
+            {resolveActionRequired === ResolveActionChoice.FLIP && <FlipResolve />}
+            {resolveActionRequired === ResolveActionChoice.GUESS && <GuessResolve />}
+            {waitingOnPlayerNames.length > 0 && <span className='flexAlignRight italics'>Waiting on: {waitingOnPlayerNames.join(', ')}</span>}
+        </span>
+    </>;
+}
+
+function FlipResolve() {
+    return <>todo</>;
+}
+
+function GuessResolve() {
+    return <>todo</>;
 }
 
 export {HintGameRoom};
