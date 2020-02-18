@@ -19,7 +19,7 @@ import {
     DisplayNumberOrLetterWithTextAndCards,
     PlayerWithCardsInHand
 } from './Cards';
-import {ResolveActionChoice, specsOfHint, whichResolveActionRequired, playersWithOutstandingAction} from './gameLogic';
+import {ResolveActionChoice, specsOfHint, whichResolveActionRequired, playersWithOutstandingAction, LETTERS} from './gameLogic';
 import {deepEqual} from './utils';
 
 function HintGameRoom({hintingGameState}: {hintingGameState: HintingPhase}) {
@@ -381,7 +381,8 @@ function GuessResolve({player, playerNumber, hintingGameState}: {player: Hinting
                 className='strawberryInput strawberryInputSmall'
                 value={guess}
                 onChange={(e) => {
-                    setGuess(e.target.value.substr(e.target.value.length - 1, 1));
+                    const letter = e.target.value.substr(e.target.value.length - 1, 1).toUpperCase();
+                    setGuess(LETTERS.includes(letter) ? letter : '');
                 }}
             />
         </form>
