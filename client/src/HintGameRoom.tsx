@@ -91,7 +91,7 @@ function HintGameRoomLog({hintingGameState}: {hintingGameState: HintingPhase}) {
             const wasViewingPlayerInHint = playerNumber !== null && logEntry.hint.lettersAndSources.some(letterAndSource => {
                 return letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === playerNumber;
             });
-            const playerCardUsed = wasViewingPlayerInHint ? logEntry.activeIndexes[playerNumber!] : null;
+            const playerCardUsed = wasViewingPlayerInHint ? logEntry.activeIndexes[playerNumber! - 1] : null;
             return <React.Fragment key={i}>
                 <span className='hintLogTitle' key={i}>Hint {i + 1} / {logEntry.totalHints}</span>
                 <HintInLog
