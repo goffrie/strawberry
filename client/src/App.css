@@ -188,24 +188,24 @@ button {
   width: 55px;
   height: 75px;
   line-height: 75px;
-  font-size: 55px;
-  color: white;
+  font-size: 50px;
+  color: black;
   text-align: center;
-  border: 1px solid #777777;
+  border: 2px solid #999999;
   border-radius: 5px;
 }
 
 .cardActive {
-  background-color: #777777;
+    border-color: #777777;
 }
 
 .cardButton {
   cursor: pointer;
+  border-color: #D20B0B;
 }
 
 .cardButton:hover {
-  background-color: #999999;
-  border-color: #999999;
+  border-color: #19AF00;
 }
 
 .cardWithPlayerNumber {
@@ -225,7 +225,7 @@ button {
 }
 
 .gameSidebar {
-  border-right: 1px solid black;
+  border-right: 2px solid #999999;
   height: 100%;
   padding: 20px;
   box-sizing: border-box;
