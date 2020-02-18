@@ -249,16 +249,11 @@ export function useGiveHint(room: ProposingHintPhase): ((hint: Hint) => void) | 
     return allowed ? (hint) => mutate({hintNumber, hint}) : null;
 }
 
-function resolveHintMutator(room: ResolvingHintPhase, {playerName, action}: {playerName: string, action: ResolveAction}): HintingPhase {
-    return performResolveAction(room, playerName, action);
+function resolveHintMutator(room: ResolvingHintPhase, {action}: {action: ResolveAction}): HintingPhase {
+    return performResolveAction(room, action);
 }
 
-export function useResolveHint(room: ResolvingHintPhase): ((action: ResolveAction) => void) | null {
-    const playerName = useContext(PlayerNameContext);
-    if (playerName == null) {
-        throw new Error("PlayerNameContext not provided");
-    }
-    const allowed = getPlayerNumber(room, playerName) != null;
-    const [, mutate] = useMutateGame(room, allowed, resolveHintMutator);
-    return allowed ? (action) => mutate({playerName, action}) : null;
+export function useResolveHint(room: ResolvingHintPhase): ((action: ResolveAction) => void) {
+    const [, mutate] = useMutateGame(room, true /* allowed */, resolveHintMutator);
+    return (action) => mutate({action});
 }

@@ -8,6 +8,7 @@ import {
     ResolvingHintPhase,
     RoomPhase,
     StartingPhase,
+    HintingPhasePlayer,
 } from './gameState';
 import { PlayerNumber, Letter, Hint, HintSpecs, LetterSources } from './gameTypes';
 import { shuffle } from './utils';
@@ -194,6 +195,7 @@ export function giveHint(room: ProposingHintPhase, hint: Hint): HintingPhase {
             state: ActiveHintState.RESOLVING,
             hint,
             playerActions: [],
+            activeIndexes: room.players.map((player) => player.hand.activeIndex),
         },
     };
     // It's possible no players were actually involved in the hint. In that case we immediately finish the resolving phase.
@@ -247,11 +249,53 @@ function allPlayersHaveActed(activeHint: ResolvingHint): boolean {
     return playerNumbers.size === activeHint.playerActions.length;
 }
 
+function applyResolution(room: ResolvingHintPhase, action: ResolveAction): ResolvingHintPhase {
+    const players = [...room.players];
+    let player = room.players[action.player - 1];
+    const bonuses = [...room.bonuses];
+    if (action.kind === ResolveActionKind.NONE) {
+        // do nothing
+        return room;
+    } else if (action.kind === ResolveActionKind.FLIP) {
+        const letters = (player.hand.activeIndex === room.wordLength - 1) ?
+                        [...player.hand.letters, randomLetter()] :
+                        player.hand.letters;
+        player = {
+            ...player,
+            hand: {
+                letters,
+                activeIndex: player.hand.activeIndex+1,
+            }
+        };
+    } else if (action.kind === ResolveActionKind.GUESS) {
+        if (action.guess === action.actual) {
+            bonuses.push(action.guess);
+        }
+        player = {
+            ...player,
+            hand: {
+                letters: [
+                    ...player.hand.letters.slice(0, room.wordLength),
+                    randomLetter(),
+                ],
+                // index doesn't change
+                activeIndex: player.hand.activeIndex,
+            },
+        };
+    }
+    players[action.player - 1] = player;
+    return {
+        ...room,
+        players,
+        bonuses,
+    }
+}
+
 function fullyResolveHint(room: ResolvingHintPhase): ProposingHintPhase {
     const logEntry = {
         hint: room.activeHint.hint,
         totalHints: room.hintLog.length + room.hintsRemaining,
-        activeIndexes: room.players.map((player) => player.hand.activeIndex),
+        activeIndexes: room.activeHint.activeIndexes,
         playerActions: room.activeHint.playerActions,
     };
     let hintsRemaining = room.hintsRemaining - 1;
@@ -282,43 +326,8 @@ function fullyResolveHint(room: ResolvingHintPhase): ProposingHintPhase {
     });
     const bonuses = room.bonuses.filter((bonus, index) => !bonusesUsed.has(index));
 
-    const players = Array.from(room.players);
-    for (const action of room.activeHint.playerActions) {
-        let player = players[action.player - 1];
-        if (action == null || action.kind === ResolveActionKind.NONE) {
-            // do nothing
-        } else if (action.kind === ResolveActionKind.FLIP) {
-            const letters = (player.hand.activeIndex === room.wordLength - 1) ?
-                            [...player.hand.letters, randomLetter()] :
-                            player.hand.letters;
-            player = {
-                ...player,
-                hand: {
-                    letters,
-                    activeIndex: player.hand.activeIndex+1,
-                }
-            };
-        } else if (action.kind === ResolveActionKind.GUESS) {
-            if (action.guess === action.actual) {
-                bonuses.push(action.guess);
-            }
-            player = {
-                ...player,
-                hand: {
-                    letters: [
-                        ...player.hand.letters.slice(0, room.wordLength),
-                        randomLetter(),
-                    ],
-                    // index doesn't change
-                    activeIndex: player.hand.activeIndex,
-                },
-            };
-        }
-        players[action.player - 1] = player;
-    }
     return {
         ...room,
-        players,
         dummies,
         bonuses,
         hintsRemaining,
@@ -330,14 +339,15 @@ function fullyResolveHint(room: ResolvingHintPhase): ProposingHintPhase {
     };
 }
 
-export function performResolveAction(room: ResolvingHintPhase, playerName: string, action: ResolveAction): HintingPhase {
-    const newRoom = {
+export function performResolveAction(room: ResolvingHintPhase, action: ResolveAction): HintingPhase {
+    let newRoom: ResolvingHintPhase = {
         ...room,
         activeHint: {
             ...room.activeHint,
             playerActions: [...room.activeHint.playerActions, action],
         }
     };
+    newRoom = applyResolution(newRoom, action);
     if (allPlayersHaveActed(newRoom.activeHint)) {
         return fullyResolveHint(newRoom);
     } else {

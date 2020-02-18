@@ -65,6 +65,8 @@ export interface ResolvingHint {
     readonly state: ActiveHintState.RESOLVING,
     readonly hint: Hint,
     readonly playerActions: readonly ResolveAction[],
+    // Which card was active for each player before any actions were taken.
+    readonly activeIndexes: Readonly<Record<PlayerNumber, number>>,
 }
 
 export type ActiveHint = ProposingHint | ResolvingHint;
