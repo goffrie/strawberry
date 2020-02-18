@@ -182,6 +182,14 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
     const addToStagedHint = (letterAndSource: LetterAndSource) => {
         const newHint = addLetterAndSourceToHint(stagedHint, letterAndSource, playerNumber!);
         setStagedHint(newHint);
+
+        if (newHint.lettersAndSources.length === 11) {
+            const isUserAlreadyWarned = localStorage.getItem('longHintWarning');
+            if (isUserAlreadyWarned === null) {
+                alert('ok stop :^)');
+                localStorage.setItem('longHintWarning', 'true');
+            }
+        }
     };
 
     const submit = () => {
