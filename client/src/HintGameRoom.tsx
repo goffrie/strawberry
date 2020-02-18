@@ -201,16 +201,16 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
             playerNumber={playerNumber!}
             addToStagedHint={addToStagedHint}
         />
-        <div className='hintLogGuessBox' style={{position: 'relative'}}>
+        <div className='hintLogGuessBox'>
             {stagedHint !== null ?
                 <CardsInHint hint={stagedHint} viewingPlayer={playerNumber!} />:
                 // Render a hidden thing to make sure we have the right width.
                 <div style={{visibility: 'hidden'}}><CardWithPlayerNumberOrLetter letter={'🍓'} playerNumberOrLetter={'🍓'} /></div>}
-            <div style={{position: 'absolute', top: '0px', right: '0px', padding: '5px'}}>
-                <LinkButton onClick={() => {
-                    setStagedHint(null);
-                }} isDisabled={stagedHint === null}>Clear</LinkButton>
-            </div>
+                <div className='flexAlignRight hintLogGuessBoxClear'>
+                    <LinkButton onClick={() => {
+                        setStagedHint(null);
+                    }} isDisabled={stagedHint === null}>Clear</LinkButton>
+                </div>
         </div>
         <div className='flex hintLogLine'>
             {stagedHint !== null && <span className='italics'>{stagedHintSentence}</span>}

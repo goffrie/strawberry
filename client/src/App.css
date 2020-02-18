@@ -272,12 +272,18 @@ button {
 
 .hintLogGuessBox {
   border: 2px solid #D20B0B;
-  padding: 10px;
+  padding: 10px 0px 10px 10px;
   margin-bottom: 15px;
   overflow: auto; /* awwww yeah side scrolling */
   min-height: fit-content;
+  display: flex;
 }
 
 .hintLogGuessBox:hover {
   border: 2px solid #19AF00;
+}
+
+.hintLogGuessBoxClear {
+  padding-left: 5px;
+  padding-right: 10px;
 }
