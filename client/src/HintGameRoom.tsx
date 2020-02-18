@@ -261,20 +261,19 @@ function ResolvingHintComponent({hintingGameState}: {hintingGameState: Resolving
 
     const activeHint = hintingGameState.activeHint;
 
-    const [playerCardUsed, setPlayerCardUsed] = useState(null as null | number);
-    console.log(hintingGameState.activeHint.playerActions);
+    // Compute whether a card of the player's was used (based on activeIndex and whether they flipped) to render.
+    const isPlayerCardUsedInHint = activeHint.hint.lettersAndSources.some(letterAndSource => {
+        return letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === playerNumber;
+    });
 
-    // TODO: this is buggy if the player reloads after flipping.
-    // Instead, compute this based on activeIndex and whether they have flipped.
-    useEffect(() => {
-        // Store playerCardUsed as an effect so that we render the correct index even after the player has flipped.
-        const isPlayerCardUsedInHint = activeHint.hint.lettersAndSources.some(letterAndSource => {
-            return letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === playerNumber;
+    let playerCardUsed = null;
+    if (isPlayerCardUsedInHint) {
+        const didPlayerFlip = hintingGameState.activeHint.playerActions.some(playerAction => {
+            return playerAction.kind === ResolveActionKind.FLIP && playerAction.player === playerNumber;
         });
-        if (isPlayerCardUsedInHint) {
-            setPlayerCardUsed(player!.hand.activeIndex);
-        }
-    }, []);
+
+        playerCardUsed = didPlayerFlip ? player!.hand.activeIndex - 1 : player!.hand.activeIndex;
+    }
 
     // TODO: refactor some of this to share with hint log
     let playerNamesByNumber: Record<PlayerNumber, string> = {};
@@ -295,6 +294,8 @@ function ResolvingHintComponent({hintingGameState}: {hintingGameState: Resolving
                     return `${actingPlayerName} correctly guessed ${playerAction.actual}.`;
                 }
                 return `${actingPlayerName} incorrectly guessed ${playerAction.guess} (actual: ${playerAction.actual}).`;
+            default:
+                return '';
         }
     });
 
