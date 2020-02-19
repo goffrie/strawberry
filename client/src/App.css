@@ -281,6 +281,7 @@ button {
 
 .hintLogLine {
   margin-bottom: 15px;
+  max-width: 850px;
 }
 
 .hintLogGuessBox {
@@ -289,6 +290,8 @@ button {
   margin-bottom: 15px;
   overflow-x: auto; /* awwww yeah side scrolling */
   display: flex;
+  max-width: 850px;
+  box-sizing: border-box;
 }
 
 .hintLogGuessBox:hover {
