@@ -13,15 +13,17 @@ function Card({letter, onClick, inactive, guess, setGuess}: {letter?: Letter | n
         classNames += ' cardButton';
     }
     const keyDown = setGuess ? (e: React.KeyboardEvent) => {
-        if (e.keyCode === 8 /* backspace */) {
+        if (e.ctrlKey || e.altKey) return;
+        if (e.keyCode === 8 /* backspace */ || e.keyCode === 46 /* delete */ || e.key === ' ' || e.key === '?') {
             setGuess(null);
+            e.preventDefault();
         } else {
             const char = e.key.toUpperCase();
             if (LETTERS.includes(char)) {
                 setGuess(char);
+                e.preventDefault();
             }
         }
-        e.preventDefault();
      } : undefined;
     return <div className={classNames} onClick={onClick} tabIndex={setGuess ? 0 : undefined} onKeyDown={keyDown}>{guess || letter || ''}</div>
 }
