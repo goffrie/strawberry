@@ -274,10 +274,12 @@ button {
   margin-bottom: 5px;
 }
 
-.hintLog {
+.hintLogContainer {
   height: 100%;
-  overflow: auto;
   flex: auto;
+}
+
+.hintLogContent {
   padding: 20px;
   box-sizing: border-box;
 }

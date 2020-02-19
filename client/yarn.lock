@@ -8326,6 +8326,11 @@ react-scripts@3.4.0:
   optionalDependencies:
     fsevents "2.1.2"
 
+react-scrollable-feed@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/react-scrollable-feed/-/react-scrollable-feed-1.1.2.tgz#739a051b2c02cede6bd16d6c3d9a285a52ddc5cf"
+  integrity sha512-fe9hkVO8pMPQCtkSW9O0+9uhgSbF1tr81T6SXr9N0M8kLnXOiw34pp8PuAFPMsZEPzmwycerfUPDu7Jjv/Y0hg==
+
 react@^16.12.0:
   version "16.12.0"
   resolved "https://registry.yarnpkg.com/react/-/react-16.12.0.tgz#0c0a9c6a142429e3614834d5a778e18aa78a0b83"

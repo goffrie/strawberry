@@ -1,4 +1,5 @@
 import React, {useContext, useEffect, useState, useRef} from 'react';
+import ScrollableFeed from 'react-scrollable-feed';
 import {
     Dummy,
     HintingPhase, HintingPhasePlayer,
@@ -153,27 +154,29 @@ function HintGameRoomLog({hintingGameState}: {hintingGameState: HintingPhase}) {
 
     const activeHintNumber = hintingGameState.hintLog.length + 1;
     const totalHintsAvailable = activeHintNumber + hintingGameState.hintsRemaining;
-    return <div className='hintLog'>
-        {hintingGameState.hintLog.map((logEntry, i) => {
-            const wasViewingPlayerInHint = playerNumber !== null && logEntry.hint.lettersAndSources.some(letterAndSource => {
-                return letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === playerNumber;
-            });
-            const playerCardUsed = wasViewingPlayerInHint ? logEntry.activeIndexes[playerNumber! - 1] : null;
-            return <React.Fragment key={i}>
-                <div className='hintLogTitle' key={i}>Hint {i + 1} / {logEntry.totalHints}</div>
-                <HintInLog
-                    hint={logEntry.hint}
-                    playerActions={logEntry.playerActions}
-                    playerCardUsed={playerCardUsed}
-                    players={hintingGameState.players}
-                />
-                <div className='hintLogLine' />
-            </React.Fragment>
-        })}
-        <div className='hintLogTitle'>Hint {activeHintNumber} / {totalHintsAvailable}</div>
-        {isProposing(hintingGameState) && <ProposingHintComponent hintingGameState={hintingGameState} />}
-        {isResolving(hintingGameState) && <ResolvingHintComponent hintingGameState={hintingGameState} />}
-    </div>
+    return <ScrollableFeed className='hintLogContainer'>
+        <div className='hintLogContent'>
+            {hintingGameState.hintLog.map((logEntry, i) => {
+                const wasViewingPlayerInHint = playerNumber !== null && logEntry.hint.lettersAndSources.some(letterAndSource => {
+                    return letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === playerNumber;
+                });
+                const playerCardUsed = wasViewingPlayerInHint ? logEntry.activeIndexes[playerNumber! - 1] : null;
+                return <React.Fragment key={i}>
+                    <div className='hintLogTitle' key={i}>Hint {i + 1} / {logEntry.totalHints}</div>
+                    <HintInLog
+                        hint={logEntry.hint}
+                        playerActions={logEntry.playerActions}
+                        playerCardUsed={playerCardUsed}
+                        players={hintingGameState.players}
+                    />
+                    <div className='hintLogLine' />
+                </React.Fragment>
+            })}
+            <div className='hintLogTitle'>Hint {activeHintNumber} / {totalHintsAvailable}</div>
+            {isProposing(hintingGameState) && <ProposingHintComponent hintingGameState={hintingGameState} />}
+            {isResolving(hintingGameState) && <ResolvingHintComponent hintingGameState={hintingGameState} />}
+        </div>
+    </ScrollableFeed>
 }
 
 function plural(n: number): string {
