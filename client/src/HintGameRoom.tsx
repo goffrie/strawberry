@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState, useRef} from 'react';
 import {
     Dummy,
     HintingPhase, HintingPhasePlayer,
@@ -62,13 +62,14 @@ function HintGameRoomSidebar({hintingGameState}: {hintingGameState: HintingPhase
 }
 
 let debounceTimeout: null | number = null;
-function HintGameRoomNotesSidebar({}) {
+function HintGameRoomNotesSidebar() {
     // TODO: refactor local storage keys into constants
     const [sidebarWidth, setSidebarWidth] = useState(350);
     const [notes, setNotes] = useState('You can type notes here.');
     const strawberryGame = useStrawberryGame();
     const roomName = strawberryGame?.roomName!;
     const localStorageKey = `notes:${roomName}`;
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Load the notes from local storage in case user rejoined
     useEffect(() => {
@@ -78,16 +79,42 @@ function HintGameRoomNotesSidebar({}) {
         }
     }, []);
 
-    // TODO: enable tabbing to indent
     return <div className='gameSidebar gameSidebarNotes' style={{width: `${sidebarWidth}px`}}>
-        <textarea className='notesBox' value={notes} onChange={e => {
-            const newValue = e.target.value;
-            if (debounceTimeout !== null) {
-                clearTimeout(debounceTimeout);
-            }
-            debounceTimeout = window.setTimeout(() => {localStorage.setItem(localStorageKey, newValue)}, 1000);
-            setNotes(e.target.value);
-        }} />
+        <textarea
+            className='notesBox'
+            value={notes}
+            onChange={e => {
+                const newValue = e.target.value;
+                if (debounceTimeout !== null) {
+                    clearTimeout(debounceTimeout);
+                }
+                debounceTimeout = window.setTimeout(() => {localStorage.setItem(localStorageKey, newValue)}, 1000);
+                setNotes(e.target.value);
+            }}
+            ref={textareaRef}
+            onKeyDown={e => {
+                // tab to insert space https://jsfiddle.net/2wAzx/13/
+               if (e.keyCode === 9) {
+                   e.preventDefault();
+                   const textarea = textareaRef.current;
+                   if (!textarea) return;
+
+                   // get caret position/selection
+                   const val = textarea.value;
+                   const start = textarea.selectionStart;
+                   const end = textarea.selectionEnd;
+
+                   // set textarea value to: text before caret + spaces + text after caret
+                   textarea.value = val.substring(0, start) + '    ' + val.substring(end);
+
+                   // put caret at right position again
+                   textarea.selectionStart = textarea.selectionEnd = start + 4;
+
+                   // prevent the focus lose
+                   return false;
+               }
+            }}
+        />
     </div>
 }
 
