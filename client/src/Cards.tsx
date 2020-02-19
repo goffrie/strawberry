@@ -129,20 +129,22 @@ function getPlayerNumberOrLetterFromLetterAndSource(letterAndSource: LetterAndSo
     }
 }
 
-function CardsInHint({hint, viewingPlayer}: {
+function CardsInHint({hint, viewingPlayer, onClick}: {
     hint: Hint,
     viewingPlayer: PlayerNumber,
+    onClick? : (letterAndSource: LetterAndSource, i: number) => void,
 }) {
     return <CardsFromLettersAndSources
         lettersAndSources={hint.lettersAndSources}
         viewingPlayer={viewingPlayer}
+        onClick={onClick}
     />;
 }
 
 function CardsFromLettersAndSources({lettersAndSources, viewingPlayer, onClick}: {
     lettersAndSources: readonly LetterAndSource[],
     viewingPlayer: PlayerNumber,
-    onClick? : (letterAndSource: LetterAndSource) => void,
+    onClick? : (letterAndSource: LetterAndSource, i: number) => void,
 }) {
     return <div className='flex'>
         {lettersAndSources.map((letterAndSource, i) => {
@@ -153,7 +155,7 @@ function CardsFromLettersAndSources({lettersAndSources, viewingPlayer, onClick}:
             return <CardWithPlayerNumberOrLetter
                 letter={letterToDisplay}
                 playerNumberOrLetter={playerNumberOrLetter}
-                onClick={onClick !== undefined ? () => onClick(letterAndSource) : undefined}
+                onClick={onClick !== undefined ? () => onClick(letterAndSource, i) : undefined}
                 key={i}
             />
         })}

@@ -165,6 +165,20 @@ function addLetterAndSourceToHint(hint: Hint | null, letterAndSource: LetterAndS
     }
 }
 
+function removeLetterFromHintByIndex(hint: Hint, i: number): Hint | null {
+    if (hint.lettersAndSources.length === 1) {
+        return null;
+    }
+
+    const newLettersAndSources = [...hint.lettersAndSources];
+    newLettersAndSources.splice(i, 1);
+
+    return {
+        givenByPlayer: hint.givenByPlayer,
+        lettersAndSources: newLettersAndSources,
+    }
+}
+
 function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}) {
     const {username, player, playerNumber} = usePlayerContext();
     const proposedHint: Hint | null = hintingGameState.activeHint.proposedHints[playerNumber!] || null;
@@ -204,7 +218,12 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
             callSubmitHint(stagedHint);
             setStagedHint(null);
         }
-    }
+    };
+
+    const removeLetterFromHint = (letterAndSource: LetterAndSource, i: number) => {
+       const newHint = removeLetterFromHintByIndex(stagedHint!, i);
+       setStagedHint(newHint);
+    };
 
     return <>
         <div className='hintLogLine' />
@@ -216,7 +235,7 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
         />
         <div className='hintLogGuessBox'>
             {stagedHint !== null ?
-                <CardsInHint hint={stagedHint} viewingPlayer={playerNumber!} />:
+                <CardsInHint hint={stagedHint} viewingPlayer={playerNumber!} onClick={removeLetterFromHint} />:
                 // Render a hidden thing to make sure we have the right width.
                 <div style={{visibility: 'hidden'}}><CardWithPlayerNumberOrLetter letter={'🍓'} playerNumberOrLetter={'🍓'} /></div>}
                 <div className='flexAlignRight hintLogGuessBoxClear'>
