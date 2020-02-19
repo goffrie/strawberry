@@ -13,7 +13,7 @@ function Card({letter, onClick, inactive, guess, setGuess}: {letter?: Letter | n
         classNames += ' cardButton';
     }
     if (letter === '*') {
-        letterToUse = '🍓';
+        letterToUse = '🍓'; // lol
         classNames +=' cardStrawberry';
     }
     const keyDown = setGuess ? (e: React.KeyboardEvent) => {
