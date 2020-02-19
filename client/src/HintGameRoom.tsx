@@ -9,7 +9,7 @@ import {
     ResolvingHintPhase
 } from './gameState';
 import {Hint, Letter, LetterAndSource, LetterSources, PlayerNumber} from './gameTypes';
-import {PlayerNameContext, useGiveHint, usePlayerContext, useProposeHint, useResolveHint, useSetHandGuess} from './gameHook';
+import {PlayerNameContext, useGiveHint, usePlayerContext, useProposeHint, useResolveHint, useSetHandGuess, useStrawberryGame} from './gameHook';
 import {
     Card,
     CardsFromLettersAndSources,
@@ -24,18 +24,19 @@ import {deepEqual} from './utils';
 import { LinkButton } from './LinkButton';
 
 function HintGameRoom({hintingGameState}: {hintingGameState: HintingPhase}) {
-    const {username} = usePlayerContext();
+    const {isSpectator} = usePlayerContext();
 
     return <div className='gameContainer'>
         <HintGameRoomSidebar hintingGameState={hintingGameState} />
         <HintGameRoomLog hintingGameState={hintingGameState} />
+        {!isSpectator && <HintGameRoomNotesSidebar />}
     </div>;
 }
 
 function HintGameRoomSidebar({hintingGameState}: {hintingGameState: HintingPhase}) {
     const username = useContext(PlayerNameContext);
     const setGuess = useSetHandGuess(hintingGameState);
-    return <div className='gameSidebar'>
+    return <div className='gameSidebar gameSidebarPlayers'>
         {hintingGameState.players.map((player, i) => {
             const playerNumber = i + 1;
             const isForViewingPlayer = player.name === username;
@@ -57,6 +58,36 @@ function HintGameRoomSidebar({hintingGameState}: {hintingGameState: HintingPhase
         })}
         {hintingGameState.dummies.length > 0 && <DummiesSection dummies={hintingGameState.dummies} />}
         {hintingGameState.bonuses.length > 0 && <BonusesSection bonuses={hintingGameState.bonuses} />}
+    </div>
+}
+
+let debounceTimeout: null | number = null;
+function HintGameRoomNotesSidebar({}) {
+    // TODO: refactor local storage keys into constants
+    const [sidebarWidth, setSidebarWidth] = useState(350);
+    const [notes, setNotes] = useState('You can type notes here.');
+    const strawberryGame = useStrawberryGame();
+    const roomName = strawberryGame?.roomName!;
+    const localStorageKey = `notes:${roomName}`;
+
+    // Load the notes from local storage in case user rejoined
+    useEffect(() => {
+        const existingNotes = localStorage.getItem(localStorageKey);
+        if (existingNotes !== null) {
+            setNotes(existingNotes);
+        }
+    }, []);
+
+    // TODO: enable tabbing to indent
+    return <div className='gameSidebar gameSidebarNotes' style={{width: `${sidebarWidth}px`}}>
+        <textarea className='notesBox' value={notes} onChange={e => {
+            const newValue = e.target.value;
+            if (debounceTimeout !== null) {
+                clearTimeout(debounceTimeout);
+            }
+            debounceTimeout = window.setTimeout(() => {localStorage.setItem(localStorageKey, newValue)}, 1000);
+            setNotes(e.target.value);
+        }} />
     </div>
 }
 

@@ -1,11 +1,18 @@
-import React, {useState, useContext} from 'react';
+import React, {useState, useContext, useEffect} from 'react';
 import {StartingPhase} from './gameState';
 import {PlayerWithCardsInHand} from './Cards';
 import {LETTERS, MIN_PLAYERS} from './gameLogic';
-import {useJoinRoom, PlayerNameContext, useInputWord, useStartGame} from './gameHook';
+import {useJoinRoom, PlayerNameContext, useInputWord, useStartGame, useStrawberryGame} from './gameHook';
 import { LinkButton } from './LinkButton';
 
 function StartGameRoom({startingGameState}: {startingGameState: StartingPhase}) {
+    // Clear the player's notes, in the rare case where they've played a game with this room name before.
+    const strawberryGame = useStrawberryGame();
+    const roomName = strawberryGame?.roomName!;
+    useEffect(() => {
+        localStorage.removeItem(`notes:${roomName}`);
+    }, []);
+
     return <div className='gameContainer'>
         <StartGameRoomSidebar startingGameState={startingGameState} />
         <div className='flexCenterContainer'>
@@ -16,7 +23,7 @@ function StartGameRoom({startingGameState}: {startingGameState: StartingPhase}) 
 
 function StartGameRoomSidebar({startingGameState}: {startingGameState: StartingPhase}) {
     const username = useContext(PlayerNameContext);
-    return <div className='gameSidebar'>
+    return <div className='gameSidebar gameSidebarPlayers'>
         {startingGameState.players.map((player, i) => {
             // For sizing purposes, we render an invisible dummy hand if the player has not yet submitted a word
             const shouldHideHand = !player.word;
