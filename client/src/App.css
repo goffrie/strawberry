@@ -252,8 +252,17 @@ button {
 }
 
 .gameSidebarNotes {
-  border-left: 2px solid #BABABA;
   overflow: hidden;
+}
+
+.gameSidebarNotesHandle {
+  width: 3px;
+  height: 60px;
+  margin-left: 5px;
+  border: solid #E1E1E1;
+  border-width: 0px 2px;
+  cursor: col-resize;
+  align-self: center;
 }
 
 .gameStartMainContent {
@@ -277,6 +286,7 @@ button {
 .hintLogContainer {
   height: 100%;
   flex: auto;
+  border-right: 2px solid #BABABA;
 }
 
 .hintLogContent {
@@ -319,6 +329,7 @@ button {
   height: 100%;
   outline: none;
   padding: 20px;
+  padding-left: 8px;
   box-sizing: border-box;
   border: none;
   resize: none;

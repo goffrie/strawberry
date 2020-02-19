@@ -68,6 +68,8 @@ function HintGameRoomSidebar({hintingGameState}: {hintingGameState: HintingPhase
 let debounceTimeout: null | number = null;
 function HintGameRoomNotesSidebar() {
     // TODO: refactor local storage keys into constants
+    // TODO: separate into components
+    // TODO: save sidebar width to localStorage
     const [sidebarWidth, setSidebarWidth] = useState(350);
     const [notes, setNotes] = useState('You can type notes here.');
     const strawberryGame = useStrawberryGame();
@@ -83,43 +85,66 @@ function HintGameRoomNotesSidebar() {
         }
     }, []);
 
-    return <div className='gameSidebar gameSidebarNotes' style={{width: `${sidebarWidth}px`}}>
-        <textarea
-            className='notesBox'
-            value={notes}
-            onChange={e => {
-                const newValue = e.target.value;
-                if (debounceTimeout !== null) {
-                    clearTimeout(debounceTimeout);
-                }
-                debounceTimeout = window.setTimeout(() => {localStorage.setItem(localStorageKey, newValue)}, 1000);
-                setNotes(e.target.value);
-            }}
-            ref={textareaRef}
-            onKeyDown={e => {
-                // tab to insert space https://jsfiddle.net/2wAzx/13/
-               if (e.keyCode === 9) {
-                   e.preventDefault();
-                   const textarea = textareaRef.current;
-                   if (!textarea) return;
+    const [isDragging, setIsDragging] = useState(false);
+    const handleRef = useRef<HTMLDivElement>(null);
 
-                   // get caret position/selection
-                   const val = textarea.value;
-                   const start = textarea.selectionStart;
-                   const end = textarea.selectionEnd;
-
-                   // set textarea value to: text before caret + spaces + text after caret
-                   textarea.value = val.substring(0, start) + '    ' + val.substring(end);
-
-                   // put caret at right position again
-                   textarea.selectionStart = textarea.selectionEnd = start + 4;
-
-                   // prevent the focus lose
-                   return false;
-               }
-            }}
+    return <>
+        <div className='gameSidebar gameSidebarNotesHandle'
+             onPointerDown={e => {
+                 handleRef!.current!.setPointerCapture(e.pointerId);
+                 setIsDragging(true)
+             }}
+             onMouseMove={e => {
+                 if (isDragging) {
+                     let newWidth = window.innerWidth - e.pageX;
+                     if (newWidth < 100) newWidth = 100;
+                     setSidebarWidth(newWidth);
+                 }
+             }}
+             onPointerUp={e => {
+                 handleRef!.current!.releasePointerCapture(e.pointerId);
+                 setIsDragging(false)
+             }}
+             ref={handleRef}
         />
-    </div>
+        <div className='gameSidebar gameSidebarNotes' style={{width: `${sidebarWidth}px`, position: 'relative'}}>
+            <textarea
+                className='notesBox'
+                value={notes}
+                onChange={e => {
+                    const newValue = e.target.value;
+                    if (debounceTimeout !== null) {
+                        clearTimeout(debounceTimeout);
+                    }
+                    debounceTimeout = window.setTimeout(() => {localStorage.setItem(localStorageKey, newValue)}, 1000);
+                    setNotes(e.target.value);
+                }}
+                ref={textareaRef}
+                onKeyDown={e => {
+                    // tab to insert space https://jsfiddle.net/2wAzx/13/
+                   if (e.keyCode === 9) {
+                       e.preventDefault();
+                       const textarea = textareaRef.current;
+                       if (!textarea) return;
+
+                       // get caret position/selection
+                       const val = textarea.value;
+                       const start = textarea.selectionStart;
+                       const end = textarea.selectionEnd;
+
+                       // set textarea value to: text before caret + spaces + text after caret
+                       textarea.value = val.substring(0, start) + '    ' + val.substring(end);
+
+                       // put caret at right position again
+                       textarea.selectionStart = textarea.selectionEnd = start + 4;
+
+                       // prevent the focus lose
+                       return false;
+                   }
+                }}
+            />
+        </div>
+    </>
 }
 
 function DummiesSection({dummies}: {dummies: readonly Dummy[]}) {
