@@ -253,6 +253,7 @@ button {
 
 .gameSidebarNotes {
   border-left: 2px solid #BABABA;
+  overflow: hidden;
 }
 
 .gameStartMainContent {
