@@ -193,7 +193,7 @@ button {
   font-size: 50px;
   color: black;
   text-align: center;
-  border: 2px solid #999999;
+  border: 2px solid #BABABA;
   border-radius: 5px;
 }
 
@@ -240,7 +240,7 @@ button {
 }
 
 .gameSidebar {
-  border-right: 2px solid #999999;
+  border-right: 2px solid #BABABA;
   height: 100%;
   padding: 20px;
   box-sizing: border-box;
