@@ -11,7 +11,7 @@ import {
     HintingPhasePlayer,
 } from './gameState';
 import { PlayerNumber, Letter, Hint, HintSpecs, LetterSources } from './gameTypes';
-import { shuffle } from './utils';
+import { shuffle, mapNth } from './utils';
 
 export const MIN_PLAYERS: number = 2;
 export const MAX_PLAYERS: number = 6;
@@ -87,6 +87,7 @@ export function startGameRoom(room: StartingPhase): HintingPhase {
                 name: player.name,
                 hand: {
                     letters: shuffle(word),
+                    guesses: Array.from(word, _ => null),
                     activeIndex: 0,
                 },
                 hintsGiven: 0,
@@ -184,12 +185,8 @@ export function giveHint(room: ProposingHintPhase, hint: Hint): HintingPhase {
     // The player `playerName` gives a hint. This sets that hint as the activeHint, moving the game into the ResolvingHintPhase.
     const newRoom: ResolvingHintPhase = {
         ...room,
-        players: room.players.map((player, ix) => {
-            if (ix + 1 === hint.givenByPlayer) {
-                return {...player, hintsGiven: player.hintsGiven + 1};
-            } else {
-                return player;
-            }
+        players: mapNth(room.players, hint.givenByPlayer - 1, (player) => {
+            return {...player, hintsGiven: player.hintsGiven + 1};
         }),
         activeHint: {
             state: ActiveHintState.RESOLVING,
@@ -267,6 +264,7 @@ function applyResolution(room: ResolvingHintPhase, action: ResolveAction): Resol
             ...player,
             hand: {
                 letters,
+                guesses: player.hand.guesses,
                 activeIndex: player.hand.activeIndex+1,
             }
         };
@@ -281,6 +279,7 @@ function applyResolution(room: ResolvingHintPhase, action: ResolveAction): Resol
                     ...player.hand.letters.slice(0, room.wordLength),
                     randomLetter(),
                 ],
+                guesses: player.hand.guesses,
                 // index doesn't change
                 activeIndex: player.hand.activeIndex,
             },
@@ -355,5 +354,21 @@ export function performResolveAction(room: ResolvingHintPhase, action: ResolveAc
         return fullyResolveHint(newRoom);
     } else {
         return newRoom;
+    }
+}
+
+export function setHandGuess(room: HintingPhase, playerNumber: PlayerNumber, index: number, guess: Letter | null): HintingPhase {
+    return {
+        ...room,
+        players: mapNth(room.players, playerNumber - 1, (player) => {
+            return {
+                ...player,
+                hand: {
+                    ...player.hand,
+                    // TODO: remove fallback (needed for migration)
+                    guesses: mapNth(player.hand.guesses || Array.from({length: room.wordLength}, () => null), index, _ => guess),
+                },
+            }
+        })
     }
 }

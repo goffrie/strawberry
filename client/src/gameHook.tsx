@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { delay, deepEqual } from './utils';
-import { Hint } from './gameTypes';
+import { Hint, Letter, PlayerNumber } from './gameTypes';
 import {
     HintingPhase,
     HintingPhasePlayer,
@@ -21,6 +21,8 @@ import {
     setProposedHint,
     startGameRoom,
     performResolveAction,
+    setHandGuess,
+    playersWithOutstandingAction,
 } from './gameLogic';
 import {callCommit, callList} from './gameAPI';
 
@@ -256,4 +258,32 @@ function resolveHintMutator(room: ResolvingHintPhase, {action}: {action: Resolve
 export function useResolveHint(room: ResolvingHintPhase): ((action: ResolveAction) => void) {
     const [, mutate] = useMutateGame(room, true /* allowed */, resolveHintMutator);
     return (action) => mutate({action});
+}
+
+function setHandGuessMutator(room: HintingPhase, {playerNumber, changes}: {playerNumber: PlayerNumber, changes: Record<number, Letter | null>}): HintingPhase {
+    for (const index in changes) {
+        room = setHandGuess(room, playerNumber, parseInt(index), changes[index]);
+    }
+    return room;
+}
+
+export function useSetHandGuess(room: HintingPhase): ((index: number, guess: Letter | null) => void) {
+    const playerName = useContext(PlayerNameContext);
+    if (playerName == null) {
+        throw new Error("PlayerNameContext not provided");
+    }
+    const playerNumber = getPlayerNumber(room, playerName);
+    const allowed = playerNumber != null;
+    const [mutation, mutate] = useMutateGame(room, allowed, setHandGuessMutator);
+    return (index, guess) => {
+        if (playerNumber == null) return;
+        // need to preserve the existing mutation since we can edit multiple indices.
+        mutate({
+            ...(mutation || {playerNumber}),
+            changes: {
+                ...mutation?.changes,
+                [index]: guess,
+            },
+        });
+    };
 }

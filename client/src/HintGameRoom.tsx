@@ -9,7 +9,7 @@ import {
     ResolvingHintPhase
 } from './gameState';
 import {Hint, Letter, LetterAndSource, LetterSources, PlayerNumber} from './gameTypes';
-import {PlayerNameContext, useGiveHint, usePlayerContext, useProposeHint, useResolveHint} from './gameHook';
+import {PlayerNameContext, useGiveHint, usePlayerContext, useProposeHint, useResolveHint, useSetHandGuess} from './gameHook';
 import {
     Card,
     CardsFromLettersAndSources,
@@ -34,20 +34,25 @@ function HintGameRoom({hintingGameState}: {hintingGameState: HintingPhase}) {
 
 function HintGameRoomSidebar({hintingGameState}: {hintingGameState: HintingPhase}) {
     const username = useContext(PlayerNameContext);
+    const setGuess = useSetHandGuess(hintingGameState);
     return <div className='gameSidebar'>
         {hintingGameState.players.map((player, i) => {
-            const hand = {
-                letters: player.hand.letters,
-                activeIndex: player.hand.activeIndex,
-            };
             const playerNumber = i + 1;
+            const isForViewingPlayer = player.name === username;
+            const hand = {...player.hand};
+            if (isForViewingPlayer) {
+                hand.guesses = hand.guesses || Array.from({length: hintingGameState.wordLength}, _ => null);
+            } else {
+                delete hand.guesses;
+            }
             return <PlayerWithCardsInHand
                 hand={hand}
-                isForViewingPlayer={player.name === username}
+                isForViewingPlayer={isForViewingPlayer}
                 playerName={player.name}
                 playerNumber={playerNumber}
                 key={playerNumber}
                 extraText={`${player.hintsGiven} hint${player.hintsGiven === 1 ? '' : 's'} given`}
+                setGuess={isForViewingPlayer ? setGuess : undefined}
             />
         })}
         {hintingGameState.dummies.length > 0 && <DummiesSection dummies={hintingGameState.dummies} />}

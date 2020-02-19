@@ -1,27 +1,39 @@
 import React from 'react';
 import {DisplayNumberOrLetter} from './DisplayNumberOrLetter';
-import {Hand, Hint, LetterAndSource, LetterSources, PlayerNumber} from './gameTypes';
+import {Hand, Hint, LetterAndSource, LetterSources, PlayerNumber, HandWithGuesses, Letter} from './gameTypes';
+import { useSetHandGuess } from './gameHook';
+import { LETTERS } from './gameLogic';
 
-function Card({letter, onClick}: {letter: string, onClick?: () => void}) {
-    let classNames = 'card cardActive';
+function Card({letter, onClick, inactive, guess, setGuess}: {letter?: Letter | null, onClick?: () => void, inactive?: boolean, guess?: Letter | null, setGuess?: ((guess: Letter | null) => void) | null}) {
+    let classNames = 'card';
+    if (!inactive) classNames += ' cardActive';
+    if (setGuess) classNames += ' cardGuessable';
+    if (guess) classNames += ' cardGuessed';
     if (onClick !== undefined) {
         classNames += ' cardButton';
     }
-    return <div className={classNames} onClick={onClick}>{letter}</div>
+    const keyDown = setGuess ? (e: React.KeyboardEvent) => {
+        if (e.keyCode === 8 /* backspace */) {
+            setGuess(null);
+        } else {
+            const char = e.key.toUpperCase();
+            if (LETTERS.includes(char)) {
+                setGuess(char);
+            }
+        }
+        e.preventDefault();
+     } : undefined;
+    return <div className={classNames} onClick={onClick} tabIndex={setGuess ? 0 : undefined} onKeyDown={keyDown}>{guess || letter || ''}</div>
 }
 
-function InactiveCard() {
-    return <div className='card' />;
-}
-
-function CardWithAnnotation({letter, annotation, onClick}: {letter: string, annotation: React.ReactNode, onClick?: () => void}) {
+function CardWithAnnotation({letter, annotation, onClick}: {letter: Letter, annotation: React.ReactNode, onClick?: () => void}) {
     return <div className='cardWithPlayerNumber'>
         <Card letter={letter} onClick={onClick} />
         {annotation}
     </div>
 }
 
-function CardWithPlayerNumberOrLetter({letter, playerNumberOrLetter, onClick}: {letter: string, playerNumberOrLetter: number | string | null, onClick?: () => void}) {
+function CardWithPlayerNumberOrLetter({letter, playerNumberOrLetter, onClick}: {letter: Letter, playerNumberOrLetter: PlayerNumber | Letter | null, onClick?: () => void}) {
     // keep same height even when there is no number or letter.
     const annotation = <div style={playerNumberOrLetter === null ? {visibility: 'hidden'} : {}}>
         <DisplayNumberOrLetter numberOrLetter={playerNumberOrLetter || '🍓'} />
@@ -29,26 +41,37 @@ function CardWithPlayerNumberOrLetter({letter, playerNumberOrLetter, onClick}: {
     return <CardWithAnnotation letter={letter} annotation={annotation} onClick={onClick} />
 }
 
-function CardsInHand({hand, isForViewingPlayer}: {hand: Hand, isForViewingPlayer: boolean}) {
+function CardsInHand({hand, isForViewingPlayer, setGuess}: {hand: Hand | HandWithGuesses, isForViewingPlayer: boolean, setGuess?: (index: number, guess: Letter | null) => void}) {
     return <div className='flex'>
         {hand.letters.map((card, i) => {
-            if (i === hand.activeIndex) {
-                const letterToDisplay = isForViewingPlayer ? '?' : card;
-                return <Card letter={letterToDisplay} key={i} />
-            } else {
-                return <InactiveCard key={i} />
+            const active = i === hand.activeIndex;
+            if (isForViewingPlayer && 'guesses' in hand && setGuess != null && i < hand.guesses.length) {
+                const guess = hand.guesses[i];
+                return <Card
+                    letter={i === hand.activeIndex ? '?' : null}
+                    inactive={!active}
+                    guess={guess}
+                    // can only guess up to activeIndex
+                    setGuess={i <= hand.activeIndex ? (guess: Letter | null) => setGuess(i, guess) : null}
+                    key={i} />
             }
+            const letterToDisplay = active ? (isForViewingPlayer ? '?' : card) : null;
+            return <Card
+                letter={letterToDisplay}
+                inactive={!active}
+                key={i} />;
         })}
     </div>
 }
 
-function PlayerWithCardsInHand({hand, isForViewingPlayer, playerName, playerNumber, shouldHideHand=false, extraText=''}: {
-    hand: Hand,
+function PlayerWithCardsInHand({hand, isForViewingPlayer, playerName, playerNumber, shouldHideHand=false, extraText='', setGuess}: {
+    hand: Hand | HandWithGuesses,
     isForViewingPlayer: boolean,
     playerName: string,
     playerNumber: number,
     shouldHideHand?: boolean,  // used for layout/sizing reasons
     extraText?: string,
+    setGuess?: (index: number, guess: Letter | null) => void,
 }) {
     // TODO: later, for end game, separate isForViewingPlayer with shouldHideLetter
     // TODO: render fallback on top of cardsInHand or something so the whitespace doesn't look weird
@@ -61,7 +84,7 @@ function PlayerWithCardsInHand({hand, isForViewingPlayer, playerName, playerNumb
         {extraText ? <span className='flexAlignRight'>{extraText}</span> : null}
     </>;
 
-    const cardsToRender = <CardsInHand hand={hand} isForViewingPlayer={isForViewingPlayer} />;
+    const cardsToRender = <CardsInHand hand={hand} isForViewingPlayer={isForViewingPlayer} setGuess={setGuess} />;
 
     return <DisplayNumberOrLetterWithTextAndCards
         numberOrLetter={playerNumber}
@@ -137,4 +160,4 @@ function CardsFromLettersAndSources({lettersAndSources, viewingPlayer, onClick}:
     </div>
 }
 
-export {Card, CardWithAnnotation, CardWithPlayerNumberOrLetter, InactiveCard, PlayerWithCardsInHand, DisplayNumberOrLetterWithTextAndCards, CardsInHand, CardsInHint, CardsFromLettersAndSources};
+export {Card, CardWithAnnotation, CardWithPlayerNumberOrLetter, PlayerWithCardsInHand, DisplayNumberOrLetterWithTextAndCards, CardsInHand, CardsInHint, CardsFromLettersAndSources};

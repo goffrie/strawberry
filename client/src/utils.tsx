@@ -39,3 +39,7 @@ export function deepEqual(x: any, y: any): boolean {
     }
     return false;
 }
+
+export function mapNth<T>(xs: readonly T[], index: number, f: (arg: T) => T): T[] {
+    return xs.map((item, i) => i == index ? f(item) : item);
+}

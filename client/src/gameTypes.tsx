@@ -6,6 +6,10 @@ export interface Hand {
     activeIndex: number; // 0-indexed, -1 if no active card
 }
 
+export interface HandWithGuesses extends Hand {
+    guesses: readonly (Letter | null)[];
+}
+
 export enum LetterSources {
     PLAYER = 'player',
     WILDCARD = 'wildcard',
