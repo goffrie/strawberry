@@ -23,8 +23,9 @@ function Card({letter, onClick, inactive, guess, setGuess}: {letter?: Letter | n
                 e.preventDefault();
             }
         }
-     } : undefined;
-    return <div className={classNames} onClick={onClick} tabIndex={setGuess ? 0 : undefined} onKeyDown={keyDown}>{guess || letter || ''}</div>
+    } : undefined;
+    let x = (letter == '*') ? <span style={{fontSize: "50%", position: "relative", verticalAlign: "middle"}}>🍓</span> : letter; // lol
+    return <div className={classNames} onClick={onClick} tabIndex={setGuess ? 0 : undefined} onKeyDown={keyDown}>{guess || x || ''}</div>
 }
 
 function CardWithAnnotation({letter, annotation, onClick}: {letter: Letter, annotation: React.ReactNode, onClick?: () => void}) {
