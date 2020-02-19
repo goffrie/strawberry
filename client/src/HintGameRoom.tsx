@@ -254,6 +254,11 @@ function AvailableCards({hintingGameState, playerNumber, addToStagedHint}: {
         }
     });
 
+    lettersAndSources.push({
+        sourceType: LetterSources.WILDCARD,
+        letter: '*',
+    });
+
     hintingGameState.dummies.forEach((dummy, i) => {
         lettersAndSources.push({
             sourceType: LetterSources.DUMMY,
@@ -267,11 +272,6 @@ function AvailableCards({hintingGameState, playerNumber, addToStagedHint}: {
             sourceType: LetterSources.BONUS,
             letter: bonus,
         })
-    });
-
-    lettersAndSources.push({
-        sourceType: LetterSources.WILDCARD,
-        letter: '*',
     });
 
     return <div className='hintLogLine' style={{marginLeft: '12px'}}>
