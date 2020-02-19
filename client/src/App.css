@@ -217,6 +217,19 @@ button {
   width: fit-content;
 }
 
+.cardGuessed {
+  color: #777777;
+}
+
+.cardGuessable {
+  cursor: text;
+  border-color: #D20B0B;
+  outline: none;
+}
+
+.cardGuessable:hover, .cardGuessable:focus {
+  border-color: #19AF00;
+}
 
 
 /* GAME LAYOUT STYLES */
