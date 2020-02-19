@@ -5,11 +5,16 @@ import { LETTERS } from './gameLogic';
 
 function Card({letter, onClick, inactive, guess, setGuess}: {letter?: Letter | null, onClick?: () => void, inactive?: boolean, guess?: Letter | null, setGuess?: ((guess: Letter | null) => void) | null}) {
     let classNames = 'card';
+    let letterToUse = letter;
     if (!inactive) classNames += ' cardActive';
     if (setGuess) classNames += ' cardGuessable';
     if (guess) classNames += ' cardGuessed';
     if (onClick !== undefined) {
         classNames += ' cardButton';
+    }
+    if (letter === '*') {
+        letterToUse = '🍓';
+        classNames +=' cardStrawberry';
     }
     const keyDown = setGuess ? (e: React.KeyboardEvent) => {
         if (e.ctrlKey || e.altKey) return;
@@ -24,8 +29,7 @@ function Card({letter, onClick, inactive, guess, setGuess}: {letter?: Letter | n
             }
         }
     } : undefined;
-    let x = (letter == '*') ? <span style={{fontSize: "50%", position: "relative", verticalAlign: "middle"}}>🍓</span> : letter; // lol
-    return <div className={classNames} onClick={onClick} tabIndex={setGuess ? 0 : undefined} onKeyDown={keyDown}>{guess || x || ''}</div>
+    return <div className={classNames} onClick={onClick} tabIndex={setGuess ? 0 : undefined} onKeyDown={keyDown}>{guess || letterToUse || ''}</div>
 }
 
 function CardWithAnnotation({letter, annotation, onClick}: {letter: Letter, annotation: React.ReactNode, onClick?: () => void}) {
