@@ -8,7 +8,6 @@ import {
     ResolvingHintPhase,
     RoomPhase,
     StartingPhase,
-    HintingPhasePlayer,
 } from './gameState';
 import { PlayerNumber, Letter, Hint, HintSpecs, LetterSources } from './gameTypes';
 import { shuffle, mapNth } from './utils';

@@ -41,5 +41,5 @@ export function deepEqual(x: any, y: any): boolean {
 }
 
 export function mapNth<T>(xs: readonly T[], index: number, f: (arg: T) => T): T[] {
-    return xs.map((item, i) => i == index ? f(item) : item);
+    return xs.map((item, i) => i === index ? f(item) : item);
 }

@@ -22,7 +22,6 @@ import {
     startGameRoom,
     performResolveAction,
     setHandGuess,
-    playersWithOutstandingAction,
 } from './gameLogic';
 import {callCommit, callList} from './gameAPI';
 

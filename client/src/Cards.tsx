@@ -1,7 +1,6 @@
 import React from 'react';
 import {DisplayNumberOrLetter} from './DisplayNumberOrLetter';
 import {Hand, Hint, LetterAndSource, LetterSources, PlayerNumber, HandWithGuesses, Letter} from './gameTypes';
-import { useSetHandGuess } from './gameHook';
 import { LETTERS } from './gameLogic';
 
 function Card({letter, onClick, inactive, guess, setGuess}: {letter?: Letter | null, onClick?: () => void, inactive?: boolean, guess?: Letter | null, setGuess?: ((guess: Letter | null) => void) | null}) {
