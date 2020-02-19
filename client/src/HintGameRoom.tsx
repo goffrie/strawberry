@@ -35,19 +35,22 @@ function HintGameRoom({hintingGameState}: {hintingGameState: HintingPhase}) {
 
 function HintGameRoomSidebar({hintingGameState}: {hintingGameState: HintingPhase}) {
     const username = useContext(PlayerNameContext);
-    const setGuess = useSetHandGuess(hintingGameState);
+    const [settingGuesses, setGuess] = useSetHandGuess(hintingGameState);
     return <div className='gameSidebar gameSidebarPlayers'>
         {hintingGameState.players.map((player, i) => {
             const playerNumber = i + 1;
             const isForViewingPlayer = player.name === username;
-            const hand = {...player.hand};
+            let guesses;
             if (isForViewingPlayer) {
-                hand.guesses = hand.guesses || Array.from({length: hintingGameState.wordLength}, _ => null);
-            } else {
-                delete hand.guesses;
+                guesses = [...player.hand.guesses] || Array.from({length: hintingGameState.wordLength}, _ => null);
+                if (settingGuesses != null) {
+                    for (const index in settingGuesses) {
+                        guesses[parseInt(index)] = settingGuesses[index];
+                    }
+                }
             }
             return <PlayerWithCardsInHand
-                hand={hand}
+                hand={{...player.hand, guesses}}
                 isForViewingPlayer={isForViewingPlayer}
                 playerName={player.name}
                 playerNumber={playerNumber}
