@@ -96,7 +96,8 @@ function HintGameRoomNotesSidebar() {
              }}
              onMouseMove={e => {
                  if (isDragging) {
-                     let newWidth = window.innerWidth - e.pageX;
+                     // minus 10 due to width of handle
+                     let newWidth = window.innerWidth - e.pageX - 10;
                      if (newWidth < 100) newWidth = 100;
                      setSidebarWidth(newWidth);
                  }
