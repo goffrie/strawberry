@@ -28,6 +28,7 @@ import {
     setHandGuess,
     setFinalGuess,
     removePlayerFromRoom,
+    commitFinalGuess,
 } from './gameLogic';
 import {callCommit, callList} from './gameAPI';
 
@@ -312,4 +313,16 @@ export function useSetFinalGuess(room: EndgamePhase): [readonly EndgameLetterCho
     const playerNumber = getPlayerNumber(room, playerName)!;
     const [mutation, mutate] = useMutateGame(room, true /* allowed */, setFinalGuessMutator);
     return [mutation?.guess, (guess) => mutate({playerNumber, guess})];
+}
+
+
+export function useCommitFinalGuess(room: EndgamePhase): () => void {
+    const playerName = useContext(PlayerNameContext);
+    if (playerName == null) {
+        throw new Error("PlayerNameContext not provided");
+    }
+    const playerNumber = getPlayerNumber(room, playerName)!;
+    const allowed = room.players[playerNumber-1].guess.length >= room.wordLength && !room.players[playerNumber-1].committed;
+    const [, mutate] = useMutateGame(room, allowed, commitFinalGuess);
+    return () => mutate(playerNumber);
 }

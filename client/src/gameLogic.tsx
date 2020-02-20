@@ -466,3 +466,13 @@ export function setFinalGuess(room: EndgamePhase, playerNumber: PlayerNumber, gu
     }
     return newRoom;
 }
+
+export function commitFinalGuess(room: EndgamePhase, playerNumber: PlayerNumber): EndgamePhase {
+    return {
+        ...room,
+        players: mapNth(room.players, playerNumber-1, (player) => ({
+            ...player,
+            committed: true,
+        })),
+    };
+}

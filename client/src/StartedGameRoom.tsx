@@ -15,7 +15,7 @@ import {
     EndgameLetterChoice,
 } from './gameState';
 import {Hint, Letter, LetterAndSource, LetterSources, PlayerNumber} from './gameTypes';
-import {PlayerNameContext, useGiveHint, usePlayerContext, useProposeHint, useResolveHint, useSetHandGuess, useStrawberryGame, useSetFinalGuess} from './gameHook';
+import {PlayerNameContext, useGiveHint, usePlayerContext, useProposeHint, useResolveHint, useSetHandGuess, useStrawberryGame, useSetFinalGuess, useCommitFinalGuess} from './gameHook';
 import {
     Card,
     CardsFromLettersAndSources,
@@ -360,7 +360,6 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
                 <span style={{marginLeft: '10px'}} />
                 <LinkButton isDisabled={!canSubmitHint} onClick={submit}>Submit hint</LinkButton>
             </span>
-
         </div>
     </>
 }
@@ -567,6 +566,9 @@ function GuessWordComponent({gameState}: {gameState: EndgamePhase}) {
         setGuess(newGuess);
     };
 
+    const canSubmitGuess = !settingGuess && guess.length >= gameState.wordLength;
+    const submit = useCommitFinalGuess(gameState);
+
     return <>
         <div className='hintLogLine' style={{marginLeft: '12px'}}>
             <CardsFromLettersAndSources lettersAndSources={lettersAndSources} viewingPlayer={-1} onClick={addToGuess} />
@@ -578,6 +580,11 @@ function GuessWordComponent({gameState}: {gameState: EndgamePhase}) {
                     setGuess([]);
                 }} isDisabled={guess.length === 0}>Clear</LinkButton>
             </div>
+        </div>
+        <div className='flex hintLogLine'>
+            <span className='flexAlignRight'>
+                <LinkButton isDisabled={!canSubmitGuess} onClick={submit}>Submit guess</LinkButton>
+            </span>
         </div>
     </>
 }
