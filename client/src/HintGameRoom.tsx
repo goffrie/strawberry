@@ -71,7 +71,7 @@ function HintGameRoomNotesSidebar() {
     // TODO: separate into components
     // TODO: save sidebar width to localStorage
     const [sidebarWidth, setSidebarWidth] = useState(350);
-    const [notes, setNotes] = useState('You can type notes here.');
+    const [notes, setNotes] = useState('');
     const strawberryGame = useStrawberryGame();
     const roomName = strawberryGame?.roomName!;
     const localStorageKey = `notes:${roomName}`;
@@ -112,6 +112,7 @@ function HintGameRoomNotesSidebar() {
             <textarea
                 className='notesBox'
                 value={notes}
+                placeholder='You can type notes here'
                 onChange={e => {
                     const newValue = e.target.value;
                     if (debounceTimeout !== null) {

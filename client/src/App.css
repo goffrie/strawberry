@@ -338,6 +338,7 @@ button {
   border: none;
   resize: none;
   font-size: 16px;
+  line-height: 20px; /* so inserting emojis doesnt change line height */
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
   monospace;
 }
