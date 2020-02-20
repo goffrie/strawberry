@@ -161,6 +161,7 @@ button {
 
 .bigStrawberry {
   font-size: 120px;
+  user-select: none;
 }
 
 .wordLengthControl {
