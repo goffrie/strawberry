@@ -322,7 +322,7 @@ This element uses ScrollableFeed, so it cannot take padding.
 
 .hintLogEntry:not(:first-child) {
   /* put some spacing between hint log entries */
-  margin-top: 50px;
+  margin-top: 40px;
 }
 .hintLogTitle {
   font-size: 25px;
@@ -343,20 +343,7 @@ This element uses ScrollableFeed, so it cannot take padding.
 .you {
   color: #777777;
 }
-.you ~ .has {
-  font-size: 0;
-}
-.you ~ .has::after {
-  content: "have";
-  font-size: 1rem;
-}
-.you ~ .their {
-  font-size: 0;
-}
-.you ~ .their::after {
-  content: "your";
-  font-size: 1rem;
-}
+
 .playerName {
   font-weight: 600;
 }
@@ -364,6 +351,7 @@ This element uses ScrollableFeed, so it cannot take padding.
 .hintLogGuessBox {
   border: 2px solid #D20B0B;
   padding: 10px 0px 10px 10px;
+  margin-top: 15px;
   margin-bottom: 15px;
   overflow-x: auto; /* awwww yeah side scrolling */
   display: flex;

@@ -371,7 +371,7 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
     };
 
     return <>
-        <div className='hintLogLine' />
+        <div className='hintLogLine'>&nbsp;</div>
         <div className='hintLogLine italics'>Available letters (click to use): </div>
         <AvailableCards
             hintingGameState={hintingGameState}
