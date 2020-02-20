@@ -13,6 +13,7 @@ import {
     EndgamePhase,
     StartedPlayer,
     EndgameLetterChoice,
+    EndgamePhasePlayer,
 } from './gameState';
 import {Hint, Letter, LetterAndSource, LetterSources, PlayerNumber} from './gameTypes';
 import {PlayerNameContext, useGiveHint, usePlayerContext, useProposeHint, useResolveHint, useSetHandGuess, useStrawberryGame, useSetFinalGuess, useCommitFinalGuess} from './gameHook';
@@ -23,15 +24,16 @@ import {
     CardWithAnnotation,
     CardWithPlayerNumberOrLetter,
     DisplayNumberOrLetterWithTextAndCards,
-    PlayerWithCardsInHand
+    PlayerWithCardsInHand,
+    CardsInHand,
+    RevealedCardsInHand
 } from './Cards';
 import {ResolveActionChoice, specsOfHint, whichResolveActionRequired, playersWithOutstandingAction, LETTERS, availableLetters, moveToEndgame, setFinalGuess} from './gameLogic';
 import {deepEqual} from './utils';
 import { LinkButton } from './LinkButton';
 
 function StartedGameRoom({gameState}: {gameState: StartedPhase}) {
-    const {isSpectator} = usePlayerContext();
-
+    const {isSpectator, playerNumber} = usePlayerContext();
     let action: React.ReactNode;
     if (isSpectator) {
         // Spectators can't act.
@@ -43,7 +45,7 @@ function StartedGameRoom({gameState}: {gameState: StartedPhase}) {
             {isProposing(gameState) && <ProposingHintComponent hintingGameState={gameState} />}
             {isResolving(gameState) && <ResolvingHintComponent hintingGameState={gameState} />}
         </div>;
-    } else {
+    } else if (!gameState.players[playerNumber! - 1].committed) {
         action = <div className="hintLogEntry">
             <div className='hintLogTitle'>Construct your word</div>
             <GuessWordComponent gameState={gameState} />
@@ -67,23 +69,53 @@ function StartedGameRoomSidebar({gameState}: {gameState: StartedPhase}) {
         {players.map((player, i) => {
             const playerNumber = i + 1;
             const isForViewingPlayer = player.name === username;
-            let guesses;
+            const hand = {...player.hand};
             if (isForViewingPlayer) {
-                guesses = [...player.hand.guesses] || Array.from({length: gameState.wordLength}, _ => null);
-                if (settingGuesses != null) {
-                    for (const index in settingGuesses) {
-                        guesses[parseInt(index)] = settingGuesses[index];
+                hand.guesses = Array.from(
+                    // TODO: remove this migration
+                    player.hand.guesses || {length: gameState.wordLength},
+                    // overlay `settingGuesses` on top
+                    (v, i) => settingGuesses ? settingGuesses[i] ?? v : v,
+                );
+            }
+            let cardsToRender = <CardsInHand hand={hand} isForViewingPlayer={isForViewingPlayer} setGuess={isForViewingPlayer ? setGuess : undefined} />;
+
+            if (gameState.phase === RoomPhase.ENDGAME) {
+                const p = player as EndgamePhasePlayer;
+                // All letters are guessable, but no letter is revealed.
+                hand.activeIndex = gameState.wordLength;
+                let override: (LetterAndSource | null)[] | undefined;
+                const convert = (choice: EndgameLetterChoice): LetterAndSource => {
+                    if (choice.sourceType === LetterSources.PLAYER) {
+                        return {
+                            sourceType: LetterSources.PLAYER,
+                            letter: gameState.players[playerNumber-1].hand.letters[choice.index],
+                            playerNumber,
+                        };
                     }
+                    return choice;
+                }
+                if (p.committed) {
+                    // Reveal this player's final guess!
+                    override = p.guess.map(convert);
+                } else if (!isForViewingPlayer) {
+                    // Show the letters that this player has taken from the centre.
+                    override = p.guess.filter((choice) => choice.sourceType !== LetterSources.PLAYER).map(convert);
+                    while (override.length < gameState.wordLength) {
+                        override.push(null);
+                    }
+                }
+                if (override) {
+                    cardsToRender = <RevealedCardsInHand letters={override} />;
                 }
             }
             return <PlayerWithCardsInHand
-                hand={{...player.hand, guesses}}
+                cardsToRender={cardsToRender}
                 isForViewingPlayer={isForViewingPlayer}
                 playerName={player.name}
                 playerNumber={playerNumber}
                 key={playerNumber}
                 extraText={`${player.hintsGiven} hint${player.hintsGiven === 1 ? '' : 's'} given`}
-                setGuess={isForViewingPlayer ? setGuess : undefined}
             />
         })}
         {gameState.dummies.length > 0 && <DummiesSection dummies={gameState.dummies} />}
@@ -549,7 +581,7 @@ function GuessWordComponent({gameState}: {gameState: EndgamePhase}) {
         if (choice.sourceType === LetterSources.PLAYER) {
             return {
                 sourceType: LetterSources.PLAYER,
-                letter: player.hand.guesses[choice.index] ?? '?',
+                letter: gameState.players[playerNumber-1].hand.guesses[choice.index] ?? '?',
                 playerNumber,
             };
         }

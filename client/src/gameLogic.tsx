@@ -376,6 +376,13 @@ export function moveToEndgame(room: HintingPhase): EndgamePhase {
         hintsRemaining: 0,
         players: players.map((player) => ({
             ...player,
+            hand: {
+                guesses: player.hand.guesses,
+                // Remove any bonus letter from the player's hand.
+                letters: player.hand.letters.slice(0, room.wordLength),
+                // All letters are guessable, but none are active.
+                activeIndex: room.wordLength,
+            },
             guess: [],
             committed: false,
         })),

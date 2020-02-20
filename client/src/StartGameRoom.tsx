@@ -1,6 +1,6 @@
 import React, {useState, useContext, useEffect} from 'react';
 import {StartingPhase} from './gameState';
-import {PlayerWithCardsInHand} from './Cards';
+import {PlayerWithCardsInHand, CardsInHand} from './Cards';
 import {LETTERS, MIN_PLAYERS, MAX_PLAYERS} from './gameLogic';
 import {useJoinRoom, PlayerNameContext, useInputWord, useStartGame, useStrawberryGame} from './gameHook';
 import { LinkButton } from './LinkButton';
@@ -28,18 +28,15 @@ function StartGameRoomSidebar({startingGameState, leaveGame}: {startingGameState
     const placeholderLetters = Array.from({length: startingGameState.wordLength}, () => {return '🍓'});
     return <div className='gameSidebar gameSidebarPlayers'>
         {startingGameState.players.map((player, i) => {
-            // For sizing purposes, we render an invisible dummy hand if the player has not yet submitted a word
-            const shouldHideHand = !player.word;
             const hand = {
                 // letters themselves not currently rendered, but might be later?
-                letters: player.word ? player.word.split('') : placeholderLetters,
+                letters: (player.word ?? '').split(''),
                 activeIndex: -1, // useless here, idk
             };
             const playerNumber = i + 1;
             const isForViewingPlayer = player.name === username;
             return <PlayerWithCardsInHand
-                hand={hand}
-                shouldHideHand={shouldHideHand}
+                cardsToRender={<CardsInHand hand={hand} isForViewingPlayer={isForViewingPlayer} />}
                 isForViewingPlayer={isForViewingPlayer}
                 playerName={player.name}
                 playerNumber={playerNumber}
@@ -49,8 +46,7 @@ function StartGameRoomSidebar({startingGameState, leaveGame}: {startingGameState
         })}
         {startingGameState.players.length === 0 && <div style={{visibility: "hidden"}}>
         <PlayerWithCardsInHand
-            hand={{letters: placeholderLetters, activeIndex: -1}}
-            shouldHideHand={true}
+            cardsToRender={<CardsInHand hand={{letters: placeholderLetters, activeIndex: -1}} isForViewingPlayer={false} />}
             isForViewingPlayer={false}
             playerName={""}
             playerNumber={0}

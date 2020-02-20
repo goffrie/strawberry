@@ -47,6 +47,12 @@ function CardWithPlayerNumberOrLetter({letter, playerNumberOrLetter, onClick, hi
     return <CardWithAnnotation letter={letter} annotation={annotation} onClick={onClick} hidden={hidden}/>
 }
 
+function RevealedCardsInHand({letters}: {letters: readonly (LetterAndSource | null)[]}) {
+    return <div className='flex'>
+        {letters.map((card, i) => <Card letter={card?.letter} inactive={card == null} key={i} />)}
+    </div>;
+}
+
 function CardsInHand({hand, isForViewingPlayer, setGuess}: {hand: Hand | HandWithGuesses, isForViewingPlayer: boolean, setGuess?: (index: number, guess: Letter | null) => void}) {
     return <div className='flex'>
         {hand.letters.map((card, i) => {
@@ -70,14 +76,12 @@ function CardsInHand({hand, isForViewingPlayer, setGuess}: {hand: Hand | HandWit
     </div>
 }
 
-function PlayerWithCardsInHand({hand, isForViewingPlayer, playerName, playerNumber, shouldHideHand=false, extraText='', setGuess}: {
-    hand: Hand | HandWithGuesses,
+function PlayerWithCardsInHand({isForViewingPlayer, playerName, playerNumber, extraText='', cardsToRender}: {
     isForViewingPlayer: boolean,
     playerName: string,
     playerNumber: number,
-    shouldHideHand?: boolean,  // used for layout/sizing reasons
     extraText?: React.ReactNode,
-    setGuess?: (index: number, guess: Letter | null) => void,
+    cardsToRender: React.ReactNode,
 }) {
     // TODO: later, for end game, separate isForViewingPlayer with shouldHideLetter
     // TODO: render fallback on top of cardsInHand or something so the whitespace doesn't look weird
@@ -90,13 +94,10 @@ function PlayerWithCardsInHand({hand, isForViewingPlayer, playerName, playerNumb
         {extraText ? <span className='flexAlignRight'>{extraText}</span> : null}
     </>;
 
-    const cardsToRender = <CardsInHand hand={hand} isForViewingPlayer={isForViewingPlayer} setGuess={setGuess} />;
-
     return <DisplayNumberOrLetterWithTextAndCards
         numberOrLetter={playerNumber}
         topText={topText}
         cardsToRender={cardsToRender}
-        shouldHideCards={shouldHideHand}
     />;
 }
 
@@ -115,9 +116,7 @@ function DisplayNumberOrLetterWithTextAndCards({numberOrLetter, topText, cardsTo
             <div style={{marginLeft: '5px', marginBottom: '5px', marginRight: '5px', lineHeight: '25px', display: 'flex'}}>
                 {topText}
             </div>
-            <div style={shouldHideCards ? {visibility: 'hidden'}: {}}>
-                {cardsToRender}
-            </div>
+            {cardsToRender}
         </div>
     </div>
 }
@@ -169,4 +168,4 @@ function CardsFromLettersAndSources({lettersAndSources, viewingPlayer, onClick}:
     </div>
 }
 
-export {Card, CardWithAnnotation, CardWithPlayerNumberOrLetter, PlayerWithCardsInHand, DisplayNumberOrLetterWithTextAndCards, CardsInHand, CardsInHint, CardsFromLettersAndSources};
+export {Card, CardWithAnnotation, CardWithPlayerNumberOrLetter, PlayerWithCardsInHand, DisplayNumberOrLetterWithTextAndCards, CardsInHand, CardsInHint, CardsFromLettersAndSources, RevealedCardsInHand};
