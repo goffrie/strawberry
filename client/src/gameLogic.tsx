@@ -11,6 +11,7 @@ import {
     EndgamePhase,
     BaseStartedPhase,
     EndgameLetterChoice,
+    StartedPhase,
 } from './gameState';
 import { PlayerNumber, Letter, Hint, HintSpecs, LetterSources } from './gameTypes';
 import { shuffle, mapNth } from './utils';
@@ -172,7 +173,7 @@ export function setProposedHint(room: ProposingHintPhase, playerName: string, hi
     };
 }
 
-export function giveHint(room: ProposingHintPhase, hint: Hint): HintingPhase {
+export function giveHint(room: ProposingHintPhase, hint: Hint): StartedPhase {
     // Sanity check that the letters used in the hint actually exist.
     for (const letterAndSource of hint.lettersAndSources) {
         switch (letterAndSource.sourceType) {
@@ -301,7 +302,7 @@ function applyResolution(room: ResolvingHintPhase, action: ResolveAction): Resol
     }
 }
 
-function fullyResolveHint(room: ResolvingHintPhase): ProposingHintPhase {
+function fullyResolveHint(room: ResolvingHintPhase): StartedPhase {
     const logEntry = {
         hint: room.activeHint.hint,
         totalHints: room.hintLog.length + room.hintsRemaining,
@@ -336,7 +337,7 @@ function fullyResolveHint(room: ResolvingHintPhase): ProposingHintPhase {
     });
     const bonuses = room.bonuses.filter((bonus, index) => !bonusesUsed.has(index));
 
-    return {
+    const newRoom: ProposingHintPhase = {
         ...room,
         dummies,
         bonuses,
@@ -347,9 +348,15 @@ function fullyResolveHint(room: ResolvingHintPhase): ProposingHintPhase {
             proposedHints: {},
         },
     };
+
+    if (hintsRemaining <= 0) {
+        return moveToEndgame(newRoom);
+    } else {
+        return newRoom;
+    }
 }
 
-export function performResolveAction(room: ResolvingHintPhase, action: ResolveAction): HintingPhase {
+export function performResolveAction(room: ResolvingHintPhase, action: ResolveAction): StartedPhase {
     let newRoom: ResolvingHintPhase = {
         ...room,
         activeHint: {

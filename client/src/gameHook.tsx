@@ -248,7 +248,7 @@ export function useProposeHint(room: ProposingHintPhase): [Hint | null | undefin
     return [mutation?.hint, allowed ? (hint) => mutate({playerName, hint}) : null];
 }
 
-function giveHintMutator(room: ProposingHintPhase, {hintNumber, hint}: {hintNumber: number, hint: Hint}): HintingPhase {
+function giveHintMutator(room: ProposingHintPhase, {hintNumber, hint}: {hintNumber: number, hint: Hint}): StartedPhase {
     if (hintNumber !== room.hintLog.length) return room; // raced
     return giveHint(room, hint);
 }
@@ -264,7 +264,7 @@ export function useGiveHint(room: ProposingHintPhase): ((hint: Hint) => void) | 
     return allowed ? (hint) => mutate({hintNumber, hint}) : null;
 }
 
-function resolveHintMutator(room: ResolvingHintPhase, {action}: {action: ResolveAction}): HintingPhase {
+function resolveHintMutator(room: ResolvingHintPhase, {action}: {action: ResolveAction}): StartedPhase {
     return performResolveAction(room, action);
 }
 

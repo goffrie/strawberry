@@ -30,13 +30,13 @@ function StartGameRoomSidebar({startingGameState, leaveGame}: {startingGameState
         {startingGameState.players.map((player, i) => {
             const hand = {
                 // letters themselves not currently rendered, but might be later?
-                letters: (player.word ?? '').split(''),
+                letters: player.word?.split('') ?? placeholderLetters,
                 activeIndex: -1, // useless here, idk
             };
             const playerNumber = i + 1;
             const isForViewingPlayer = player.name === username;
             return <PlayerWithCardsInHand
-                cardsToRender={<CardsInHand hand={hand} isForViewingPlayer={isForViewingPlayer} />}
+                cardsToRender={<CardsInHand hand={hand} isForViewingPlayer={isForViewingPlayer} hidden={player.word == null} />}
                 isForViewingPlayer={isForViewingPlayer}
                 playerName={player.name}
                 playerNumber={playerNumber}
