@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import {DisplayNumberOrLetter} from './DisplayNumberOrLetter';
 import {Hand, LetterAndSource, LetterSources, PlayerNumber, HandWithGuesses, Letter} from './gameTypes';
 import { LETTERS } from './gameLogic';
+import { FruitEmojiContext } from './Fruit';
 
 function Card({letter, onClick, inactive, guess, setGuess}: {letter?: Letter | null, onClick?: () => void, inactive?: boolean, guess?: Letter | null, setGuess?: ((guess: Letter | null) => void) | null}) {
     let classNames = 'card';
@@ -12,8 +13,9 @@ function Card({letter, onClick, inactive, guess, setGuess}: {letter?: Letter | n
     if (onClick !== undefined) {
         classNames += ' cardButton';
     }
+    const fruitEmoji = useContext(FruitEmojiContext);
     if (letter === '*') {
-        letterToUse = '🍓'; // lol
+        letterToUse = fruitEmoji; // lol
         classNames +=' cardStrawberry';
     }
     const keyDown = setGuess ? (e: React.KeyboardEvent) => {

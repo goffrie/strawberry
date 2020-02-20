@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useContext } from 'react';
+import { FruitEmojiContext } from './Fruit';
 
 function LoadingStrawberry() {
-    return <span role='img' aria-label='loading' className='loadingStrawberry'>🍓</span>
+    const fruitEmoji = useContext(FruitEmojiContext);
+    return <span role='img' aria-label='loading' className='loadingStrawberry'>{fruitEmoji}</span>
 }
 
 function WrappedLoadingStrawberry() {

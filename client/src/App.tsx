@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+
 import { SuperWrappedLoadingStrawberry } from './LoadingStrawberry';
+import { FRUIT, FruitEmojiContext, FRUIT_NAMES } from './Fruit';
 
 import { MainPage } from './MainPage';
 import { StartGameRoom } from './StartGameRoom';
@@ -15,6 +17,14 @@ function App({ initialUsername, initialRoom }: { initialUsername: string | null,
     const [room, setRoom] = useState(initialRoom);
     const [isPendingRoomCreation, setIsPendingRoomCreation] = useState(false);
 
+    const [fruitIndex, setFruitIndex] = useState(0);
+    const fruitEmoji = FRUIT[fruitIndex];
+    const changeFruit = () => {
+        const newIndex = Math.floor(Math.random() * FRUIT.length);
+        setFruitIndex(newIndex);
+        document.title = FRUIT_NAMES[newIndex];
+    };
+
     useEffect(() => {
         const listener = () => {
             const newRoom = window.location.hash.substr(1);
@@ -28,33 +38,36 @@ function App({ initialUsername, initialRoom }: { initialUsername: string | null,
         };
     });
 
+    let page;
     if (isPendingRoomCreation) {
-        return <SuperWrappedLoadingStrawberry />;
-    }
-
-    if (username !== null && room !== '') {
-        return <StrawberryGameProvider roomName={room}>
+        page = <SuperWrappedLoadingStrawberry />;
+    } else if (username !== null && room !== '') {
+        page = <StrawberryGameProvider roomName={room}>
             <PlayerNameContext.Provider value={username}>
                 <Game />
             </PlayerNameContext.Provider>
         </StrawberryGameProvider>;
+    } else {
+        // TODO: confusingly, this handles both setting a username and creating a game. They should be separate.
+        page = <MainPage
+            isLoggedIn={username !== null}
+            setUsername={(username) => {
+                setUsername(username);
+                localStorage.setItem('username', username);
+            }}
+            createGame={async (wordLength) => {
+                setIsPendingRoomCreation(true);
+                const newRoom = await createNewRoom(username!, wordLength);
+                setRoom(newRoom);
+                window.location.hash = `#${newRoom}`;
+                setIsPendingRoomCreation(false);
+            }}
+            changeFruit={changeFruit}
+        />;
     }
-
-    // TODO: confusingly, this handles both setting a username and creating a game. They should be separate.
-    return <MainPage
-        isLoggedIn={username !== null}
-        setUsername={(username) => {
-            setUsername(username);
-            localStorage.setItem('username', username);
-        }}
-        createGame={async (wordLength) => {
-            setIsPendingRoomCreation(true);
-            const newRoom = await createNewRoom(username!, wordLength);
-            setRoom(newRoom);
-            window.location.hash = `#${newRoom}`;
-            setIsPendingRoomCreation(false);
-        }}
-    />;
+    return <FruitEmojiContext.Provider value={fruitEmoji}>
+        {page}
+    </FruitEmojiContext.Provider>;
 }
 
 function Game() {

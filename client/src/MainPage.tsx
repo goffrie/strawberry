@@ -1,20 +1,20 @@
-import React, {useState} from 'react';
+import React, {useState, useContext} from 'react';
+import { FruitEmojiContext } from './Fruit';
 
 type setUsernameFn = (username: string) => void;
 type createGameFn = (wordLength: number) => void;
 
-function MainPage({isLoggedIn, setUsername, createGame}: {
+function MainPage({isLoggedIn, setUsername, createGame, changeFruit}: {
     isLoggedIn: boolean,
     setUsername: setUsernameFn,
     createGame: createGameFn,
+    changeFruit: () => void,
 }) {
-    // TODO: make this interactive
-    const fruitEmoji = '🍓';
-
+    const fruitEmoji = useContext(FruitEmojiContext);
     return (
         <div className='mainContainer'>
             <div className='mainPageContent'>
-                <BigStrawberry fruitEmoji={fruitEmoji} />
+                <BigStrawberry onClick={changeFruit} />
                 <div className='mainPageControl'>
                     {isLoggedIn ? <StartNewGame createGame={createGame} /> : <SetUsername setUsername={setUsername} />}
                 </div>
@@ -62,8 +62,9 @@ function StartNewGame({createGame}: {createGame: createGameFn}) {
     </>;
 }
 
-function BigStrawberry({fruitEmoji}: {fruitEmoji: string}) {
-    return <div className='bigStrawberry'>{fruitEmoji}</div>;
+function BigStrawberry({onClick}: {onClick: () => void}) {
+    const fruitEmoji = useContext(FruitEmojiContext);
+    return <div className='bigStrawberry' onClick={onClick}>{fruitEmoji}</div>;
 }
 
 export {MainPage};
