@@ -95,14 +95,14 @@ function StartGameRoomMain({startingGameState, joinGame}: {startingGameState: St
     if (isSpectator) {
         let msg;
         if (doStartGame != null) {
-            msg = "🕐 Waiting for game to start...";
+            msg = "Waiting for game to start...";
         } else if (startingGameState.players.length < MIN_PLAYERS) {
-            msg = "🕐 Waiting for players to join...";
+            msg = "Waiting for players to join...";
         } else {
-            msg = "🕐 Waiting for players to decide on words...";
+            msg = "Waiting for players to decide on words...";
         }
         return <div className='strawberryCenter'>
-            <div className='bigText'>{msg}</div>
+            <div className='bigText'><Clock /> {msg}</div>
             {startingGameState.players.length < MAX_PLAYERS && <LinkButton onClick={joinGame}>Join game</LinkButton>}
         </div>;
     }
@@ -138,17 +138,31 @@ function StartGameRoomMain({startingGameState, joinGame}: {startingGameState: St
 
     let startGame;
     if (startingGameState.players.length < MIN_PLAYERS) {
-        startGame = <div className='bigText'>🕐 Waiting for players to join...</div>;
+        startGame = <div className='bigText'><Clock /> Waiting for players to join...</div>;
     } else if (doStartGame != null) {
         startGame = <div className='strawberryButton' onClick={doStartGame}>Start game</div>
     } else {
-        startGame = <div className='bigText'>🕐 Waiting for other players to enter words...</div>;
+        startGame = <div className='bigText'><Clock /> Waiting for other players to enter words...</div>;
     }
 
     return <div className='strawberryCenter'>
         {startGame}
         <LinkButton onClick={() => setCommittedWord(null)}>Change my word</LinkButton>
     </div>;
+}
+
+// const CLOCK_EMOJI: readonly string[] = ['🕐', '🕜', '🕑', '🕝', '🕒', '🕞', '🕓', '🕟', '🕔', '🕠', '🕕', '🕡', '🕖', '🕢', '🕗', '🕣', '🕘', '🕤', '🕙', '🕥', '🕚', '🕦', '🕛', '🕧'];
+const CLOCK_EMOJI: readonly string[] = ['🕐', '🕑', '🕒', '🕓', '🕔', '🕕', '🕖', '🕗', '🕘', '🕙', '🕚', '🕛'];
+const CLOCK_DELAY: number = 1000;
+function Clock() {
+    const [index, setIndex] = useState(0);
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            setIndex((index + 1) % CLOCK_EMOJI.length);
+        }, CLOCK_DELAY);
+        return () => clearTimeout(timeout);
+    }, [index])
+    return <>{CLOCK_EMOJI[index]}</>;
 }
 
 export {StartGameRoom};
