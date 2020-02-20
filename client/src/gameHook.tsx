@@ -10,6 +10,10 @@ import {
     RoomPhase,
     RoomState,
     StartingPhase,
+    StartedPhase,
+    StartedPlayer,
+    EndgamePhase,
+    EndgameLetterChoice,
 } from './gameState';
 import {
     addPlayerToRoom,
@@ -22,6 +26,7 @@ import {
     startGameRoom,
     performResolveAction,
     setHandGuess,
+    setFinalGuess,
 } from './gameLogic';
 import {callCommit, callList} from './gameAPI';
 
@@ -37,7 +42,7 @@ export const PlayerNameContext = React.createContext<string>("");
 export function usePlayerContext(): {
     username: string,
     isSpectator: boolean,
-    player: HintingPhasePlayer | null,
+    player: StartedPlayer | null,
     playerNumber: number | null,
 } {
     const room = useContext(RoomContext);
@@ -51,8 +56,7 @@ export function usePlayerContext(): {
     if (username === '') {
         throw new Error('illegal');
     }
-    // TODO: support other phase too
-    if (room.gameState.phase !== RoomPhase.HINT) {
+    if (room.gameState.phase === RoomPhase.START) {
         throw new Error('illegal');
     }
 
@@ -175,9 +179,7 @@ function useMutateGame<Room, Mutation>(room: Room, allowed: boolean, mutator: (r
         const abortController = new AbortController();
         callCommit(roomName, stateVersion, newRoom, abortController.signal)
             .then((response) => {
-                if (response.success) {
-                    setMutation(undefined);
-                } else {
+                if (!response.success) {
                     console.log("commit failed; race condition occurred");
                 }
             })
@@ -259,14 +261,14 @@ export function useResolveHint(room: ResolvingHintPhase): ((action: ResolveActio
     return (action) => mutate({action});
 }
 
-function setHandGuessMutator(room: HintingPhase, {playerNumber, changes}: {playerNumber: PlayerNumber, changes: Record<number, Letter | null>}): HintingPhase {
+function setHandGuessMutator(room: StartedPhase, {playerNumber, changes}: {playerNumber: PlayerNumber, changes: Record<number, Letter | null>}): StartedPhase {
     for (const index in changes) {
         room = setHandGuess(room, playerNumber, parseInt(index), changes[index]);
     }
     return room;
 }
 
-export function useSetHandGuess(room: HintingPhase): [Record<number, Letter | null> | undefined, ((index: number, guess: Letter | null) => void)] {
+export function useSetHandGuess(room: StartedPhase): [Record<number, Letter | null> | undefined, ((index: number, guess: Letter | null) => void)] {
     const playerName = useContext(PlayerNameContext);
     if (playerName == null) {
         throw new Error("PlayerNameContext not provided");
@@ -285,4 +287,18 @@ export function useSetHandGuess(room: HintingPhase): [Record<number, Letter | nu
             },
         });
     }];
+}
+
+function setFinalGuessMutator(room: EndgamePhase, {playerNumber, guess}: {playerNumber: PlayerNumber, guess: readonly EndgameLetterChoice[]}): EndgamePhase {
+    return setFinalGuess(room, playerNumber, guess) ?? room;
+}
+
+export function useSetFinalGuess(room: EndgamePhase): [readonly EndgameLetterChoice[] | undefined, ((guess: readonly EndgameLetterChoice[]) => void)] {
+    const playerName = useContext(PlayerNameContext);
+    if (playerName == null) {
+        throw new Error("PlayerNameContext not provided");
+    }
+    const playerNumber = getPlayerNumber(room, playerName)!;
+    const [mutation, mutate] = useMutateGame(room, true /* allowed */, setFinalGuessMutator);
+    return [mutation?.guess, (guess) => mutate({playerNumber, guess})];
 }

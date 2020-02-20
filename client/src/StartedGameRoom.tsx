@@ -2,15 +2,20 @@ import React, {useContext, useEffect, useState, useRef} from 'react';
 import ScrollableFeed from 'react-scrollable-feed';
 import {
     Dummy,
-    HintingPhase, HintingPhasePlayer,
+    HintingPhasePlayer,
     isProposing,
     isResolving,
     ProposingHintPhase, ResolveAction,
     ResolveActionKind,
-    ResolvingHintPhase
+    ResolvingHintPhase,
+    StartedPhase,
+    RoomPhase,
+    EndgamePhase,
+    StartedPlayer,
+    EndgameLetterChoice,
 } from './gameState';
 import {Hint, Letter, LetterAndSource, LetterSources, PlayerNumber} from './gameTypes';
-import {PlayerNameContext, useGiveHint, usePlayerContext, useProposeHint, useResolveHint, useSetHandGuess, useStrawberryGame} from './gameHook';
+import {PlayerNameContext, useGiveHint, usePlayerContext, useProposeHint, useResolveHint, useSetHandGuess, useStrawberryGame, useSetFinalGuess} from './gameHook';
 import {
     Card,
     CardsFromLettersAndSources,
@@ -20,30 +25,52 @@ import {
     DisplayNumberOrLetterWithTextAndCards,
     PlayerWithCardsInHand
 } from './Cards';
-import {ResolveActionChoice, specsOfHint, whichResolveActionRequired, playersWithOutstandingAction, LETTERS} from './gameLogic';
+import {ResolveActionChoice, specsOfHint, whichResolveActionRequired, playersWithOutstandingAction, LETTERS, availableLetters, moveToEndgame, setFinalGuess} from './gameLogic';
 import {deepEqual} from './utils';
 import { LinkButton } from './LinkButton';
 
-function HintGameRoom({hintingGameState}: {hintingGameState: HintingPhase}) {
+function StartedGameRoom({gameState}: {gameState: StartedPhase}) {
     const {isSpectator} = usePlayerContext();
 
+    let action: React.ReactFragment;
+    if (isSpectator) {
+        // Spectators can't act
+        action = <></>;
+    } else if (gameState.phase === RoomPhase.HINT) {
+        const activeHintNumber = gameState.hintLog.length + 1;
+        const totalHintsAvailable = activeHintNumber + gameState.hintsRemaining;
+        action = <>
+            <div className='hintLogTitle'>Hint {activeHintNumber} / {totalHintsAvailable}</div>
+            {isProposing(gameState) && <ProposingHintComponent hintingGameState={gameState} />}
+            {isResolving(gameState) && <ResolvingHintComponent hintingGameState={gameState} />}
+        </>;
+    } else {
+        action = <>
+            <div className='hintLogTitle'>Construct your word</div>
+            <GuessWordComponent gameState={gameState} />
+        </>
+    }
+
     return <div className='gameContainer'>
-        <HintGameRoomSidebar hintingGameState={hintingGameState} />
-        <HintGameRoomLog hintingGameState={hintingGameState} />
-        {!isSpectator && <HintGameRoomNotesSidebar />}
+        <StartedGameRoomSidebar gameState={gameState} />
+        <StartedGameRoomLog gameState={gameState}>
+            {action}
+        </StartedGameRoomLog>
+        {!isSpectator && <StartedGameRoomNotesSidebar />}
     </div>;
 }
 
-function HintGameRoomSidebar({hintingGameState}: {hintingGameState: HintingPhase}) {
+function StartedGameRoomSidebar({gameState}: {gameState: StartedPhase}) {
     const username = useContext(PlayerNameContext);
-    const [settingGuesses, setGuess] = useSetHandGuess(hintingGameState);
+    const [settingGuesses, setGuess] = useSetHandGuess(gameState);
+    const players: readonly StartedPlayer[] = gameState.players;
     return <div className='gameSidebar gameSidebarPlayers'>
-        {hintingGameState.players.map((player, i) => {
+        {players.map((player, i) => {
             const playerNumber = i + 1;
             const isForViewingPlayer = player.name === username;
             let guesses;
             if (isForViewingPlayer) {
-                guesses = [...player.hand.guesses] || Array.from({length: hintingGameState.wordLength}, _ => null);
+                guesses = [...player.hand.guesses] || Array.from({length: gameState.wordLength}, _ => null);
                 if (settingGuesses != null) {
                     for (const index in settingGuesses) {
                         guesses[parseInt(index)] = settingGuesses[index];
@@ -60,13 +87,13 @@ function HintGameRoomSidebar({hintingGameState}: {hintingGameState: HintingPhase
                 setGuess={isForViewingPlayer ? setGuess : undefined}
             />
         })}
-        {hintingGameState.dummies.length > 0 && <DummiesSection dummies={hintingGameState.dummies} />}
-        {hintingGameState.bonuses.length > 0 && <BonusesSection bonuses={hintingGameState.bonuses} />}
+        {gameState.dummies.length > 0 && <DummiesSection dummies={gameState.dummies} />}
+        {gameState.bonuses.length > 0 && <BonusesSection bonuses={gameState.bonuses} />}
     </div>
 }
 
 let debounceTimeout: null | number = null;
-function HintGameRoomNotesSidebar() {
+function StartedGameRoomNotesSidebar() {
     // TODO: refactor local storage keys into constants
     // TODO: separate into components
     // TODO: save sidebar width to localStorage
@@ -176,14 +203,12 @@ function BonusesSection({bonuses}: {bonuses: readonly Letter[]}) {
     />
 }
 
-function HintGameRoomLog({hintingGameState}: {hintingGameState: HintingPhase}) {
+function StartedGameRoomLog({gameState, children}: {gameState: StartedPhase, children: React.ReactNode}) {
     const {playerNumber} = usePlayerContext();
 
-    const activeHintNumber = hintingGameState.hintLog.length + 1;
-    const totalHintsAvailable = activeHintNumber + hintingGameState.hintsRemaining;
     return <ScrollableFeed className='hintLogContainer'>
         <div className='hintLogContent'>
-            {hintingGameState.hintLog.map((logEntry, i) => {
+            {gameState.hintLog.map((logEntry, i) => {
                 const wasViewingPlayerInHint = playerNumber !== null && logEntry.hint.lettersAndSources.some(letterAndSource => {
                     return letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === playerNumber;
                 });
@@ -194,14 +219,12 @@ function HintGameRoomLog({hintingGameState}: {hintingGameState: HintingPhase}) {
                         hint={logEntry.hint}
                         playerActions={logEntry.playerActions}
                         playerCardUsed={playerCardUsed}
-                        players={hintingGameState.players}
+                        players={gameState.players}
                     />
                     <div className='hintLogLine' />
                 </React.Fragment>
             })}
-            <div className='hintLogTitle'>Hint {activeHintNumber} / {totalHintsAvailable}</div>
-            {isProposing(hintingGameState) && <ProposingHintComponent hintingGameState={hintingGameState} />}
-            {isResolving(hintingGameState) && <ResolvingHintComponent hintingGameState={hintingGameState} />}
+            {children}
         </div>
     </ScrollableFeed>
 }
@@ -227,7 +250,7 @@ function getHintSentence(hint: Hint): string {
 
 
 function ProposingHintComponent({hintingGameState}: {hintingGameState: ProposingHintPhase}) {
-    const {username, isSpectator, player} = usePlayerContext();
+    const {isSpectator} = usePlayerContext();
 
     return <>
         <div className='hintLogLine'>Players are proposing hints.</div>
@@ -271,7 +294,7 @@ function removeLetterFromHintByIndex(hint: Hint, i: number): Hint | null {
 }
 
 function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}) {
-    const {username, player, playerNumber} = usePlayerContext();
+    const {playerNumber} = usePlayerContext();
     const proposedHint: Hint | null = hintingGameState.activeHint.proposedHints[playerNumber!] || null;
 
     const [stagedHint, setStagedHint] = useState<Hint | null>(proposedHint);
@@ -325,15 +348,12 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
             addToStagedHint={addToStagedHint}
         />
         <div className='hintLogGuessBox'>
-            {stagedHint !== null ?
-                <CardsInHint hint={stagedHint} viewingPlayer={playerNumber!} onClick={removeLetterFromHint} />:
-                // Render a hidden thing to make sure we have the right width.
-                <div style={{visibility: 'hidden'}}><CardWithPlayerNumberOrLetter letter={'🍓'} playerNumberOrLetter={'🍓'} /></div>}
-                <div className='flexAlignRight hintLogGuessBoxClear'>
-                    <LinkButton onClick={() => {
-                        setStagedHint(null);
-                    }} isDisabled={stagedHint === null}>Clear</LinkButton>
-                </div>
+            {<CardsInHint lettersAndSources={stagedHint?.lettersAndSources ?? []} viewingPlayer={playerNumber!} onClick={removeLetterFromHint} />}
+            <div className='flexAlignRight hintLogGuessBoxClear'>
+                <LinkButton onClick={() => {
+                    setStagedHint(null);
+                }} isDisabled={stagedHint === null}>Clear</LinkButton>
+            </div>
         </div>
         <div className='flex hintLogLine'>
             {stagedHint !== null && <span className='italics'>{stagedHintSentence}</span>}
@@ -424,7 +444,7 @@ function HintInLog({hint, playerActions, playerCardUsed, players}: {
     return <>
         <div className='hintLogLine'>{playerNamesByNumber[hint.givenByPlayer]} gave a hint: {getHintSentence(hint)}</div>
         <div className='hintLogLine' style={{marginLeft: '-5px'}}>
-            <CardsInHint hint={hint} viewingPlayer={playerNumber!} />
+            <CardsInHint lettersAndSources={hint.lettersAndSources} viewingPlayer={playerNumber!} />
         </div>
         {playerCardUsed !== null && <div className='hintLogLine'>Your position {playerCardUsed + 1} card was used.</div>}
 
@@ -508,4 +528,52 @@ function GuessResolve({player, playerNumber, hintingGameState}: {player: Hinting
     </>;
 }
 
-export {HintGameRoom};
+function GuessWordComponent({gameState}: {gameState: EndgamePhase}) {
+    const {player, playerNumber} = usePlayerContext();
+    if (player == null || playerNumber == null) throw new Error("no");
+
+    const [settingGuess, setGuess] = useSetFinalGuess(gameState);
+    const guess = settingGuess ?? gameState.players[playerNumber-1].guess;
+
+    const optimisticGameState = settingGuess
+    ? setFinalGuess(gameState, playerNumber, settingGuess) ?? gameState
+    : gameState;
+
+    const available = availableLetters(optimisticGameState, playerNumber);
+    const convert = (choice: EndgameLetterChoice): LetterAndSource => {
+        if (choice.sourceType === LetterSources.PLAYER) {
+            return {
+                sourceType: LetterSources.PLAYER,
+                letter: player.hand.guesses[choice.index] ?? '?',
+                playerNumber,
+            };
+        }
+        return choice;
+    };
+    const lettersAndSources: LetterAndSource[] = available.map(convert);
+
+    const addToGuess = (_: object, i: number) => {
+        setGuess([...guess, available[i]]);
+    };
+    const removeLetterFromGuess = (_: object, i: number) => {
+        let newGuess = [...guess];
+        newGuess.splice(i, 1);
+        setGuess(newGuess);
+    };
+
+    return <>
+        <div className='hintLogLine' style={{marginLeft: '12px'}}>
+            <CardsFromLettersAndSources lettersAndSources={lettersAndSources} viewingPlayer={-1} onClick={addToGuess} />
+        </div>
+        <div className='hintLogGuessBox'>
+            <CardsInHint lettersAndSources={guess.map(convert)} viewingPlayer={-1} onClick={removeLetterFromGuess} />
+            <div className='flexAlignRight hintLogGuessBoxClear'>
+                <LinkButton onClick={() => {
+                    setGuess([]);
+                }} isDisabled={guess.length === 0}>Clear</LinkButton>
+            </div>
+        </div>
+    </>
+}
+
+export { StartedGameRoom };

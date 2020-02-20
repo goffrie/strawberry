@@ -3,7 +3,7 @@ import { SuperWrappedLoadingStrawberry } from './LoadingStrawberry';
 
 import { MainPage } from './MainPage';
 import { StartGameRoom } from './StartGameRoom';
-import { HintGameRoom } from './HintGameRoom';
+import { StartedGameRoom } from './StartedGameRoom';
 import { createNewRoom } from './gameActions';
 import { useStrawberryGame, StrawberryGameProvider, PlayerNameContext } from './gameHook';
 import { RoomPhase } from './gameState';
@@ -70,10 +70,8 @@ function Game() {
     switch (strawberryGame.gameState.phase) {
         case RoomPhase.START:
             return <StartGameRoom startingGameState={strawberryGame.gameState} />;
-        case RoomPhase.HINT:
-            return <HintGameRoom hintingGameState={strawberryGame.gameState} />;
         default:
-            return <div>{JSON.stringify(strawberryGame)}</div>;
+            return <StartedGameRoom gameState={strawberryGame.gameState} />;
     }
 }
 

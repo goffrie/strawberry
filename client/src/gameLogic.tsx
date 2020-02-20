@@ -8,6 +8,9 @@ import {
     ResolvingHintPhase,
     RoomPhase,
     StartingPhase,
+    EndgamePhase,
+    BaseStartedPhase,
+    EndgameLetterChoice,
 } from './gameState';
 import { PlayerNumber, Letter, Hint, HintSpecs, LetterSources } from './gameTypes';
 import { shuffle, mapNth } from './utils';
@@ -136,7 +139,7 @@ export function specsOfHint(hint: Hint): HintSpecs {
     };
 }
 
-export function getPlayerNumber(room: HintingPhase, playerName: string): PlayerNumber | null {
+export function getPlayerNumber(room: BaseStartedPhase, playerName: string): PlayerNumber | null {
     for (let i = 0; i < room.players.length; i++) {
         if (room.players[i].name === playerName) return i+1;
     }
@@ -356,7 +359,24 @@ export function performResolveAction(room: ResolvingHintPhase, action: ResolveAc
     }
 }
 
-export function setHandGuess(room: HintingPhase, playerNumber: PlayerNumber, index: number, guess: Letter | null): HintingPhase {
+export function moveToEndgame(room: HintingPhase): EndgamePhase {
+    const {players, wordLength, dummies, bonuses, hintLog} = room;
+    return {
+        phase: RoomPhase.ENDGAME,
+        wordLength,
+        dummies,
+        bonuses,
+        hintLog,
+        hintsRemaining: 0,
+        players: players.map((player) => ({
+            ...player,
+            guess: [],
+            committed: false,
+        })),
+    };
+}
+
+export function setHandGuess<T extends BaseStartedPhase>(room: T, playerNumber: PlayerNumber, index: number, guess: Letter | null): T {
     return {
         ...room,
         players: mapNth(room.players, playerNumber - 1, (player) => {
@@ -370,4 +390,73 @@ export function setHandGuess(room: HintingPhase, playerNumber: PlayerNumber, ind
             }
         })
     }
+}
+
+class InvalidLetters extends Error {}
+
+export function availableLetters(room: EndgamePhase, playerNumber: PlayerNumber): EndgameLetterChoice[] {
+    const player = room.players[playerNumber-1];
+    const usedOwnLetters = new Set();
+    const bonuses = [...room.bonuses];
+    let wildcardAvailable = true;
+    for (const guess of player.guess) {
+        if (guess.sourceType === LetterSources.PLAYER) {
+            if (usedOwnLetters.has(guess.index)) throw new InvalidLetters();
+            usedOwnLetters.add(guess.index);
+        }
+    }
+    for (const otherPlayer of room.players) {
+        for (const guess of otherPlayer.guess) {
+            if (guess.sourceType === LetterSources.WILDCARD) {
+                if (!wildcardAvailable) throw new InvalidLetters();
+                wildcardAvailable = false;
+            } else if (guess.sourceType === LetterSources.BONUS) {
+                const ix = bonuses.indexOf(guess.letter);
+                if (ix < 0) throw new InvalidLetters();
+                bonuses.splice(ix, 1);
+            }
+        }
+    }
+
+    const available: EndgameLetterChoice[] = [];
+    for (let i = 0; i < room.wordLength; ++i) {
+        if (!usedOwnLetters.has(i)) {
+            available.push({
+                sourceType: LetterSources.PLAYER,
+                index: i,
+            });
+        }
+    }
+    if (wildcardAvailable) {
+        available.push({
+            sourceType: LetterSources.WILDCARD,
+            letter: '*',
+        })
+    }
+    for (const bonus of bonuses) {
+        available.push({
+            sourceType: LetterSources.BONUS,
+            letter: bonus,
+        })
+    }
+    return available;
+}
+
+export function setFinalGuess(room: EndgamePhase, playerNumber: PlayerNumber, guess: readonly EndgameLetterChoice[]): EndgamePhase | null {
+    const newRoom = {
+        ...room,
+        players: mapNth(room.players, playerNumber-1, (player) => ({
+            ...player,
+            guess,
+        })),
+    };
+    try {
+        availableLetters(newRoom, playerNumber);
+    } catch (e) {
+        if (e instanceof InvalidLetters) {
+            return null;
+        }
+        throw e;
+    }
+    return newRoom;
 }

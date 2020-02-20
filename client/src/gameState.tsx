@@ -1,8 +1,9 @@
-import { Letter, Hint, PlayerNumber, HandWithGuesses } from './gameTypes';
+import { Letter, Hint, PlayerNumber, HandWithGuesses, LetterSources } from './gameTypes';
 
 export enum RoomPhase {
     START = 'start',
     HINT = 'hint',
+    ENDGAME = 'endgame',
 };
 
 export interface StartingPhasePlayer {
@@ -20,10 +21,13 @@ export interface StartingPhase {
     readonly players: readonly StartingPhasePlayer[],
 }
 
-export interface HintingPhasePlayer {
+export interface StartedPlayer {
     readonly name: string,
     readonly hand: HandWithGuesses,
     readonly hintsGiven: number,
+}
+
+export interface HintingPhasePlayer extends StartedPlayer {
 }
 
 export interface Dummy {
@@ -82,22 +86,48 @@ export interface HintLogEntry {
     readonly playerActions: readonly ResolveAction[],
 }
 
-// The main phase of the game, in which players give hints and flip over their
-// cards.
-export interface HintingPhase {
-    readonly phase: RoomPhase.HINT,
+export interface BaseStartedPhase {
     readonly wordLength: number,
-    readonly players: readonly HintingPhasePlayer[],
+    readonly players: readonly StartedPlayer[],
     readonly dummies: readonly Dummy[],
     readonly bonuses: readonly Letter[],
-    readonly hintsRemaining: number,
     // Hints that have previously been given and resolved.
     readonly hintLog: readonly HintLogEntry[],
+}
+
+// The main phase of the game, in which players give hints and flip over their
+// cards.
+export interface HintingPhase extends BaseStartedPhase {
+    readonly phase: RoomPhase.HINT,
+    readonly players: readonly HintingPhasePlayer[],
+    readonly hintsRemaining: number,
     readonly activeHint: ActiveHint,
 }
 
 export type ProposingHintPhase = HintingPhase & { readonly activeHint: ProposingHint };
 export type ResolvingHintPhase = HintingPhase & { readonly activeHint: ResolvingHint };
+
+export type EndgameLetterChoice = Readonly<{
+    index: number,
+    sourceType: LetterSources.PLAYER,
+}> | Readonly<{
+    letter: Letter,
+    sourceType: LetterSources.BONUS,
+}> | Readonly<{
+    letter: '*',
+    sourceType: LetterSources.WILDCARD,
+}>;
+
+export interface EndgamePhasePlayer extends StartedPlayer {
+    readonly guess: readonly EndgameLetterChoice[],
+    readonly committed: boolean;
+}
+
+export interface EndgamePhase extends BaseStartedPhase {
+    readonly phase: RoomPhase.ENDGAME,
+    readonly hintsRemaining: 0,
+    readonly players: readonly EndgamePhasePlayer[],
+}
 
 // TODO: ugh fix this
 export function isProposing(phase: HintingPhase): phase is ProposingHintPhase {
@@ -107,4 +137,5 @@ export function isResolving(phase: HintingPhase): phase is ResolvingHintPhase {
     return phase.activeHint.state === ActiveHintState.RESOLVING;
 }
 
-export type RoomState = StartingPhase | HintingPhase;
+export type StartedPhase = HintingPhase | EndgamePhase;
+export type RoomState = StartingPhase | HintingPhase | EndgamePhase;

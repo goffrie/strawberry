@@ -32,19 +32,19 @@ function Card({letter, onClick, inactive, guess, setGuess}: {letter?: Letter | n
     return <div className={classNames} onClick={onClick} tabIndex={setGuess ? 0 : undefined} onKeyDown={keyDown}>{guess || letterToUse || ''}</div>
 }
 
-function CardWithAnnotation({letter, annotation, onClick}: {letter: Letter, annotation: React.ReactNode, onClick?: () => void}) {
-    return <div className='cardWithPlayerNumber'>
+function CardWithAnnotation({letter, annotation, onClick, hidden=false}: {letter: Letter, annotation: React.ReactNode, onClick?: () => void, hidden?: boolean}) {
+    return <div className='cardWithPlayerNumber' style={hidden ? {visibility: "hidden"} : undefined}>
         <Card letter={letter} onClick={onClick} />
         {annotation}
     </div>
 }
 
-function CardWithPlayerNumberOrLetter({letter, playerNumberOrLetter, onClick}: {letter: Letter, playerNumberOrLetter: PlayerNumber | Letter | null, onClick?: () => void}) {
+function CardWithPlayerNumberOrLetter({letter, playerNumberOrLetter, onClick, hidden=false}: {letter: Letter, playerNumberOrLetter: PlayerNumber | Letter | null, onClick?: () => void, hidden?: boolean}) {
     // keep same height even when there is no number or letter.
     const annotation = <div style={playerNumberOrLetter === null ? {visibility: 'hidden'} : {}}>
         <DisplayNumberOrLetter numberOrLetter={playerNumberOrLetter || '🍓'} />
     </div> ;
-    return <CardWithAnnotation letter={letter} annotation={annotation} onClick={onClick} />
+    return <CardWithAnnotation letter={letter} annotation={annotation} onClick={onClick} hidden={hidden}/>
 }
 
 function CardsInHand({hand, isForViewingPlayer, setGuess}: {hand: Hand | HandWithGuesses, isForViewingPlayer: boolean, setGuess?: (index: number, guess: Letter | null) => void}) {
@@ -135,13 +135,13 @@ function getPlayerNumberOrLetterFromLetterAndSource(letterAndSource: LetterAndSo
     }
 }
 
-function CardsInHint({hint, viewingPlayer, onClick}: {
-    hint: Hint,
+function CardsInHint({lettersAndSources, viewingPlayer, onClick}: {
+    lettersAndSources: readonly LetterAndSource[],
     viewingPlayer: PlayerNumber,
     onClick? : (letterAndSource: LetterAndSource, i: number) => void,
 }) {
     return <CardsFromLettersAndSources
-        lettersAndSources={hint.lettersAndSources}
+        lettersAndSources={lettersAndSources}
         viewingPlayer={viewingPlayer}
         onClick={onClick}
     />;
@@ -165,6 +165,7 @@ function CardsFromLettersAndSources({lettersAndSources, viewingPlayer, onClick}:
                 key={i}
             />
         })}
+        {lettersAndSources.length === 0 && <CardWithPlayerNumberOrLetter letter={'🍓'} playerNumberOrLetter={'🍓'} hidden={true} />}
     </div>
 }
 
