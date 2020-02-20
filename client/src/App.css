@@ -7,6 +7,7 @@
 
 .bigText {
   font-size: 30px;
+  margin-bottom: 20px;
 }
 
 @keyframes rotate {

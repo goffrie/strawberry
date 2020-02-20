@@ -140,7 +140,7 @@ function StartGameRoomMain({startingGameState, joinGame}: {startingGameState: St
     } else if (doStartGame != null) {
         startGame = <div className='strawberryButton' onClick={doStartGame}>Start game</div>
     } else {
-        startGame = <div className='bigText' style={{marginBottom: '20px'}}>🕐 Waiting for other players to enter words...</div>;
+        startGame = <div className='bigText'>🕐 Waiting for other players to enter words...</div>;
     }
 
     return <div className='strawberryCenter'>
