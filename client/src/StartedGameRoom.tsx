@@ -22,13 +22,12 @@ import {
     CardsFromLettersAndSources,
     CardsInHint,
     CardWithAnnotation,
-    CardWithPlayerNumberOrLetter,
     DisplayNumberOrLetterWithTextAndCards,
     PlayerWithCardsInHand,
     CardsInHand,
     RevealedCardsInHand
 } from './Cards';
-import {ResolveActionChoice, specsOfHint, whichResolveActionRequired, playersWithOutstandingAction, LETTERS, lettersForFinalGuess, moveToEndgame, setFinalGuess} from './gameLogic';
+import {ResolveActionChoice, specsOfHint, whichResolveActionRequired, playersWithOutstandingAction, LETTERS, lettersForFinalGuess, setFinalGuess} from './gameLogic';
 import {deepEqual} from './utils';
 import { LinkButton } from './LinkButton';
 
@@ -138,11 +137,11 @@ function StartedGameRoomNotesSidebar() {
 
     // Load the notes from local storage in case user rejoined
     useEffect(() => {
-        const existingNotes = localStorage.getItem(localStorageKey);
+        const existingNotes = window.localStorage.getItem(localStorageKey);
         if (existingNotes !== null) {
             setNotes(existingNotes);
         }
-    }, []);
+    }, [localStorageKey]);
 
     const [isDragging, setIsDragging] = useState(false);
     const handleRef = useRef<HTMLDivElement>(null);

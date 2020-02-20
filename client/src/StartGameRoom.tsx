@@ -5,13 +5,15 @@ import {LETTERS, MIN_PLAYERS, MAX_PLAYERS} from './gameLogic';
 import {useJoinRoom, PlayerNameContext, useInputWord, useStartGame, useStrawberryGame} from './gameHook';
 import { LinkButton } from './LinkButton';
 
+/* eslint-disable jsx-a11y/accessible-emoji */
+
 function StartGameRoom({startingGameState}: {startingGameState: StartingPhase}) {
     // Clear the player's notes, in the rare case where they've played a game with this room name before.
     const strawberryGame = useStrawberryGame();
     const roomName = strawberryGame?.roomName!;
     useEffect(() => {
         localStorage.removeItem(`notes:${roomName}`);
-    }, []);
+    }, [roomName]);
     const [shouldJoin, setShouldJoin] = useState(true);
     useJoinRoom(startingGameState, shouldJoin);
 

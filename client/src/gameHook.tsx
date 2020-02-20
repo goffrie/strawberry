@@ -3,7 +3,6 @@ import { delay, deepEqual } from './utils';
 import { Hint, Letter, PlayerNumber } from './gameTypes';
 import {
     HintingPhase,
-    HintingPhasePlayer,
     ProposingHintPhase,
     ResolveAction,
     ResolvingHintPhase,
