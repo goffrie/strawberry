@@ -53,8 +53,8 @@ function RevealedCardsInHand({letters}: {letters: readonly (LetterAndSource | nu
     </div>;
 }
 
-function CardsInHand({hand, isForViewingPlayer, setGuess}: {hand: Hand | HandWithGuesses, isForViewingPlayer: boolean, setGuess?: (index: number, guess: Letter | null) => void}) {
-    return <div className='flex'>
+function CardsInHand({hand, isForViewingPlayer, setGuess, hidden}: {hand: Hand | HandWithGuesses, isForViewingPlayer: boolean, setGuess?: (index: number, guess: Letter | null) => void, hidden?: boolean}) {
+    return <div className='flex' style={hidden ? {visibility: "hidden"} : undefined}>
         {hand.letters.map((card, i) => {
             const active = i === hand.activeIndex;
             if (isForViewingPlayer && 'guesses' in hand && setGuess != null && i < hand.guesses.length) {
