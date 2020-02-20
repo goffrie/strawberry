@@ -39,16 +39,16 @@ function StartedGameRoom({gameState}: {gameState: StartedPhase}) {
     } else if (gameState.phase === RoomPhase.HINT) {
         const activeHintNumber = gameState.hintLog.length + 1;
         const totalHintsAvailable = gameState.hintLog.length + gameState.hintsRemaining;
-        action = <>
+        action = <div className="hintLogEntry">
             <div className='hintLogTitle'>Hint {activeHintNumber} / {totalHintsAvailable}</div>
             {isProposing(gameState) && <ProposingHintComponent hintingGameState={gameState} />}
             {isResolving(gameState) && <ResolvingHintComponent hintingGameState={gameState} />}
-        </>;
+        </div>;
     } else {
-        action = <>
+        action = <div className="hintLogEntry">
             <div className='hintLogTitle'>Construct your word</div>
             <GuessWordComponent gameState={gameState} />
-        </>
+        </div>
     }
 
     return <div className='gameContainer'>
@@ -213,7 +213,7 @@ function StartedGameRoomLog({gameState, children}: {gameState: StartedPhase, chi
                     return letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === playerNumber;
                 });
                 const playerCardUsed = wasViewingPlayerInHint ? logEntry.activeIndexes[playerNumber! - 1] : null;
-                return <React.Fragment key={i}>
+                return <div className="hintLogEntry" key={i}>
                     <div className='hintLogTitle' key={i}>Hint {i + 1} / {logEntry.totalHints}</div>
                     <HintInLog
                         hint={logEntry.hint}
@@ -221,8 +221,7 @@ function StartedGameRoomLog({gameState, children}: {gameState: StartedPhase, chi
                         playerCardUsed={playerCardUsed}
                         players={gameState.players}
                     />
-                    <div className='hintLogLine' />
-                </React.Fragment>
+                </div>
             })}
             {children}
         </div>
@@ -258,7 +257,7 @@ function ProposingHintComponent({hintingGameState}: {hintingGameState: Proposing
             const proposedHint = hintingGameState.activeHint.proposedHints[i + 1];
             const sentence = proposedHint && getHintSentence(proposedHint);
             return <div className='hintLogLine' key={i}>
-                {player.name} {proposedHint ? `has proposed: ${sentence}.` : 'has not proposed a hint.'}
+                <PlayerName name={player.name} /> <span className="has">has</span> {proposedHint ? `proposed: ${sentence}.` : 'not proposed a hint.'}
             </div>;
         })}
         {!isSpectator && <HintComposer hintingGameState={hintingGameState} />}
@@ -409,6 +408,14 @@ function AvailableCards({hintingGameState, playerNumber, addToStagedHint}: {
     </div>
 }
 
+function PlayerName({name}: {name: string}) {
+    const {username} = usePlayerContext();
+    return <>
+        <span className="playerName">{name}</span>
+        {username === name && <> <span className="you">(you)</span></>}
+    </>;
+}
+
 function HintInLog({hint, playerActions, playerCardUsed, players}: {
     hint: Hint,
     playerActions: readonly ResolveAction[],
@@ -427,14 +434,14 @@ function HintInLog({hint, playerActions, playerCardUsed, players}: {
 
         switch (playerAction.kind) {
             case ResolveActionKind.NONE:
-                return `${actingPlayerName} did not flip their card.`;
+                return <><PlayerName name={actingPlayerName} /> <span className="incorrect">did not flip</span> <span className="their">their</span> card.</>;
             case ResolveActionKind.FLIP:
-                return `${actingPlayerName} flipped their card.`;
+                return <><PlayerName name={actingPlayerName} /> <span className="correct">flipped</span> <span className="their">their</span> card.</>;
             case ResolveActionKind.GUESS:
                 if (playerAction.actual === playerAction.guess) {
-                    return `${actingPlayerName} correctly guessed ${playerAction.actual}.`;
+                    return <><PlayerName name={actingPlayerName} /> <span className="correct">correctly</span> guessed {playerAction.actual}.</>;
                 }
-                return `${actingPlayerName} incorrectly guessed ${playerAction.guess} (actual: ${playerAction.actual}).`;
+                return <><PlayerName name={actingPlayerName} /> <span className="incorrect">incorrectly</span> guessed {playerAction.guess} (actual: {playerAction.actual}).</>;
             default:
                 return '';
         }
@@ -442,7 +449,7 @@ function HintInLog({hint, playerActions, playerCardUsed, players}: {
 
     // TODO: marginLeft -12 if want to align cards with hint construction
     return <>
-        <div className='hintLogLine'>{playerNamesByNumber[hint.givenByPlayer]} gave a hint: {getHintSentence(hint)}</div>
+        <div className='hintLogLine'><PlayerName name={playerNamesByNumber[hint.givenByPlayer]} /> gave a hint: {getHintSentence(hint)}</div>
         <div className='hintLogLine' style={{marginLeft: '-5px'}}>
             <CardsInHint lettersAndSources={hint.lettersAndSources} viewingPlayer={playerNumber!} />
         </div>

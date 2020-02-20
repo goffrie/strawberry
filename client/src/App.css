@@ -173,6 +173,7 @@ button {
 /* GAME COMPONENT STYLES */
 
 .displayNumberOrLetter {
+  min-width: 25px; /* preserve roundness in case of flexbox-flexing */
   width: 25px;
   height: 25px;
   line-height: 23px;
@@ -287,25 +288,64 @@ button {
   margin-bottom: 5px;
 }
 
+/*
+The box containing the hint log.
+This element is a flex item in the flexbox that defines the entire page's viewport.
+This element uses ScrollableFeed, so it cannot take padding.
+*/
 .hintLogContainer {
   height: 100%;
   flex: auto;
   border-right: 2px solid #BABABA;
 }
 
+/* An intermediate element to add some padding inside of the hintLogContainer. */
 .hintLogContent {
   padding: 20px;
-  box-sizing: border-box;
+  max-width: 850px;
+
+  line-height: 1.4;
 }
 
+.hintLogEntry:not(:first-child) {
+  /* put some spacing between hint log entries */
+  margin-top: 50px;
+}
 .hintLogTitle {
   font-size: 25px;
-  margin-bottom: 15px;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+.hintLogLine {
+  margin-bottom: 5px;
 }
 
-.hintLogLine {
-  margin-bottom: 15px;
-  max-width: 850px;
+.correct {
+  color: #19AF00;
+}
+.incorrect {
+  color: #D20B0B;
+}
+
+.you {
+  color: #777777;
+}
+.you ~ .has {
+  font-size: 0;
+}
+.you ~ .has::after {
+  content: "have";
+  font-size: 1rem;
+}
+.you ~ .their {
+  font-size: 0;
+}
+.you ~ .their::after {
+  content: "your";
+  font-size: 1rem;
+}
+.playerName {
+  font-weight: 600;
 }
 
 .hintLogGuessBox {

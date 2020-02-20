@@ -86,7 +86,7 @@ function PlayerWithCardsInHand({hand, isForViewingPlayer, playerName, playerNumb
 
     const topText = <>
         <span style={{maxWidth: '150px'}} className='ellipsis'>{playerName}&nbsp;</span>
-        {isForViewingPlayer ? <span style={{color: '#777777'}}>(you)</span>: null}
+        {isForViewingPlayer ? <span className="you">(you)</span>: null}
         {extraText ? <span className='flexAlignRight'>{extraText}</span> : null}
     </>;
 
