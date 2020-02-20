@@ -133,7 +133,8 @@ button {
 /* MAIN PAGE STYLES */
 .mainContainer {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: flex-end;
   align-items: center;
   height: 100vh;
 }
@@ -141,8 +142,21 @@ button {
 .mainPageContent {
   text-align: center;
   font-size: 40px;
-  margin-top: -50px;
-  height: 310px;
+  flex-grow: 1;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.mainPageControl {
+  min-height: 200px;
+}
+
+.mainPageAttribution {
+  font-size: 10px;
+  flex-grow: 0;
+  margin: 10px;
 }
 
 .bigStrawberry {

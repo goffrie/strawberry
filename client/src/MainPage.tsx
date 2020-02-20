@@ -8,12 +8,19 @@ function MainPage({isLoggedIn, setUsername, createGame}: {
     setUsername: setUsernameFn,
     createGame: createGameFn,
 }) {
+    // TODO: make this interactive
+    const fruitEmoji = '🍓';
+
     return (
         <div className='mainContainer'>
             <div className='mainPageContent'>
-                <BigStrawberry />
-
-                {isLoggedIn ? <StartNewGame createGame={createGame} /> : <SetUsername setUsername={setUsername} />}
+                <BigStrawberry fruitEmoji={fruitEmoji} />
+                <div className='mainPageControl'>
+                    {isLoggedIn ? <StartNewGame createGame={createGame} /> : <SetUsername setUsername={setUsername} />}
+                </div>
+            </div>
+            <div className='mainPageAttribution'>
+                Made with {fruitEmoji} by goffrie and minicat
             </div>
         </div>
     )
@@ -41,7 +48,7 @@ function UsernameInput({setUsername}: {setUsername: setUsernameFn}) {
 
 function StartNewGame({createGame}: {createGame: createGameFn}) {
     const [wordLength, setWordLength] = useState(5);
-    return <div style={{textAlign: 'center'}}>
+    return <>
         <button className='strawberryButton' onClick={() => createGame(wordLength)}>Start new game</button>
 
         <div className='wordLengthControl'>
@@ -52,13 +59,10 @@ function StartNewGame({createGame}: {createGame: createGameFn}) {
                 })}
             </select> letter words
         </div>
-    </div>;
+    </>;
 }
 
-function BigStrawberry() {
-    // TODO: make this interactive
-    const fruitEmoji = '🍓';
-
+function BigStrawberry({fruitEmoji}: {fruitEmoji: string}) {
     return <div className='bigStrawberry'>{fruitEmoji}</div>;
 }
 
