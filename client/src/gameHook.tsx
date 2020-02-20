@@ -27,6 +27,7 @@ import {
     performResolveAction,
     setHandGuess,
     setFinalGuess,
+    removePlayerFromRoom,
 } from './gameLogic';
 import {callCommit, callList} from './gameAPI';
 
@@ -136,22 +137,32 @@ export enum JoinRoomStatus {
     JOINED = 'joined',
     // The room is full :(
     ROOM_FULL = 'room_full',
+    // We are actively trying to leave the room.
+    LEAVING = 'leaving',
+    // We have left the room.
+    LEFT = 'left',
 }
 
-export function useJoinRoom(room: StartingPhase): JoinRoomStatus {
+export function useJoinRoom(room: StartingPhase, shouldJoin: boolean): JoinRoomStatus {
     const { roomName, stateVersion } = useStrawberryGame()!;
     const playerName = useContext(PlayerNameContext);
     if (playerName == null) {
         throw new Error("PlayerNameContext not provided");
     }
     let status: JoinRoomStatus;
-    if (room.players.some((player) => player.name === playerName)) status = JoinRoomStatus.JOINED;
-    else if (room.players.length >= MAX_PLAYERS) status = JoinRoomStatus.ROOM_FULL;
-    else status = JoinRoomStatus.JOINING;
+    const joined = room.players.some((player) => player.name === playerName);
+    if (shouldJoin) {
+        if (joined) status = JoinRoomStatus.JOINED;
+        else if (room.players.length >= MAX_PLAYERS) status = JoinRoomStatus.ROOM_FULL;
+        else status = JoinRoomStatus.JOINING;
+    } else {
+        if (joined) status = JoinRoomStatus.LEAVING;
+        else status = JoinRoomStatus.LEFT;
+    }
     useEffect(() => {
-        if (status !== JoinRoomStatus.JOINING) return;
+        if (status !== JoinRoomStatus.JOINING && status !== JoinRoomStatus.LEAVING) return;
         const abortController = new AbortController();
-        callCommit(roomName, stateVersion, addPlayerToRoom(room, playerName))
+        callCommit(roomName, stateVersion, status === JoinRoomStatus.JOINING ? addPlayerToRoom(room, playerName) : removePlayerFromRoom(room, playerName))
             .catch((reason) => {
                 console.error(reason);
             });

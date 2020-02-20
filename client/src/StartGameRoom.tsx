@@ -1,7 +1,7 @@
 import React, {useState, useContext, useEffect} from 'react';
 import {StartingPhase} from './gameState';
 import {PlayerWithCardsInHand} from './Cards';
-import {LETTERS, MIN_PLAYERS} from './gameLogic';
+import {LETTERS, MIN_PLAYERS, MAX_PLAYERS} from './gameLogic';
 import {useJoinRoom, PlayerNameContext, useInputWord, useStartGame, useStrawberryGame} from './gameHook';
 import { LinkButton } from './LinkButton';
 
@@ -12,42 +12,55 @@ function StartGameRoom({startingGameState}: {startingGameState: StartingPhase}) 
     useEffect(() => {
         localStorage.removeItem(`notes:${roomName}`);
     }, []);
+    const [shouldJoin, setShouldJoin] = useState(true);
+    useJoinRoom(startingGameState, shouldJoin);
 
     return <div className='gameContainer'>
-        <StartGameRoomSidebar startingGameState={startingGameState} />
+        <StartGameRoomSidebar startingGameState={startingGameState} leaveGame={() => setShouldJoin(false)} />
         <div className='flexCenterContainer'>
-            <StartGameRoomMain startingGameState={startingGameState} />
+            <StartGameRoomMain startingGameState={startingGameState} joinGame={() => setShouldJoin(true)} />
         </div>
     </div>;
 }
 
-function StartGameRoomSidebar({startingGameState}: {startingGameState: StartingPhase}) {
+function StartGameRoomSidebar({startingGameState, leaveGame}: {startingGameState: StartingPhase, leaveGame: () => void}) {
     const username = useContext(PlayerNameContext);
+    const placeholderLetters = Array.from({length: startingGameState.wordLength}, () => {return '🍓'});
     return <div className='gameSidebar gameSidebarPlayers'>
         {startingGameState.players.map((player, i) => {
             // For sizing purposes, we render an invisible dummy hand if the player has not yet submitted a word
             const shouldHideHand = !player.word;
             const hand = {
                 // letters themselves not currently rendered, but might be later?
-                letters: player.word ? player.word.split('') : Array.from({length: startingGameState.wordLength}, () => {return '🍓'}),
+                letters: player.word ? player.word.split('') : placeholderLetters,
                 activeIndex: -1, // useless here, idk
             };
             const playerNumber = i + 1;
+            const isForViewingPlayer = player.name === username;
             return <PlayerWithCardsInHand
                 hand={hand}
                 shouldHideHand={shouldHideHand}
-                isForViewingPlayer={player.name === username}
+                isForViewingPlayer={isForViewingPlayer}
                 playerName={player.name}
                 playerNumber={playerNumber}
+                extraText={isForViewingPlayer ? <LinkButton onClick={leaveGame}>Leave</LinkButton> : undefined}
                 key={playerNumber}
             />
         })}
+        {startingGameState.players.length === 0 && <div style={{visibility: "hidden"}}>
+        <PlayerWithCardsInHand
+            hand={{letters: placeholderLetters, activeIndex: -1}}
+            shouldHideHand={true}
+            isForViewingPlayer={false}
+            playerName={""}
+            playerNumber={0}
+        />
+        </div>}
     </div>
 }
 
-function StartGameRoomMain({startingGameState}: {startingGameState: StartingPhase}) {
+function StartGameRoomMain({startingGameState, joinGame}: {startingGameState: StartingPhase, joinGame: () => void}) {
     const username = useContext(PlayerNameContext);
-    const joinStatus = useJoinRoom(startingGameState);
     const doStartGame = useStartGame(startingGameState);
 
     const [inputWord, setInputWord] = useState('');
@@ -82,11 +95,18 @@ function StartGameRoomMain({startingGameState}: {startingGameState: StartingPhas
     }
 
     if (isSpectator) {
+        let msg;
         if (doStartGame != null) {
-            return <div className='bigText'>🕐 Waiting for game to start...</div>
+            msg = "🕐 Waiting for game to start...";
+        } else if (startingGameState.players.length < MIN_PLAYERS) {
+            msg = "🕐 Waiting for players to join...";
         } else {
-            return <div className='bigText'>🕐 Waiting for players to decide on words...</div>
+            msg = "🕐 Waiting for players to decide on words...";
         }
+        return <div className='strawberryCenter'>
+            <div className='bigText'>{msg}</div>
+            {startingGameState.players.length < MAX_PLAYERS && <LinkButton onClick={joinGame}>Join game</LinkButton>}
+        </div>;
     }
 
     if (playerNeedsToInputWord) {

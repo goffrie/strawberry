@@ -32,10 +32,9 @@ import { LinkButton } from './LinkButton';
 function StartedGameRoom({gameState}: {gameState: StartedPhase}) {
     const {isSpectator} = usePlayerContext();
 
-    let action: React.ReactFragment;
+    let action: React.ReactNode;
     if (isSpectator) {
-        // Spectators can't act
-        action = <></>;
+        // Spectators can't act.
     } else if (gameState.phase === RoomPhase.HINT) {
         const activeHintNumber = gameState.hintLog.length + 1;
         const totalHintsAvailable = gameState.hintLog.length + gameState.hintsRemaining;

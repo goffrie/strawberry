@@ -76,7 +76,7 @@ function PlayerWithCardsInHand({hand, isForViewingPlayer, playerName, playerNumb
     playerName: string,
     playerNumber: number,
     shouldHideHand?: boolean,  // used for layout/sizing reasons
-    extraText?: string,
+    extraText?: React.ReactNode,
     setGuess?: (index: number, guess: Letter | null) => void,
 }) {
     // TODO: later, for end game, separate isForViewingPlayer with shouldHideLetter

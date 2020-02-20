@@ -55,9 +55,15 @@ export function newStartingPhase(firstPlayerName: string, wordLength: number): S
 
 export function addPlayerToRoom(room: StartingPhase, playerName: string): StartingPhase {
     return {
-        phase: RoomPhase.START,
-        wordLength: room.wordLength,
+        ...room,
         players: [...room.players, { name: playerName, word: null }],
+    };
+}
+
+export function removePlayerFromRoom(room: StartingPhase, playerName: string): StartingPhase {
+    return {
+        ...room,
+        players: room.players.filter((p) => p.name !== playerName),
     };
 }
 
