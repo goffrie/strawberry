@@ -101,7 +101,8 @@ function StartedGameRoomSidebar({gameState}: {gameState: StartedPhase}) {
                 } else if (!isForViewingPlayer) {
                     // Show the letters that this player has taken from the centre.
                     override = p.guess.filter((choice) => choice.sourceType !== LetterSources.PLAYER).map(convert);
-                    while (override.length < gameState.wordLength) {
+                    const length = Math.max(gameState.wordLength, p.guess.length);
+                    while (override.length < length) {
                         override.push(null);
                     }
                 }
