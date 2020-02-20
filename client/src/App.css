@@ -254,6 +254,13 @@ button {
   border-right: 2px solid #BABABA;
   padding: 20px;
   box-sizing: border-box;
+  flex-grow: 0;
+  flex-basis: min-content;
+}
+
+.bonuses {
+  display: flex;
+  flex-wrap: wrap;
 }
 
 .gameSidebarNotes {

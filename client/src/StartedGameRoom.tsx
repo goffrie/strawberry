@@ -222,7 +222,7 @@ function DummiesSection({dummies}: {dummies: readonly Dummy[]}) {
 }
 
 function BonusesSection({bonuses}: {bonuses: readonly Letter[]}) {
-    const cards = <div className='flex'>
+    const cards = <div className='flex bonuses'>
         {bonuses.map((letter, i) => {
             return <Card letter={letter} key={i} />
         })}
