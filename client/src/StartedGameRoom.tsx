@@ -28,7 +28,7 @@ import {
     CardsInHand,
     RevealedCardsInHand
 } from './Cards';
-import {ResolveActionChoice, specsOfHint, whichResolveActionRequired, playersWithOutstandingAction, LETTERS, availableLetters, moveToEndgame, setFinalGuess} from './gameLogic';
+import {ResolveActionChoice, specsOfHint, whichResolveActionRequired, playersWithOutstandingAction, LETTERS, lettersForFinalGuess, moveToEndgame, setFinalGuess} from './gameLogic';
 import {deepEqual} from './utils';
 import { LinkButton } from './LinkButton';
 
@@ -577,7 +577,7 @@ function GuessWordComponent({gameState}: {gameState: EndgamePhase}) {
     ? setFinalGuess(gameState, playerNumber, settingGuess) ?? gameState
     : gameState;
 
-    const available = availableLetters(optimisticGameState, playerNumber);
+    const available = lettersForFinalGuess(optimisticGameState, playerNumber);
     const convert = (choice: EndgameLetterChoice): LetterAndSource => {
         if (choice.sourceType === LetterSources.PLAYER) {
             return {
@@ -604,7 +604,7 @@ function GuessWordComponent({gameState}: {gameState: EndgamePhase}) {
 
     return <>
         <div className='hintLogLine' style={{marginLeft: '12px'}}>
-            <CardsFromLettersAndSources lettersAndSources={lettersAndSources} viewingPlayer={-1} onClick={addToGuess} />
+            <CardsFromLettersAndSources lettersAndSources={lettersAndSources} inactive={(i) => !available[i].available} viewingPlayer={-1} onClick={addToGuess} />
         </div>
         <div className='hintLogGuessBox'>
             <CardsInHint lettersAndSources={guess.map(convert)} viewingPlayer={-1} onClick={removeLetterFromGuess} />

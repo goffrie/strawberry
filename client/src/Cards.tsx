@@ -32,19 +32,19 @@ function Card({letter, onClick, inactive, guess, setGuess}: {letter?: Letter | n
     return <div className={classNames} onClick={onClick} tabIndex={setGuess ? 0 : undefined} onKeyDown={keyDown}>{guess || letterToUse || ''}</div>
 }
 
-function CardWithAnnotation({letter, annotation, onClick, hidden=false}: {letter: Letter, annotation: React.ReactNode, onClick?: () => void, hidden?: boolean}) {
+function CardWithAnnotation({letter, inactive, annotation, onClick, hidden=false}: {letter: Letter, inactive?: boolean, annotation: React.ReactNode, onClick?: () => void, hidden?: boolean}) {
     return <div className='cardWithPlayerNumber' style={hidden ? {visibility: "hidden"} : undefined}>
-        <Card letter={letter} onClick={onClick} />
+        <Card letter={letter} inactive={inactive} onClick={onClick} />
         {annotation}
     </div>
 }
 
-function CardWithPlayerNumberOrLetter({letter, playerNumberOrLetter, onClick, hidden=false}: {letter: Letter, playerNumberOrLetter: PlayerNumber | Letter | null, onClick?: () => void, hidden?: boolean}) {
+function CardWithPlayerNumberOrLetter({letter, playerNumberOrLetter, onClick, inactive=false, hidden=false}: {letter: Letter, playerNumberOrLetter: PlayerNumber | Letter | null, onClick?: () => void, inactive?: boolean, hidden?: boolean}) {
     // keep same height even when there is no number or letter.
     const annotation = <div style={playerNumberOrLetter === null ? {visibility: 'hidden'} : {}}>
         <DisplayNumberOrLetter numberOrLetter={playerNumberOrLetter || '🍓'} />
     </div> ;
-    return <CardWithAnnotation letter={letter} annotation={annotation} onClick={onClick} hidden={hidden}/>
+    return <CardWithAnnotation letter={letter} inactive={inactive} annotation={annotation} onClick={onClick} hidden={hidden}/>
 }
 
 function RevealedCardsInHand({letters}: {letters: readonly (LetterAndSource | null)[]}) {
@@ -146,10 +146,11 @@ function CardsInHint({lettersAndSources, viewingPlayer, onClick}: {
     />;
 }
 
-function CardsFromLettersAndSources({lettersAndSources, viewingPlayer, onClick}: {
+function CardsFromLettersAndSources({lettersAndSources, viewingPlayer, inactive, onClick}: {
     lettersAndSources: readonly LetterAndSource[],
     viewingPlayer: PlayerNumber,
-    onClick? : (letterAndSource: LetterAndSource, i: number) => void,
+    inactive?: (i: number) => void,
+    onClick?: (letterAndSource: LetterAndSource, i: number) => void,
 }) {
     return <div className='flex'>
         {lettersAndSources.map((letterAndSource, i) => {
@@ -157,10 +158,12 @@ function CardsFromLettersAndSources({lettersAndSources, viewingPlayer, onClick}:
             const letterToDisplay = letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === viewingPlayer ? '?' : letterAndSource.letter;
 
             const playerNumberOrLetter = getPlayerNumberOrLetterFromLetterAndSource(letterAndSource);
+            const cardInactive = !!(inactive && inactive(i));
             return <CardWithPlayerNumberOrLetter
                 letter={letterToDisplay}
+                inactive={cardInactive}
                 playerNumberOrLetter={playerNumberOrLetter}
-                onClick={onClick !== undefined ? () => onClick(letterAndSource, i) : undefined}
+                onClick={(onClick !== undefined && !cardInactive) ? () => onClick(letterAndSource, i) : undefined}
                 key={i}
             />
         })}

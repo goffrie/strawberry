@@ -414,10 +414,13 @@ export function setHandGuess<T extends BaseStartedPhase>(room: T, playerNumber: 
 
 class InvalidLetters extends Error {}
 
-export function availableLetters(room: EndgamePhase, playerNumber: PlayerNumber): EndgameLetterChoice[] {
+export function lettersForFinalGuess(room: EndgamePhase, playerNumber: PlayerNumber): (EndgameLetterChoice & {available: boolean})[] {
     const player = room.players[playerNumber-1];
     const usedOwnLetters = new Set();
-    const bonuses = [...room.bonuses];
+    const bonusesAvailable = new Map();
+    for (const letter of room.bonuses) {
+        bonusesAvailable.set(letter, (bonusesAvailable.get(letter) ?? 0) + 1);
+    }
     let wildcardAvailable = true;
     for (const guess of player.guess) {
         if (guess.sourceType === LetterSources.PLAYER) {
@@ -431,35 +434,39 @@ export function availableLetters(room: EndgamePhase, playerNumber: PlayerNumber)
                 if (!wildcardAvailable) throw new InvalidLetters();
                 wildcardAvailable = false;
             } else if (guess.sourceType === LetterSources.BONUS) {
-                const ix = bonuses.indexOf(guess.letter);
-                if (ix < 0) throw new InvalidLetters();
-                bonuses.splice(ix, 1);
+                const current = bonusesAvailable.get(guess.letter);
+                if (!current) throw new InvalidLetters();
+                bonusesAvailable.set(guess.letter, current - 1);
             }
         }
     }
 
-    const available: EndgameLetterChoice[] = [];
+    const choices: (EndgameLetterChoice & {available: boolean})[] = [];
     for (let i = 0; i < room.wordLength; ++i) {
-        if (!usedOwnLetters.has(i)) {
-            available.push({
-                sourceType: LetterSources.PLAYER,
-                index: i,
-            });
+        choices.push({
+            sourceType: LetterSources.PLAYER,
+            index: i,
+            available: !usedOwnLetters.has(i),
+        });
+    }
+    choices.push({
+        sourceType: LetterSources.WILDCARD,
+        letter: '*',
+        available: wildcardAvailable,
+    });
+    for (const letter of room.bonuses) {
+        const current = bonusesAvailable.get(letter);
+        const available = !!current;
+        if (available) {
+            bonusesAvailable.set(letter, current - 1);
         }
-    }
-    if (wildcardAvailable) {
-        available.push({
-            sourceType: LetterSources.WILDCARD,
-            letter: '*',
-        })
-    }
-    for (const bonus of bonuses) {
-        available.push({
+        choices.push({
             sourceType: LetterSources.BONUS,
-            letter: bonus,
+            letter,
+            available,
         })
     }
-    return available;
+    return choices;
 }
 
 export function setFinalGuess(room: EndgamePhase, playerNumber: PlayerNumber, guess: readonly EndgameLetterChoice[]): EndgamePhase | null {
@@ -471,7 +478,7 @@ export function setFinalGuess(room: EndgamePhase, playerNumber: PlayerNumber, gu
         })),
     };
     try {
-        availableLetters(newRoom, playerNumber);
+        lettersForFinalGuess(newRoom, playerNumber);
     } catch (e) {
         if (e instanceof InvalidLetters) {
             return null;
