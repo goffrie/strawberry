@@ -38,7 +38,7 @@ function StartedGameRoom({gameState}: {gameState: StartedPhase}) {
         action = <></>;
     } else if (gameState.phase === RoomPhase.HINT) {
         const activeHintNumber = gameState.hintLog.length + 1;
-        const totalHintsAvailable = activeHintNumber + gameState.hintsRemaining;
+        const totalHintsAvailable = gameState.hintLog.length + gameState.hintsRemaining;
         action = <>
             <div className='hintLogTitle'>Hint {activeHintNumber} / {totalHintsAvailable}</div>
             {isProposing(gameState) && <ProposingHintComponent hintingGameState={gameState} />}
