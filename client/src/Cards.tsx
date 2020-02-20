@@ -152,7 +152,7 @@ function CardsFromLettersAndSources({lettersAndSources, viewingPlayer, inactive,
     inactive?: (i: number) => void,
     onClick?: (letterAndSource: LetterAndSource, i: number) => void,
 }) {
-    return <div className='flex'>
+    return <div className='cardList'>
         {lettersAndSources.map((letterAndSource, i) => {
 
             const letterToDisplay = letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === viewingPlayer ? '?' : letterAndSource.letter;
