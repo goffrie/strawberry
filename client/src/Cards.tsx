@@ -31,7 +31,13 @@ function Card({letter, onClick, inactive, guess, setGuess}: {letter?: Letter | n
             }
         }
     } : undefined;
-    return <div className={classNames} onClick={onClick} tabIndex={setGuess ? 0 : undefined} onKeyDown={keyDown}>{guess || letterToUse || ''}</div>
+    const text = guess || letterToUse || '';
+    return <div
+        className={classNames}
+        onClick={onClick}
+        tabIndex={setGuess ? 0 : undefined}
+        onKeyDown={keyDown}
+    >{text}</div>
 }
 
 function CardWithAnnotation({letter, inactive, annotation, onClick, hidden=false}: {letter: Letter, inactive?: boolean, annotation: React.ReactNode, onClick?: () => void, hidden?: boolean}) {

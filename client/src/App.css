@@ -219,6 +219,8 @@ button {
 .cardButton {
   cursor: pointer;
   border-color: #D20B0B;
+  /* Prevent double taps from zooming */
+  touch-action: manipulation;
 }
 
 .cardButton:hover {
