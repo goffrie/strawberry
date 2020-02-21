@@ -279,15 +279,15 @@ function setHandGuessMutator(room: StartedPhase, {playerNumber, changes}: {playe
     return room;
 }
 
-export function useSetHandGuess(room: StartedPhase): [Record<number, Letter | null> | undefined, ((index: number, guess: Letter | null) => void)] {
+export function useSetHandGuess(room: StartedPhase): [Record<number, Letter | null> | undefined, ((index: number, guess: Letter | null) => void) | undefined] {
     const playerName = useContext(PlayerNameContext);
     if (playerName == null) {
         throw new Error("PlayerNameContext not provided");
     }
     const playerNumber = getPlayerNumber(room, playerName);
-    const allowed = playerNumber != null;
+    const allowed = playerNumber != null && (room.phase === RoomPhase.HINT || !room.players[playerNumber-1].committed);
     const [mutation, mutate] = useMutateGame(room, allowed, setHandGuessMutator);
-    return [mutation?.changes, (index, guess) => {
+    const setGuess = (index: number, guess: Letter | null) => {
         if (playerNumber == null) return;
         // need to preserve the existing mutation since we can edit multiple indices.
         mutate({
@@ -297,7 +297,8 @@ export function useSetHandGuess(room: StartedPhase): [Record<number, Letter | nu
                 [index]: guess,
             },
         });
-    }];
+    };
+    return [mutation?.changes, allowed ? setGuess : undefined];
 }
 
 function setFinalGuessMutator(room: EndgamePhase, {playerNumber, guess}: {playerNumber: PlayerNumber, guess: readonly EndgameLetterChoice[]}): EndgamePhase {

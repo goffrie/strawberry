@@ -434,4 +434,11 @@ This element uses ScrollableFeed, so it cannot take padding.
     height: 80px;
     width: 80px;
   }
+  .inlineHandGuess {
+    display: block;
+    font-size: 40px;
+    height: 80px;
+    width: 80px;
+    margin: 15px 0 0 10px;
+  }
 }
