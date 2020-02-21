@@ -140,7 +140,7 @@ function StartGameRoomMain({startingGameState, joinGame}: {startingGameState: St
     if (startingGameState.players.length < MIN_PLAYERS) {
         startGame = <div className='bigText'><Clock /> Waiting for players to join...</div>;
     } else if (doStartGame != null) {
-        startGame = <div className='strawberryButton' onClick={doStartGame}>Start game</div>
+        startGame = <button className='strawberryButton' onClick={doStartGame}>Start game</button>
     } else {
         startGame = <div className='bigText'><Clock /> Waiting for other players to enter words...</div>;
     }

@@ -18,7 +18,7 @@
 
 .strawberryInputBig {
   height: 40px;
-  line-height: 40px;
+  line-height: 1;
   font-size: 40px;
   width: 320px;
 
@@ -61,8 +61,6 @@ button {
   box-sizing: border-box;
   font-size: 40px;
   height: 65px;
-  line-height: 40px;
-  padding: 10px 10px 15px 10px;
   border: 2px solid #D20B0B;
   margin-bottom: 20px;
   cursor: pointer;
@@ -397,4 +395,43 @@ This element uses ScrollableFeed, so it cannot take padding.
   line-height: 20px; /* so inserting emojis doesnt change line height */
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
   monospace;
+}
+
+@media only screen and (max-width: 850px) {
+  body {
+    font-size: 25px;
+    text-size-adjust: none;
+  }
+  .mainPageAttribution {
+    font-size: 20px;
+  }
+  .gameSidebarPlayers, .gameSidebarNotes, .gameSidebarNotesHandle {
+    display: none;
+  }
+  .stagedHintActions {
+    flex-direction: column;
+  }
+  .stagedHintActions .flexAlignRight /* hax */ {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+  }
+  .stagedHintActions button, .resolveAction button {
+    height: 80px;
+  }
+  .resolveAction {
+    flex-direction: column;
+  }
+  .resolveAction .or {
+    /* hide the slash */
+    display: none;
+  }
+  .resolveAction form {
+    margin-top: 10px;
+  }
+  .resolveAction .strawberryInputSmall {
+    font-size: 40px;
+    height: 80px;
+    width: 80px;
+  }
 }

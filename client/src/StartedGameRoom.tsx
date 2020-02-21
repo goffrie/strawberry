@@ -48,7 +48,12 @@ function StartedGameRoom({gameState}: {gameState: StartedPhase}) {
         action = <div className="hintLogEntry">
             <div className='hintLogTitle'>Construct your word</div>
             <GuessWordComponent gameState={gameState} />
-        </div>
+        </div>;
+    } else {
+        action = <div className="hintLogEntry">
+            <div className='hintLogTitle'>Your final word</div>
+            <FinalWordComponent gameState={gameState} />
+        </div>;
     }
 
     return <div className='gameContainer'>
@@ -385,8 +390,8 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
                 }} isDisabled={stagedHint === null}>Clear</LinkButton>
             </div>
         </div>
-        <div className='flex hintLogLine'>
-            {stagedHint !== null && <span className='italics'>{stagedHintSentence}</span>}
+        <div className='flex hintLogLine stagedHintActions'>
+            {stagedHint !== null && <span className='stagedHintSentence italics'>{stagedHintSentence}</span>}
             <span className='flexAlignRight'>
                 <LinkButton isDisabled={stagedHint == null && callProposeHint != null} onClick={() => stagedHint != null && callProposeHint != null && callProposeHint(stagedHint)}>{proposeText}</LinkButton>
                 <span style={{marginLeft: '10px'}} />
@@ -506,10 +511,10 @@ function ResolvingHintComponent({hintingGameState}: {hintingGameState: Resolving
 
     return <>
         <HintInLog hint={activeHint.hint} playerActions={activeHint.playerActions} playerCardUsed={playerCardUsed} players={hintingGameState.players} />
-        <div className='hintLogLine flex'>
+        <div className='hintLogLine flex resolveAction'>
             {resolveActionRequired === ResolveActionChoice.FLIP && <FlipResolve playerNumber={playerNumber!} hintingGameState={hintingGameState} />}
             {resolveActionRequired === ResolveActionChoice.GUESS && <GuessResolve player={player!} playerNumber={playerNumber!} hintingGameState={hintingGameState} />}
-            {waitingOnPlayerNames.length > 0 && <span className='flexAlignRight italics'>Waiting on: {waitingOnPlayerNames.join(', ')}</span>}
+            {waitingOnPlayerNames.length > 0 && <span className='flexAlignRight italics waitingOnPlayers'>Waiting on: {waitingOnPlayerNames.join(', ')}</span>}
         </div>
     </>;
 }
@@ -525,7 +530,7 @@ function FlipResolve({playerNumber, hintingGameState}: {playerNumber: PlayerNumb
                 kind: ResolveActionKind.FLIP,
             });
         }}>Yes</LinkButton>
-        &nbsp;/&nbsp;
+        <span className="or">&nbsp;/&nbsp;</span>
         <LinkButton onClick={() => {
             resolveFn({
                 player: playerNumber,
@@ -613,12 +618,34 @@ function GuessWordComponent({gameState}: {gameState: EndgamePhase}) {
                 }} isDisabled={guess.length === 0}>Clear</LinkButton>
             </div>
         </div>
-        <div className='flex hintLogLine'>
+        <div className='flex hintLogLine stagedHintActions'>
             <span className='flexAlignRight'>
                 <LinkButton isDisabled={!canSubmitGuess} onClick={submit}>Submit guess</LinkButton>
             </span>
         </div>
     </>
+}
+
+function FinalWordComponent({gameState}: {gameState: EndgamePhase}) {
+    const {player, playerNumber} = usePlayerContext();
+    if (player == null || playerNumber == null) throw new Error("no");
+    const guess = gameState.players[playerNumber-1].guess;
+    // TODO: remove duplication
+    const convert = (choice: EndgameLetterChoice): LetterAndSource => {
+        if (choice.sourceType === LetterSources.PLAYER) {
+            return {
+                sourceType: LetterSources.PLAYER,
+                letter: gameState.players[playerNumber-1].hand.letters[choice.index],
+                playerNumber,
+            };
+        }
+        return choice;
+    };
+    const lettersAndSources: LetterAndSource[] = guess.map(convert);
+
+    return <div className='hintLogLine' style={{marginLeft: '12px'}}>
+        <CardsFromLettersAndSources lettersAndSources={lettersAndSources} viewingPlayer={-1} />
+    </div>;
 }
 
 export { StartedGameRoom };
