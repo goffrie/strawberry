@@ -398,6 +398,9 @@ This element uses ScrollableFeed, so it cannot take padding.
 }
 
 @media only screen and (max-width: 850px) {
+  .gameContainer {
+    height: auto;
+  }
   body {
     font-size: 25px;
     text-size-adjust: none;
@@ -407,6 +410,10 @@ This element uses ScrollableFeed, so it cannot take padding.
   }
   .gameSidebarPlayers, .gameSidebarNotes, .gameSidebarNotesHandle {
     display: none;
+  }
+  .hintLogContainer {
+    border: none;
+    height: auto;
   }
   .stagedHintActions {
     flex-direction: column;
