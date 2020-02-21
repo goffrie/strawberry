@@ -504,7 +504,8 @@ function HintInLog({hint, playerActions, playerCardUsed, gameState, settingGuess
         </div>
         {playerCardUsed !== null && <div className='hintLogLine'>
             Your position {playerCardUsed + 1} card was used.
-            {setGuess && <> Your guess: <InlineHandGuess gameState={gameState} cardIndex={playerCardUsed} settingGuesses={settingGuesses} setGuess={setGuess} /></>}
+            {playerCardUsed < gameState.wordLength && setGuess &&
+                <> Your guess: <InlineHandGuess gameState={gameState} cardIndex={playerCardUsed} settingGuesses={settingGuesses} setGuess={setGuess} /></>}
         </div>}
 
         {playerActionStrings.map((str, i) => {

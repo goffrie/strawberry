@@ -411,6 +411,9 @@ This element uses ScrollableFeed, so it cannot take padding.
   .gameSidebarPlayers, .gameSidebarNotes, .gameSidebarNotesHandle {
     display: none;
   }
+  .gameContainer > .flexCenterContainer {
+    height: 100vh;
+  }
   .hintLogContainer {
     border: none;
     height: auto;
