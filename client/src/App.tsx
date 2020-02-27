@@ -11,9 +11,12 @@ import { useStrawberryGame, StrawberryGameProvider, PlayerNameContext } from './
 import { RoomPhase } from './gameState';
 
 import './App.css';
+import { useLocalStorage } from './localStorage';
 
-function App({ initialUsername, initialRoom }: { initialUsername: string | null, initialRoom: string }) {
-    const [username, setUsername] = useState(initialUsername);
+const USERNAME_KEY: string = 'username';
+
+function App({ initialRoom }: { initialRoom: string }) {
+    const [username, setUsername] = useLocalStorage(USERNAME_KEY);
     const [room, setRoom] = useState(initialRoom);
     const [isPendingRoomCreation, setIsPendingRoomCreation] = useState(false);
 
@@ -51,10 +54,7 @@ function App({ initialUsername, initialRoom }: { initialUsername: string | null,
         // TODO: confusingly, this handles both setting a username and creating a game. They should be separate.
         page = <MainPage
             isLoggedIn={username !== null}
-            setUsername={(username) => {
-                setUsername(username);
-                localStorage.setItem('username', username);
-            }}
+            setUsername={setUsername}
             createGame={async (wordLength) => {
                 setIsPendingRoomCreation(true);
                 const newRoom = await createNewRoom(username!, wordLength);

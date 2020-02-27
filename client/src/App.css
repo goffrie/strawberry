@@ -157,6 +157,11 @@ button {
   margin: 10px;
 }
 
+.logOut {
+  margin: 15px;
+  font-size: 15px;
+}
+
 .bigStrawberry {
   font-size: 120px;
   user-select: none;

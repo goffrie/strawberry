@@ -1,7 +1,8 @@
 import React, {useState, useContext} from 'react';
 import { FruitEmojiContext } from './Fruit';
+import { LinkButton } from './LinkButton';
 
-type setUsernameFn = (username: string) => void;
+type setUsernameFn = (username: string | null) => void;
 type createGameFn = (wordLength: number) => void;
 
 function MainPage({isLoggedIn, setUsername, createGame, changeFruit}: {
@@ -16,7 +17,7 @@ function MainPage({isLoggedIn, setUsername, createGame, changeFruit}: {
             <div className='mainPageContent'>
                 <BigStrawberry onClick={changeFruit} />
                 <div className='mainPageControl'>
-                    {isLoggedIn ? <StartNewGame createGame={createGame} /> : <SetUsername setUsername={setUsername} />}
+                    {isLoggedIn ? <StartNewGame createGame={createGame} setUsername={setUsername} /> : <SetUsername setUsername={setUsername} />}
                 </div>
             </div>
             <div className='mainPageAttribution'>
@@ -46,7 +47,7 @@ function UsernameInput({setUsername}: {setUsername: setUsernameFn}) {
     </form>
 }
 
-function StartNewGame({createGame}: {createGame: createGameFn}) {
+function StartNewGame({createGame, setUsername}: {createGame: createGameFn, setUsername: setUsernameFn}) {
     const [wordLength, setWordLength] = useState(5);
     return <>
         <button className='strawberryButton' onClick={() => createGame(wordLength)}>Start new game</button>
@@ -58,6 +59,10 @@ function StartNewGame({createGame}: {createGame: createGameFn}) {
                     return <option value={n} key={n}>{n}</option>
                 })}
             </select> letter words
+        </div>
+
+        <div className='logOut'>
+            <LinkButton onClick={() => setUsername(null)}>Log out</LinkButton>
         </div>
     </>;
 }
