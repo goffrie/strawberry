@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 
 import { SuperWrappedLoadingStrawberry } from './LoadingStrawberry';
 import { FRUIT, FruitEmojiContext, FRUIT_NAMES } from './Fruit';
@@ -8,10 +8,11 @@ import { StartGameRoom } from './StartGameRoom';
 import { StartedGameRoom } from './StartedGameRoom';
 import { createNewRoom } from './gameActions';
 import { useStrawberryGame, StrawberryGameProvider, PlayerNameContext } from './gameHook';
-import { RoomPhase } from './gameState';
+import { RoomPhase, ResolveActionKind, isResolving } from './gameState';
 
 import './App.css';
 import { useLocalStorage } from './localStorage';
+import { ResolveActionChoice, whichResolveActionRequired } from './gameLogic';
 
 const USERNAME_KEY: string = 'username';
 
@@ -25,8 +26,14 @@ function App({ initialRoom }: { initialRoom: string }) {
     const changeFruit = () => {
         const newIndex = Math.floor(Math.random() * FRUIT.length);
         setFruitIndex(newIndex);
-        document.title = FRUIT_NAMES[newIndex];
     };
+
+    const [isNotified, setNotified] = useState(false);
+
+    // Update the window title as needed
+    useEffect(() => {
+        document.title = (isNotified ? "(!) " : "") + FRUIT_NAMES[fruitIndex];
+    }, [isNotified, fruitIndex]);
 
     useEffect(() => {
         const listener = () => {
@@ -47,7 +54,7 @@ function App({ initialRoom }: { initialRoom: string }) {
     } else if (username !== null && room !== '') {
         page = <StrawberryGameProvider roomName={room}>
             <PlayerNameContext.Provider value={username}>
-                <Game />
+                <Game setNotified={setNotified} />
             </PlayerNameContext.Provider>
         </StrawberryGameProvider>;
     } else {
@@ -70,9 +77,20 @@ function App({ initialRoom }: { initialRoom: string }) {
     </FruitEmojiContext.Provider>;
 }
 
-function Game() {
+function Game({setNotified}: {setNotified: (_: boolean) => void}) {
     // TODO: bounce if game doesn't exist
     const strawberryGame = useStrawberryGame();
+    const username = useContext(PlayerNameContext);
+
+    useEffect(() => {
+        const needsNotify = strawberryGame != null &&
+            strawberryGame.gameState.phase === RoomPhase.HINT &&
+            isResolving(strawberryGame.gameState) &&
+            [ResolveActionChoice.FLIP, ResolveActionKind.GUESS].includes(
+                whichResolveActionRequired(strawberryGame.gameState, username!));
+        setNotified(needsNotify);
+        return () => setNotified(false);
+    }, [username, strawberryGame, setNotified])
 
     // Game state is null if game doesnt exist or still loading.
     if (strawberryGame === null) {
