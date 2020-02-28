@@ -157,7 +157,7 @@ button {
   margin: 10px;
 }
 
-.logOut {
+.logOut, .enableNotifications {
   margin: 15px;
   font-size: 15px;
 }

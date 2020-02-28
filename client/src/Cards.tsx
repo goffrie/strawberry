@@ -142,18 +142,6 @@ function getPlayerNumberOrLetterFromLetterAndSource(letterAndSource: LetterAndSo
     }
 }
 
-function CardsInHint({lettersAndSources, viewingPlayer, onClick}: {
-    lettersAndSources: readonly LetterAndSource[],
-    viewingPlayer: PlayerNumber,
-    onClick? : (letterAndSource: LetterAndSource, i: number) => void,
-}) {
-    return <CardsFromLettersAndSources
-        lettersAndSources={lettersAndSources}
-        viewingPlayer={viewingPlayer}
-        onClick={onClick}
-    />;
-}
-
 function CardsFromLettersAndSources({lettersAndSources, viewingPlayer, inactive, onClick}: {
     lettersAndSources: readonly LetterAndSource[],
     viewingPlayer: PlayerNumber,
@@ -179,4 +167,4 @@ function CardsFromLettersAndSources({lettersAndSources, viewingPlayer, inactive,
     </div>
 }
 
-export {Card, CardWithAnnotation, CardWithPlayerNumberOrLetter, PlayerWithCardsInHand, DisplayNumberOrLetterWithTextAndCards, CardsInHand, CardsInHint, CardsFromLettersAndSources, RevealedCardsInHand};
+export {Card, CardWithAnnotation, CardWithPlayerNumberOrLetter, PlayerWithCardsInHand, DisplayNumberOrLetterWithTextAndCards, CardsInHand, CardsFromLettersAndSources, RevealedCardsInHand};

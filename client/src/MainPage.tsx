@@ -49,6 +49,12 @@ function UsernameInput({setUsername}: {setUsername: setUsernameFn}) {
 
 function StartNewGame({createGame, setUsername}: {createGame: createGameFn, setUsername: setUsernameFn}) {
     const [wordLength, setWordLength] = useState(5);
+    const [notificationsEnabled, setNotificationsEnabled] = useState(Notification.permission);
+    const enableNotifications = () => {
+        Notification.requestPermission().then(() => {
+            setNotificationsEnabled(Notification.permission);
+        });
+    };
     return <>
         <button className='strawberryButton' onClick={() => createGame(wordLength)}>Start new game</button>
 
@@ -60,6 +66,14 @@ function StartNewGame({createGame, setUsername}: {createGame: createGameFn, setU
                 })}
             </select> letter words
         </div>
+
+        {"Notification" in window &&
+        <div className='enableNotifications'>
+            <LinkButton onClick={enableNotifications} isDisabled={notificationsEnabled !== "default"}>
+                {notificationsEnabled === "granted" ? "Notifications enabled!" : "Enable notifications"}
+            </LinkButton>
+        </div>
+        }
 
         <div className='logOut'>
             <LinkButton onClick={() => setUsername(null)}>Log out</LinkButton>

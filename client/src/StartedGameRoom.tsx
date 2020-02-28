@@ -20,7 +20,6 @@ import {PlayerNameContext, useGiveHint, usePlayerContext, useProposeHint, useRes
 import {
     Card,
     CardsFromLettersAndSources,
-    CardsInHint,
     CardWithAnnotation,
     DisplayNumberOrLetterWithTextAndCards,
     PlayerWithCardsInHand,
@@ -395,7 +394,7 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
             addToStagedHint={addToStagedHint}
         />
         <div className='hintLogGuessBox'>
-            {<CardsInHint lettersAndSources={stagedHint?.lettersAndSources ?? []} viewingPlayer={playerNumber!} onClick={removeLetterFromHint} />}
+            {<CardsFromLettersAndSources lettersAndSources={stagedHint?.lettersAndSources ?? []} viewingPlayer={playerNumber!} onClick={removeLetterFromHint} />}
             <div className='flexAlignRight hintLogGuessBoxClear'>
                 <LinkButton onClick={() => {
                     setStagedHint(null);
@@ -500,8 +499,8 @@ function HintInLog({hint, playerActions, playerCardUsed, gameState, settingGuess
     // TODO: marginLeft -12 if want to align cards with hint construction
     return <>
         <div className='hintLogLine'><PlayerName name={playerNamesByNumber[hint.givenByPlayer]} /> gave a hint: {getHintSentence(hint)}</div>
-        <div className='hintLogLine' style={{marginLeft: '-5px'}}>
-            <CardsInHint lettersAndSources={hint.lettersAndSources} viewingPlayer={playerNumber!} />
+        <div className='hintLogLine'>
+            <CardsFromLettersAndSources lettersAndSources={hint.lettersAndSources} viewingPlayer={playerNumber!} />
         </div>
         {playerCardUsed !== null && <div className='hintLogLine'>
             {playerCardUsed < gameState.wordLength ?
@@ -662,7 +661,7 @@ function GuessWordComponent({gameState}: {gameState: EndgamePhase}) {
             <CardsFromLettersAndSources lettersAndSources={lettersAndSources} inactive={(i) => !available[i].available} viewingPlayer={-1} onClick={addToGuess} />
         </div>
         <div className='hintLogGuessBox'>
-            <CardsInHint lettersAndSources={guess.map(convert)} viewingPlayer={-1} onClick={removeLetterFromGuess} />
+            <CardsFromLettersAndSources lettersAndSources={guess.map(convert)} viewingPlayer={-1} onClick={removeLetterFromGuess} />
             <div className='flexAlignRight hintLogGuessBoxClear'>
                 <LinkButton onClick={() => {
                     setGuess([]);
@@ -694,7 +693,7 @@ function FinalWordComponent({gameState}: {gameState: EndgamePhase}) {
     };
     const lettersAndSources: LetterAndSource[] = guess.map(convert);
 
-    return <div className='hintLogLine' style={{marginLeft: '12px'}}>
+    return <div className='hintLogLine'>
         <CardsFromLettersAndSources lettersAndSources={lettersAndSources} viewingPlayer={-1} />
     </div>;
 }

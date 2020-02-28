@@ -8,7 +8,7 @@ import { StartGameRoom } from './StartGameRoom';
 import { StartedGameRoom } from './StartedGameRoom';
 import { createNewRoom } from './gameActions';
 import { useStrawberryGame, StrawberryGameProvider, PlayerNameContext } from './gameHook';
-import { RoomPhase, ResolveActionKind, isResolving } from './gameState';
+import { RoomPhase, ResolveActionKind, isResolving, isProposing, RoomState } from './gameState';
 
 import './App.css';
 import { useLocalStorage } from './localStorage';
@@ -77,20 +77,52 @@ function App({ initialRoom }: { initialRoom: string }) {
     </FruitEmojiContext.Provider>;
 }
 
+enum GameAction {
+    WAITING = "",
+    GIVE_HINT = "You can give a hint.",
+    RESOLVE = "You have received a hint.",
+    ENDGAME = "You can guess your word.",
+}
+
+function playerCurrentAction(game: RoomState, username: string | null): GameAction | null {
+    if (username == null) return null;
+    switch (game.phase) {
+        case RoomPhase.START:
+            return null;
+        case RoomPhase.HINT:
+            if (!isResolving(game)) {
+                return GameAction.GIVE_HINT;
+            } else if ([ResolveActionChoice.FLIP, ResolveActionKind.GUESS]
+                .includes(whichResolveActionRequired(game, username))) {
+                return GameAction.RESOLVE;
+            } else {
+                return GameAction.WAITING;
+            }
+        case RoomPhase.ENDGAME:
+            return GameAction.ENDGAME;
+    }
+}
+
 function Game({setNotified}: {setNotified: (_: boolean) => void}) {
     // TODO: bounce if game doesn't exist
     const strawberryGame = useStrawberryGame();
     const username = useContext(PlayerNameContext);
 
+    const [oldAction, setOldAction] = useState<GameAction | null>(null);
+    const currentAction = strawberryGame && playerCurrentAction(strawberryGame.gameState, username);
     useEffect(() => {
-        const needsNotify = strawberryGame != null &&
-            strawberryGame.gameState.phase === RoomPhase.HINT &&
-            isResolving(strawberryGame.gameState) &&
-            [ResolveActionChoice.FLIP, ResolveActionKind.GUESS].includes(
-                whichResolveActionRequired(strawberryGame.gameState, username!));
-        setNotified(needsNotify);
+        setOldAction(currentAction);
+        if (!("Notification" in window)) return;
+        if (window.Notification.permission !== "granted") return;
+        if (oldAction == null || !currentAction || oldAction === currentAction) return;
+        new Notification(currentAction, {silent: true});
+    }, [oldAction, currentAction, setOldAction]);
+
+    const needsResolve = currentAction === GameAction.RESOLVE;
+    useEffect(() => {
+        setNotified(needsResolve);
         return () => setNotified(false);
-    }, [username, strawberryGame, setNotified])
+    }, [needsResolve, setNotified])
 
     // Game state is null if game doesnt exist or still loading.
     if (strawberryGame === null) {
