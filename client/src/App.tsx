@@ -7,7 +7,7 @@ import { MainPage } from './MainPage';
 import { StartGameRoom } from './StartGameRoom';
 import { StartedGameRoom } from './StartedGameRoom';
 import { createNewRoom } from './gameActions';
-import { useStrawberryGame, StrawberryGameProvider, PlayerNameContext } from './gameHook';
+import { useStrawberryGame, StrawberryGameProvider, UsernameContext } from './gameHook';
 import { RoomPhase, ResolveActionKind, isResolving, RoomState } from './gameState';
 
 import './App.css';
@@ -58,9 +58,9 @@ function App({ initialRoom }: { initialRoom: string }) {
         page = <SuperWrappedLoadingStrawberry />;
     } else if (username !== null && room !== '') {
         page = <StrawberryGameProvider roomName={room}>
-            <PlayerNameContext.Provider value={username}>
+            <UsernameContext.Provider value={username}>
                 <Game setNotified={setNotified} />
-            </PlayerNameContext.Provider>
+            </UsernameContext.Provider>
         </StrawberryGameProvider>;
     } else {
         // TODO: confusingly, this handles both setting a username and creating a game. They should be separate.
@@ -111,7 +111,7 @@ function playerCurrentAction(game: RoomState, username: string | null): GameActi
 function Game({setNotified}: {setNotified: (_: boolean) => void}) {
     // TODO: bounce if game doesn't exist
     const strawberryGame = useStrawberryGame();
-    const username = useContext(PlayerNameContext);
+    const username = useContext(UsernameContext);
 
     const [oldAction, setOldAction] = useState<GameAction | null>(null);
     const currentAction = strawberryGame && playerCurrentAction(strawberryGame.gameState, username);

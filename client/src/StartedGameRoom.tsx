@@ -16,7 +16,7 @@ import {
     EndgamePhasePlayer,
 } from './gameState';
 import {Hint, Letter, LetterAndSource, LetterSources, PlayerNumber} from './gameTypes';
-import {PlayerNameContext, useGiveHint, usePlayerContext, useProposeHint, useResolveHint, useSetHandGuess, useStrawberryGame, useSetFinalGuess, useCommitFinalGuess} from './gameHook';
+import {UsernameContext, useGiveHint, usePlayerContext, useProposeHint, useResolveHint, useSetHandGuess, useStrawberryGame, useSetFinalGuess, useCommitFinalGuess} from './gameHook';
 import {
     Card,
     CardsFromLettersAndSources,
@@ -71,7 +71,7 @@ function StartedGameRoomSidebar({gameState, settingGuesses={}, setGuess}: {
     settingGuesses?: Readonly<Record<number, Letter | null>>,
     setGuess?: (index: number, guess: Letter | null) => void,
 }) {
-    const username = useContext(PlayerNameContext);
+    const username = useContext(UsernameContext);
     const players: readonly StartedPlayer[] = gameState.players;
     return <div className='gameSidebar gameSidebarPlayers'>
         {players.map((player, i) => {

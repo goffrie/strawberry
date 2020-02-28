@@ -38,7 +38,7 @@ export type StrawberryGame = Readonly<{
 }>;
 
 export const RoomContext = React.createContext<StrawberryGame | null>(null);
-export const PlayerNameContext = React.createContext<string>("");
+export const UsernameContext = React.createContext<string>("");
 
 export function usePlayerContext(): {
     username: string,
@@ -47,7 +47,7 @@ export function usePlayerContext(): {
     playerNumber: number | null,
 } {
     const room = useContext(RoomContext);
-    const username = useContext(PlayerNameContext);
+    const username = useContext(UsernameContext);
 
     // game hasn't loaded
     if (room === null) {
@@ -145,7 +145,7 @@ export enum JoinRoomStatus {
 
 export function useJoinRoom(room: StartingPhase, shouldJoin: boolean): JoinRoomStatus {
     const { roomName, stateVersion } = useStrawberryGame()!;
-    const playerName = useContext(PlayerNameContext);
+    const playerName = useContext(UsernameContext);
     if (playerName == null) {
         throw new Error("PlayerNameContext not provided");
     }
@@ -209,7 +209,7 @@ function inputWordMutator(room: StartingPhase, {playerName, word}: {playerName: 
 }
 
 export function useInputWord(room: StartingPhase): [string | null | undefined, (newWord: string | null) => void] {
-    const playerName = useContext(PlayerNameContext);
+    const playerName = useContext(UsernameContext);
     if (playerName == null) {
         throw new Error("PlayerNameContext not provided");
     }
@@ -238,7 +238,7 @@ function proposeHintMutator(room: ProposingHintPhase, {playerName, hint}: {playe
 }
 
 export function useProposeHint(room: ProposingHintPhase): [Hint | null | undefined, ((hint: Hint | null) => void) | null] {
-    const playerName = useContext(PlayerNameContext);
+    const playerName = useContext(UsernameContext);
     if (playerName == null) {
         throw new Error("PlayerNameContext not provided");
     }
@@ -253,7 +253,7 @@ function giveHintMutator(room: ProposingHintPhase, {hintNumber, hint}: {hintNumb
 }
 
 export function useGiveHint(room: ProposingHintPhase): ((hint: Hint) => void) | null {
-    const playerName = useContext(PlayerNameContext);
+    const playerName = useContext(UsernameContext);
     if (playerName == null) {
         throw new Error("PlayerNameContext not provided");
     }
@@ -280,7 +280,7 @@ function setHandGuessMutator(room: StartedPhase, {playerNumber, changes}: {playe
 }
 
 export function useSetHandGuess(room: StartedPhase): [Record<number, Letter | null> | undefined, ((index: number, guess: Letter | null) => void) | undefined] {
-    const playerName = useContext(PlayerNameContext);
+    const playerName = useContext(UsernameContext);
     if (playerName == null) {
         throw new Error("PlayerNameContext not provided");
     }
@@ -306,7 +306,7 @@ function setFinalGuessMutator(room: EndgamePhase, {playerNumber, guess}: {player
 }
 
 export function useSetFinalGuess(room: EndgamePhase): [readonly EndgameLetterChoice[] | undefined, ((guess: readonly EndgameLetterChoice[]) => void)] {
-    const playerName = useContext(PlayerNameContext);
+    const playerName = useContext(UsernameContext);
     if (playerName == null) {
         throw new Error("PlayerNameContext not provided");
     }
@@ -317,7 +317,7 @@ export function useSetFinalGuess(room: EndgamePhase): [readonly EndgameLetterCho
 
 
 export function useCommitFinalGuess(room: EndgamePhase): () => void {
-    const playerName = useContext(PlayerNameContext);
+    const playerName = useContext(UsernameContext);
     if (playerName == null) {
         throw new Error("PlayerNameContext not provided");
     }

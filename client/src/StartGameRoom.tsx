@@ -2,7 +2,7 @@ import React, {useState, useContext, useEffect} from 'react';
 import {StartingPhase} from './gameState';
 import {PlayerWithCardsInHand, CardsInHand} from './Cards';
 import {LETTERS, MIN_PLAYERS, MAX_PLAYERS} from './gameLogic';
-import {useJoinRoom, PlayerNameContext, useInputWord, useStartGame, useStrawberryGame} from './gameHook';
+import {useJoinRoom, UsernameContext, useInputWord, useStartGame, useStrawberryGame} from './gameHook';
 import { LinkButton } from './LinkButton';
 
 /* eslint-disable jsx-a11y/accessible-emoji */
@@ -26,7 +26,7 @@ function StartGameRoom({startingGameState}: {startingGameState: StartingPhase}) 
 }
 
 function StartGameRoomSidebar({startingGameState, leaveGame}: {startingGameState: StartingPhase, leaveGame: () => void}) {
-    const username = useContext(PlayerNameContext);
+    const username = useContext(UsernameContext);
     const placeholderLetters = Array.from({length: startingGameState.wordLength}, () => {return '🍓'});
     return <div className='gameSidebar gameSidebarPlayers'>
         {startingGameState.players.map((player, i) => {
@@ -58,7 +58,7 @@ function StartGameRoomSidebar({startingGameState, leaveGame}: {startingGameState
 }
 
 function StartGameRoomMain({startingGameState, joinGame}: {startingGameState: StartingPhase, joinGame: () => void}) {
-    const username = useContext(PlayerNameContext);
+    const username = useContext(UsernameContext);
     const doStartGame = useStartGame(startingGameState);
 
     const [inputWord, setInputWord] = useState('');
