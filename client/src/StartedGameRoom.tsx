@@ -339,6 +339,42 @@ function removeLetterFromHintByIndex(hint: Hint, i: number): Hint | null {
     }
 }
 
+function proposableLettersAndSources(hintingGameState: ProposingHintPhase, playerNumber: PlayerNumber): LetterAndSource[] {
+    let lettersAndSources: LetterAndSource[] = [];
+
+    hintingGameState.players.forEach((player, i) => {
+        if (i + 1 !== playerNumber) {
+            lettersAndSources.push({
+                sourceType: LetterSources.PLAYER,
+                letter: player.hand.letters[player.hand.activeIndex],
+                playerNumber: i + 1,
+            });
+        }
+    });
+
+    lettersAndSources.push({
+        sourceType: LetterSources.WILDCARD,
+        letter: '*',
+    });
+
+    hintingGameState.dummies.forEach((dummy, i) => {
+        lettersAndSources.push({
+            sourceType: LetterSources.DUMMY,
+            letter: dummy.currentLetter,
+            dummyNumber: i + 1,
+        });
+    });
+
+    hintingGameState.bonuses.forEach(bonus => {
+        lettersAndSources.push({
+            sourceType: LetterSources.BONUS,
+            letter: bonus,
+        })
+    });
+
+    return lettersAndSources;
+}
+
 function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}) {
     const {playerNumber} = usePlayerContext();
     const proposedHint: Hint | null = hintingGameState.activeHint.proposedHints[playerNumber!] || null;
@@ -380,21 +416,50 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
         }
     };
 
-    const removeLetterFromHint = (letterAndSource: LetterAndSource, i: number) => {
+    const removeLetterFromHint = (i: number) => {
        const newHint = removeLetterFromHintByIndex(stagedHint!, i);
        setStagedHint(newHint);
+    };
+
+    const availableLetters = proposableLettersAndSources(hintingGameState, playerNumber!);
+
+    const onKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Backspace") {
+            e.preventDefault();
+            if (stagedHint) {
+                removeLetterFromHint(stagedHint.lettersAndSources.length - 1);
+            }
+        }
+    };
+
+    const onKeyPress = (e: React.KeyboardEvent) => {
+        e.preventDefault();
+        if (e.key === "Enter") {
+            if (stagedHint && callProposeHint) {
+                callProposeHint(stagedHint);
+            }
+            return;
+        }
+
+        const letter = e.key.toUpperCase();
+        for (const availableLetter of availableLetters) {
+            if (availableLetter.letter === letter) {
+                addToStagedHint(availableLetter);
+                break;
+            }
+        }
     };
 
     return <>
         <div className='hintLogLine'>&nbsp;</div>
         <div className='hintLogLine italics'>Available letters (click to use): </div>
         <AvailableCards
-            hintingGameState={hintingGameState}
+            lettersAndSources={availableLetters}
             playerNumber={playerNumber!}
             addToStagedHint={addToStagedHint}
         />
-        <div className='hintLogGuessBox'>
-            {<CardsFromLettersAndSources lettersAndSources={stagedHint?.lettersAndSources ?? []} viewingPlayer={playerNumber!} onClick={removeLetterFromHint} />}
+        <div className='hintLogGuessBox' tabIndex={0} onKeyDown={onKeyDown} onKeyPress={onKeyPress}>
+            {<CardsFromLettersAndSources lettersAndSources={stagedHint?.lettersAndSources ?? []} viewingPlayer={playerNumber!} onClick={(_, i) => removeLetterFromHint(i)} />}
             <div className='flexAlignRight hintLogGuessBoxClear'>
                 <LinkButton onClick={() => {
                     setStagedHint(null);
@@ -412,43 +477,11 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
     </>
 }
 
-function AvailableCards({hintingGameState, playerNumber, addToStagedHint}: {
-    hintingGameState: ProposingHintPhase,
+function AvailableCards({lettersAndSources, playerNumber, addToStagedHint}: {
+    lettersAndSources: readonly LetterAndSource[],
     playerNumber: PlayerNumber,
     addToStagedHint: (letterAndSource: LetterAndSource) => void,
 }) {
-    let lettersAndSources: LetterAndSource[] = [];
-
-    hintingGameState.players.forEach((player, i) => {
-        if (i + 1 !== playerNumber) {
-            lettersAndSources.push({
-                sourceType: LetterSources.PLAYER,
-                letter: player.hand.letters[player.hand.activeIndex],
-                playerNumber: i + 1,
-            });
-        }
-    });
-
-    lettersAndSources.push({
-        sourceType: LetterSources.WILDCARD,
-        letter: '*',
-    });
-
-    hintingGameState.dummies.forEach((dummy, i) => {
-        lettersAndSources.push({
-            sourceType: LetterSources.DUMMY,
-            letter: dummy.currentLetter,
-            dummyNumber: i + 1,
-        });
-    });
-
-    hintingGameState.bonuses.forEach(bonus => {
-        lettersAndSources.push({
-            sourceType: LetterSources.BONUS,
-            letter: bonus,
-        })
-    });
-
     return <div className='hintLogLine' style={{marginLeft: '12px'}}>
         <CardsFromLettersAndSources lettersAndSources={lettersAndSources} viewingPlayer={playerNumber} onClick={addToStagedHint} />
     </div>

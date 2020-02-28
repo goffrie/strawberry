@@ -20,7 +20,7 @@ function Card({letter, onClick, inactive, guess, setGuess}: {letter?: Letter | n
     }
     const keyDown = setGuess ? (e: React.KeyboardEvent) => {
         if (e.ctrlKey || e.altKey) return;
-        if (e.keyCode === 8 /* backspace */ || e.keyCode === 46 /* delete */ || e.key === ' ' || e.key === '?') {
+        if (e.key === "Backspace" || e.key === "Delete" || e.key === ' ' || e.key === '?') {
             setGuess(null);
             e.preventDefault();
         } else {

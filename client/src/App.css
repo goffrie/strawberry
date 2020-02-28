@@ -379,7 +379,7 @@ This element uses ScrollableFeed, so it cannot take padding.
   box-sizing: border-box;
 }
 
-.hintLogGuessBox:hover {
+.hintLogGuessBox:hover, .hintLogGuessBox:focus {
   border: 2px solid #19AF00;
 }
 
