@@ -15,17 +15,22 @@ import { useLocalStorage } from './localStorage';
 import { ResolveActionChoice, whichResolveActionRequired } from './gameLogic';
 
 const USERNAME_KEY: string = 'username';
+const FRUIT_KEY: string = 'fruit';
 
 function App({ initialRoom }: { initialRoom: string }) {
     const [username, setUsername] = useLocalStorage(USERNAME_KEY);
     const [room, setRoom] = useState(initialRoom);
     const [isPendingRoomCreation, setIsPendingRoomCreation] = useState(false);
 
-    const [fruitIndex, setFruitIndex] = useState(0);
+    const [fruitIndexVar, setFruitIndexVar] = useLocalStorage(FRUIT_KEY);
+    let fruitIndex = fruitIndexVar ? parseInt(fruitIndexVar) : 0;
+    if (!FRUIT[fruitIndex]) fruitIndex = 0;
     const fruitEmoji = FRUIT[fruitIndex];
     const changeFruit = () => {
-        const newIndex = Math.floor(Math.random() * FRUIT.length);
-        setFruitIndex(newIndex);
+        // pick a random index other than `fruitIndex`
+        let newIndex = Math.floor(Math.random() * (FRUIT.length - 1));
+        if (newIndex >= fruitIndex) newIndex += 1;
+        setFruitIndexVar(newIndex.toString());
     };
 
     const [isNotified, setNotified] = useState(false);
