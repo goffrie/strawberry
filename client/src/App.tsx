@@ -8,7 +8,7 @@ import { StartGameRoom } from './StartGameRoom';
 import { StartedGameRoom } from './StartedGameRoom';
 import { createNewRoom } from './gameActions';
 import { useStrawberryGame, StrawberryGameProvider, PlayerNameContext } from './gameHook';
-import { RoomPhase, ResolveActionKind, isResolving, isProposing, RoomState } from './gameState';
+import { RoomPhase, ResolveActionKind, isResolving, RoomState } from './gameState';
 
 import './App.css';
 import { useLocalStorage } from './localStorage';
