@@ -33,6 +33,8 @@ import { LinkButton } from './LinkButton';
 
 function StartedGameRoom({gameState}: {gameState: StartedPhase}) {
     const {isSpectator, playerNumber} = usePlayerContext();
+    const [settingGuesses, setGuess] = useSetHandGuess(gameState);
+
     let action: React.ReactNode;
     if (isSpectator) {
         // Spectators can't act.
@@ -42,7 +44,7 @@ function StartedGameRoom({gameState}: {gameState: StartedPhase}) {
         action = <div className="hintLogEntry">
             <div className='hintLogTitle'>Hint {activeHintNumber} / {totalHintsAvailable}</div>
             {isProposing(gameState) && <ProposingHintComponent hintingGameState={gameState} />}
-            {isResolving(gameState) && <ResolvingHintComponent hintingGameState={gameState} />}
+            {isResolving(gameState) && <ResolvingHintComponent hintingGameState={gameState} setGuess={setGuess} />}
         </div>;
     } else if (!gameState.players[playerNumber! - 1].committed) {
         action = <div className="hintLogEntry">
@@ -55,7 +57,6 @@ function StartedGameRoom({gameState}: {gameState: StartedPhase}) {
             <FinalWordComponent gameState={gameState} />
         </div>;
     }
-    const [settingGuesses, setGuess] = useSetHandGuess(gameState);
 
     return <div className='gameContainer'>
         <StartedGameRoomSidebar gameState={gameState} settingGuesses={settingGuesses} setGuess={setGuess}/>
@@ -518,7 +519,7 @@ function HintInLog({hint, playerActions, playerCardUsed, gameState, settingGuess
 
 function InlineHandGuess({gameState, cardIndex, settingGuesses, setGuess}: {
     gameState: StartedPhase,
-    cardIndex: number, 
+    cardIndex: number,
     settingGuesses: Readonly<Record<number, Letter | null>>,
     setGuess: (index: number, guess: Letter | null) => void,
 }) {
@@ -534,7 +535,10 @@ function InlineHandGuess({gameState, cardIndex, settingGuesses, setGuess}: {
     />;
 }
 
-function ResolvingHintComponent({hintingGameState}: {hintingGameState: ResolvingHintPhase}) {
+function ResolvingHintComponent({hintingGameState, setGuess}: {
+    hintingGameState: ResolvingHintPhase,
+    setGuess?: (index: number, guess: Letter | null) => void,
+}) {
     const {username, player, playerNumber} = usePlayerContext();
 
     const activeHint = hintingGameState.activeHint;
@@ -548,7 +552,12 @@ function ResolvingHintComponent({hintingGameState}: {hintingGameState: Resolving
     const waitingOnPlayerNames = hintingGameState.players.filter((player, i) => waitingOnPlayers.has(i+1)).map((player) => player.name);
 
     return <>
-        <HintInLog hint={activeHint.hint} playerActions={activeHint.playerActions} playerCardUsed={playerCardUsed} gameState={hintingGameState} />
+        <HintInLog
+            hint={activeHint.hint}
+            playerActions={activeHint.playerActions}
+            playerCardUsed={playerCardUsed}
+            gameState={hintingGameState}
+            setGuess={setGuess} />
         <div className='hintLogLine flex resolveAction'>
             {resolveActionRequired === ResolveActionChoice.FLIP && <FlipResolve playerNumber={playerNumber!} hintingGameState={hintingGameState} />}
             {resolveActionRequired === ResolveActionChoice.GUESS && <GuessResolve player={player!} playerNumber={playerNumber!} hintingGameState={hintingGameState} />}
