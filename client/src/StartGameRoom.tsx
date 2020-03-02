@@ -126,7 +126,7 @@ function StartGameRoomMain({startingGameState, joinGame}: {startingGameState: St
                         borderColor: isInputWordValid ? '#19AF00' : '#D20B0B',
                     }}
                     onChange={e => {
-                        setInputWord(e.target.value);
+                        setInputWord(e.target.value.toUpperCase());
                         setErrorToRender('');
                     }}
                     autoFocus

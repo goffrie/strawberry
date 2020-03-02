@@ -165,6 +165,9 @@ button {
 .bigStrawberry {
   font-size: 120px;
   user-select: none;
+  cursor: pointer;
+  width: fit-content;
+  align-self: center;
 }
 
 .wordLengthControl {
@@ -377,6 +380,8 @@ This element uses ScrollableFeed, so it cannot take padding.
   display: flex;
   max-width: 850px;
   box-sizing: border-box;
+  cursor: text;
+  outline: none;
 }
 
 .hintLogGuessBox:hover, .hintLogGuessBox:focus {
