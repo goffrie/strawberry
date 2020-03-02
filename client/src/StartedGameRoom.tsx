@@ -164,6 +164,8 @@ function StartedGameRoomNotesSidebar() {
              onMouseMove={e => {
                  if (isDragging) {
                      // minus 10 due to width of handle
+                     // TODO: fix this properly. handle is width 7 but need to consider where in the handle
+                     // the mouse is to accurately offset
                      let newWidth = window.innerWidth - e.pageX - 10;
                      if (newWidth < 100) newWidth = 100;
                      setSidebarWidth(newWidth);
