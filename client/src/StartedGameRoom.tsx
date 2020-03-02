@@ -602,7 +602,7 @@ function FlipResolve({playerNumber, hintingGameState}: {playerNumber: PlayerNumb
     const resolveFn = useResolveHint(hintingGameState);
     if (resolveFn === null) throw new Error('illegal');
     return <>
-        <span className='italics'>Would you like to flip your card?&nbsp;</span>
+        <span className='italics'>Would you like to flip your card?&nbsp;&nbsp;</span>
         <LinkButton onClick={() => {
             resolveFn({
                 player: playerNumber,
