@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import ScrollableFeed from 'react-scrollable-feed';
 import {
     Dummy,
@@ -16,7 +16,7 @@ import {
     EndgamePhasePlayer,
 } from './gameState';
 import {Hint, Letter, LetterAndSource, LetterSources, PlayerNumber} from './gameTypes';
-import {UsernameContext, useGiveHint, usePlayerContext, useProposeHint, useResolveHint, useSetHandGuess, useStrawberryGame, useSetFinalGuess, useCommitFinalGuess} from './gameHook';
+import {useGiveHint, usePlayerContext, useProposeHint, useResolveHint, useSetHandGuess, useStrawberryGame, useSetFinalGuess, useCommitFinalGuess} from './gameHook';
 import {
     Card,
     CardsFromLettersAndSources,
@@ -71,7 +71,7 @@ function StartedGameRoomSidebar({gameState, settingGuesses={}, setGuess}: {
     settingGuesses?: Readonly<Record<number, Letter | null>>,
     setGuess?: (index: number, guess: Letter | null) => void,
 }) {
-    const username = useContext(UsernameContext);
+    const { username } = usePlayerContext();
     const players: readonly StartedPlayer[] = gameState.players;
     return <div className='gameSidebar gameSidebarPlayers'>
         {players.map((player, i) => {
@@ -490,7 +490,7 @@ function AvailableCards({lettersAndSources, playerNumber, addToStagedHint}: {
 }
 
 function PlayerName({name}: {name: string}) {
-    const {username} = usePlayerContext();
+    const { username } = usePlayerContext();
     return <>
         <span className="playerName">{name}</span>
         {username === name && <> <span className="you">(you)</span></>}

@@ -30,15 +30,17 @@ import {
     commitFinalGuess,
 } from './gameLogic';
 import {callCommit, callList} from './gameAPI';
+import {TestRooms} from './testData';
 
 export type StrawberryGame = Readonly<{
     roomName: string,
     gameState: RoomState,
     stateVersion: number,
+    setGameState: (newState: RoomState, abortSignal: AbortSignal) => void,
 }>;
 
 export const RoomContext = React.createContext<StrawberryGame | null>(null);
-export const UsernameContext = React.createContext<string>("");
+export const UsernameContext = React.createContext<{username: string, setUsername: (_: string) => void} | null>(null);
 
 export function usePlayerContext(): {
     username: string,
@@ -47,7 +49,7 @@ export function usePlayerContext(): {
     playerNumber: number | null,
 } {
     const room = useContext(RoomContext);
-    const username = useContext(UsernameContext);
+    const { username } = useContext(UsernameContext)!;
 
     // game hasn't loaded
     if (room === null) {
@@ -82,12 +84,26 @@ export function usePlayerContext(): {
     }
 }
 
-export function StrawberryGameProvider({ roomName, children }: { roomName: string, children: React.ReactNode }) {
+function RealStrawberryGameProvider({ roomName, children }: { roomName: string, children: React.ReactNode }) {
     const game = useListStrawberryGame(roomName);
     return <RoomContext.Provider value={game}>
         {children}
     </RoomContext.Provider>;
 }
+
+function FakeStrawberryGameProvider({ roomName, children }: { roomName: string, children: React.ReactNode }) {
+    const game = useFakeStrawberryGame(roomName);
+    return <RoomContext.Provider value={game}>
+        {children}
+    </RoomContext.Provider>;
+}
+
+function DevStrawberryGameProvider({ roomName, children }: { roomName: string, children: React.ReactNode }) {
+    const Provider = roomName in TestRooms ? FakeStrawberryGameProvider : RealStrawberryGameProvider;
+    return <Provider roomName={roomName} children={children} />;
+}
+
+export const StrawberryGameProvider = process.env.NODE_ENV === 'development' ? DevStrawberryGameProvider : RealStrawberryGameProvider;
 
 async function listLoop(roomName: string, version: number, signal: AbortSignal): Promise<StrawberryGame | null> {
     while (true) {
@@ -101,6 +117,19 @@ async function listLoop(roomName: string, version: number, signal: AbortSignal):
                     roomName,
                     gameState: result.data,
                     stateVersion: result.version,
+                    setGameState: (newState, abortSignal) => {
+                        callCommit(roomName, result.version, newState, abortSignal)
+                            .then((response) => {
+                                if (!response.success) {
+                                    console.log("commit failed; race condition occurred");
+                                }
+                            })
+                            .catch((reason) => {
+                                if (!abortSignal.aborted) {
+                                    console.error(reason);
+                                }
+                            });
+                    },
                 };
             }
         } catch (e) {
@@ -125,6 +154,27 @@ function useListStrawberryGame(roomName: string): StrawberryGame | null {
     return state;
 }
 
+function useFakeStrawberryGame(roomName: string): StrawberryGame | null {
+    const [state, setState] = useState<StrawberryGame | null>(null);
+    useEffect(() => {
+        const makeSetGameState = (version: number) => (newState: RoomState, _: object) => {
+            setState({
+                roomName,
+                gameState: newState,
+                stateVersion: version + 1,
+                setGameState: makeSetGameState(version + 1),
+            })
+        };
+        setState({
+            roomName,
+            gameState: TestRooms[roomName],
+            stateVersion: 1,
+            setGameState: makeSetGameState(1),
+        });
+    }, [roomName]);
+    return state;
+}
+
 // Gain access to the StrawberryGame from context.
 export function useStrawberryGame(): StrawberryGame | null {
     return useContext(RoomContext);
@@ -144,13 +194,13 @@ export enum JoinRoomStatus {
 }
 
 export function useJoinRoom(room: StartingPhase, shouldJoin: boolean): JoinRoomStatus {
-    const { roomName, stateVersion } = useStrawberryGame()!;
-    const playerName = useContext(UsernameContext);
-    if (playerName == null) {
+    const { setGameState } = useStrawberryGame()!;
+    const { username } = useContext(UsernameContext)!;
+    if (username == null) {
         throw new Error("PlayerNameContext not provided");
     }
     let status: JoinRoomStatus;
-    const joined = room.players.some((player) => player.name === playerName);
+    const joined = room.players.some((player) => player.name === username);
     if (shouldJoin) {
         if (joined) status = JoinRoomStatus.JOINED;
         else if (room.players.length >= MAX_PLAYERS) status = JoinRoomStatus.ROOM_FULL;
@@ -162,18 +212,15 @@ export function useJoinRoom(room: StartingPhase, shouldJoin: boolean): JoinRoomS
     useEffect(() => {
         if (status !== JoinRoomStatus.JOINING && status !== JoinRoomStatus.LEAVING) return;
         const abortController = new AbortController();
-        callCommit(roomName, stateVersion, status === JoinRoomStatus.JOINING ? addPlayerToRoom(room, playerName) : removePlayerFromRoom(room, playerName))
-            .catch((reason) => {
-                console.error(reason);
-            });
+        setGameState(status === JoinRoomStatus.JOINING ? addPlayerToRoom(room, username) : removePlayerFromRoom(room, username), abortController.signal);
         return () => abortController.abort();
-    }, [room, status, roomName, stateVersion, playerName]);
+    }, [room, status, setGameState, username]);
     return status;
 }
 
 // GOTCHA: the mutation *must* be idempotent!
 function useMutateGame<Room, Mutation>(room: Room, allowed: boolean, mutator: (room: Room, mutation: Mutation) => RoomState): [Mutation | undefined, (arg: Mutation) => void] {
-    const { roomName, stateVersion } = useStrawberryGame()!;
+    const { setGameState } = useStrawberryGame()!;
     const [mutation, setMutation] = useState<Mutation | undefined>(undefined);
     useEffect(() => {
         if (mutation === undefined) return;
@@ -188,19 +235,9 @@ function useMutateGame<Room, Mutation>(room: Room, allowed: boolean, mutator: (r
             return;
         }
         const abortController = new AbortController();
-        callCommit(roomName, stateVersion, newRoom, abortController.signal)
-            .then((response) => {
-                if (!response.success) {
-                    console.log("commit failed; race condition occurred");
-                }
-            })
-            .catch((reason) => {
-                if (!abortController.signal.aborted) {
-                    console.error(reason);
-                }
-            });
+        setGameState(newRoom, abortController.signal)
         return () => abortController.abort();
-    }, [roomName, stateVersion, room, allowed, mutator, mutation]);
+    }, [setGameState, room, allowed, mutator, mutation]);
     return [mutation, setMutation];
 }
 
@@ -209,17 +246,17 @@ function inputWordMutator(room: StartingPhase, {playerName, word}: {playerName: 
 }
 
 export function useInputWord(room: StartingPhase): [string | null | undefined, (newWord: string | null) => void] {
-    const playerName = useContext(UsernameContext);
-    if (playerName == null) {
+    const { username } = useContext(UsernameContext)!;
+    if (username == null) {
         throw new Error("PlayerNameContext not provided");
     }
-    const allowed = room.players.some(player => player.name === playerName);
+    const allowed = room.players.some(player => player.name === username);
     const [mutation, mutate] = useMutateGame(room, allowed, inputWordMutator);
     return [mutation?.word, (word) => {
         if (!allowed) {
             throw new Error("attempting to set word but we're not in the game");
         }
-        mutate({playerName, word});
+        mutate({playerName: username, word});
     }];
 }
 
@@ -238,13 +275,13 @@ function proposeHintMutator(room: ProposingHintPhase, {playerName, hint}: {playe
 }
 
 export function useProposeHint(room: ProposingHintPhase): [Hint | null | undefined, ((hint: Hint | null) => void) | null] {
-    const playerName = useContext(UsernameContext);
-    if (playerName == null) {
+    const { username } = useContext(UsernameContext)!;
+    if (username == null) {
         throw new Error("PlayerNameContext not provided");
     }
-    const allowed = getPlayerNumber(room, playerName) != null;
+    const allowed = getPlayerNumber(room, username) != null;
     const [mutation, mutate] = useMutateGame(room, allowed, proposeHintMutator);
-    return [mutation?.hint, allowed ? (hint) => mutate({playerName, hint}) : null];
+    return [mutation?.hint, allowed ? (hint) => mutate({playerName: username, hint}) : null];
 }
 
 function giveHintMutator(room: ProposingHintPhase, {hintNumber, hint}: {hintNumber: number, hint: Hint}): StartedPhase {
@@ -253,12 +290,12 @@ function giveHintMutator(room: ProposingHintPhase, {hintNumber, hint}: {hintNumb
 }
 
 export function useGiveHint(room: ProposingHintPhase): ((hint: Hint) => void) | null {
-    const playerName = useContext(UsernameContext);
-    if (playerName == null) {
+    const { username } = useContext(UsernameContext)!;
+    if (username == null) {
         throw new Error("PlayerNameContext not provided");
     }
     const hintNumber = room.hintLog.length;
-    const allowed = getPlayerNumber(room, playerName) != null;
+    const allowed = getPlayerNumber(room, username) != null;
     const [, mutate] = useMutateGame(room, allowed, giveHintMutator);
     return allowed ? (hint) => mutate({hintNumber, hint}) : null;
 }
@@ -280,11 +317,11 @@ function setHandGuessMutator(room: StartedPhase, {playerNumber, changes}: {playe
 }
 
 export function useSetHandGuess(room: StartedPhase): [Record<number, Letter | null> | undefined, ((index: number, guess: Letter | null) => void) | undefined] {
-    const playerName = useContext(UsernameContext);
-    if (playerName == null) {
+    const { username } = useContext(UsernameContext)!;
+    if (username == null) {
         throw new Error("PlayerNameContext not provided");
     }
-    const playerNumber = getPlayerNumber(room, playerName);
+    const playerNumber = getPlayerNumber(room, username);
     const allowed = playerNumber != null && (room.phase === RoomPhase.HINT || !room.players[playerNumber-1].committed);
     const [mutation, mutate] = useMutateGame(room, allowed, setHandGuessMutator);
     const setGuess = (index: number, guess: Letter | null) => {
@@ -306,22 +343,22 @@ function setFinalGuessMutator(room: EndgamePhase, {playerNumber, guess}: {player
 }
 
 export function useSetFinalGuess(room: EndgamePhase): [readonly EndgameLetterChoice[] | undefined, ((guess: readonly EndgameLetterChoice[]) => void)] {
-    const playerName = useContext(UsernameContext);
-    if (playerName == null) {
+    const { username } = useContext(UsernameContext)!;
+    if (username == null) {
         throw new Error("PlayerNameContext not provided");
     }
-    const playerNumber = getPlayerNumber(room, playerName)!;
+    const playerNumber = getPlayerNumber(room, username)!;
     const [mutation, mutate] = useMutateGame(room, true /* allowed */, setFinalGuessMutator);
     return [mutation?.guess, (guess) => mutate({playerNumber, guess})];
 }
 
 
 export function useCommitFinalGuess(room: EndgamePhase): () => void {
-    const playerName = useContext(UsernameContext);
-    if (playerName == null) {
+    const { username } = useContext(UsernameContext)!;
+    if (username == null) {
         throw new Error("PlayerNameContext not provided");
     }
-    const playerNumber = getPlayerNumber(room, playerName)!;
+    const playerNumber = getPlayerNumber(room, username)!;
     const allowed = room.players[playerNumber-1].guess.length >= room.wordLength && !room.players[playerNumber-1].committed;
     const [, mutate] = useMutateGame(room, allowed, commitFinalGuess);
     return () => mutate(playerNumber);

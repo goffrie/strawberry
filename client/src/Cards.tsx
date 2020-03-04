@@ -3,6 +3,8 @@ import {DisplayNumberOrLetter} from './DisplayNumberOrLetter';
 import {Hand, LetterAndSource, LetterSources, PlayerNumber, HandWithGuesses, Letter} from './gameTypes';
 import { LETTERS } from './gameLogic';
 import { FruitEmojiContext } from './Fruit';
+import { LinkButton } from './LinkButton';
+import { UsernameContext } from './gameHook';
 
 function Card({letter, onClick, inactive, guess, setGuess}: {letter?: Letter | null, onClick?: () => void, inactive?: boolean, guess?: Letter | null, setGuess?: ((guess: Letter | null) => void) | null}) {
     let classNames = 'card';
@@ -95,10 +97,12 @@ function PlayerWithCardsInHand({isForViewingPlayer, playerName, playerNumber, ex
     // TODO: render fallback on top of cardsInHand or something so the whitespace doesn't look weird
     // TODO: dont inline style here
     // TODO: render top bar better when there are few cards
+    const {setUsername} = useContext(UsernameContext)!;
 
     const topText = <>
         <span style={{maxWidth: '150px'}} className='ellipsis'>{playerName}&nbsp;</span>
         {isForViewingPlayer ? <span className="you">(you)</span>: null}
+        {process.env.NODE_ENV === 'development' && !isForViewingPlayer ? <span className='flexAlignRight'><LinkButton onClick={() => setUsername(playerName)}>Impersonate</LinkButton></span> : null}
         {extraText ? <span className='flexAlignRight'>{extraText}</span> : null}
     </>;
 

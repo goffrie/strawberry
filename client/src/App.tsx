@@ -58,7 +58,7 @@ function App({ initialRoom }: { initialRoom: string }) {
         page = <SuperWrappedLoadingStrawberry />;
     } else if (username !== null && room !== '') {
         page = <StrawberryGameProvider roomName={room}>
-            <UsernameContext.Provider value={username}>
+            <UsernameContext.Provider value={{username, setUsername}}>
                 <Game setNotified={setNotified} />
             </UsernameContext.Provider>
         </StrawberryGameProvider>;
@@ -111,7 +111,7 @@ function playerCurrentAction(game: RoomState, username: string | null): GameActi
 function Game({setNotified}: {setNotified: (_: boolean) => void}) {
     // TODO: bounce if game doesn't exist
     const strawberryGame = useStrawberryGame();
-    const username = useContext(UsernameContext);
+    const { username } = useContext(UsernameContext)!;
 
     const [oldAction, setOldAction] = useState<GameAction | null>(null);
     const currentAction = strawberryGame && playerCurrentAction(strawberryGame.gameState, username);
