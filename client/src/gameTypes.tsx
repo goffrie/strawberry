@@ -31,6 +31,7 @@ export type LetterAndSource = Readonly<{
 }> | Readonly<{
     letter: '*',
     sourceType: LetterSources.WILDCARD,
+    typedLetter?: Letter,
 }>;
 
 export interface Hint {

@@ -267,6 +267,19 @@ button {
   flex-wrap: wrap;
 }
 
+.cardWithTypedLetter {
+  line-height: 35px;
+}
+
+.cardBadWildcard {
+  /* TODO(lennart) improve this styling */
+  opacity: 0.4;
+}
+
+.typedLetter {
+  font-size: 35px;
+}
+
 
 /* GAME LAYOUT STYLES */
 

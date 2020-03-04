@@ -4,7 +4,7 @@ import {Hand, LetterAndSource, LetterSources, PlayerNumber, HandWithGuesses, Let
 import { LETTERS } from './gameLogic';
 import { FruitEmojiContext } from './Fruit';
 
-function Card({letter, onClick, inactive, guess, setGuess}: {letter?: Letter | null, onClick?: () => void, inactive?: boolean, guess?: Letter | null, setGuess?: ((guess: Letter | null) => void) | null}) {
+function Card({letter, typedLetter, onClick, inactive, guess, setGuess}: {letter?: Letter | null, typedLetter?: Letter, onClick?: () => void, inactive?: boolean, guess?: Letter | null, setGuess?: ((guess: Letter | null) => void) | null}) {
     let classNames = 'card';
     let letterToUse = letter;
     if (!inactive) classNames += ' cardActive';
@@ -17,6 +17,12 @@ function Card({letter, onClick, inactive, guess, setGuess}: {letter?: Letter | n
     if (letter === '*') {
         letterToUse = fruitEmoji; // lol
         classNames +=' cardStrawberry';
+    } else if (letter === '×') { // bad wildcard
+        letterToUse = '×';
+        classNames += ' cardBadWildcard';
+    }
+    if (typedLetter != null) {
+        classNames += ' cardWithTypedLetter'
     }
     const keyDown = setGuess ? (e: React.KeyboardEvent) => {
         if (e.ctrlKey || e.altKey) return;
@@ -32,27 +38,30 @@ function Card({letter, onClick, inactive, guess, setGuess}: {letter?: Letter | n
         }
     } : undefined;
     const text = guess || letterToUse || '';
+    const maybeTypedLetter = typedLetter ? (
+        <div className="typedLetter">{typedLetter}</div>
+    ): '';
     return <div
         className={classNames}
         onClick={onClick}
         tabIndex={setGuess ? 0 : undefined}
         onKeyDown={keyDown}
-    >{text}</div>
+    >{text}{maybeTypedLetter}</div>
 }
 
-function CardWithAnnotation({letter, inactive, annotation, onClick, hidden=false}: {letter: Letter, inactive?: boolean, annotation: React.ReactNode, onClick?: () => void, hidden?: boolean}) {
+function CardWithAnnotation({letter, typedLetter, inactive, annotation, onClick, hidden=false}: {letter: Letter, typedLetter?: Letter, inactive?: boolean, annotation: React.ReactNode, onClick?: () => void, hidden?: boolean}) {
     return <div className='cardWithPlayerNumber' style={hidden ? {visibility: "hidden"} : undefined}>
-        <Card letter={letter} inactive={inactive} onClick={onClick} />
+        <Card letter={letter} typedLetter={typedLetter} inactive={inactive} onClick={onClick} />
         {annotation}
     </div>
 }
 
-function CardWithPlayerNumberOrLetter({letter, playerNumberOrLetter, onClick, inactive=false, hidden=false}: {letter: Letter, playerNumberOrLetter: PlayerNumber | Letter | null, onClick?: () => void, inactive?: boolean, hidden?: boolean}) {
+function CardWithPlayerNumberOrLetter({letter, typedLetter, playerNumberOrLetter, onClick, inactive=false, hidden=false}: {letter: Letter, typedLetter?: Letter, playerNumberOrLetter: PlayerNumber | Letter | null, onClick?: () => void, inactive?: boolean, hidden?: boolean}) {
     // keep same height even when there is no number or letter.
     const annotation = <div style={playerNumberOrLetter === null ? {visibility: 'hidden'} : {}}>
         <DisplayNumberOrLetter numberOrLetter={playerNumberOrLetter || '🍓'} />
     </div> ;
-    return <CardWithAnnotation letter={letter} inactive={inactive} annotation={annotation} onClick={onClick} hidden={hidden}/>
+    return <CardWithAnnotation letter={letter} typedLetter={typedLetter} inactive={inactive} annotation={annotation} onClick={onClick} hidden={hidden}/>
 }
 
 function RevealedCardsInHand({letters}: {letters: readonly (LetterAndSource | null)[]}) {
@@ -148,15 +157,30 @@ function CardsFromLettersAndSources({lettersAndSources, viewingPlayer, inactive,
     inactive?: (i: number) => void,
     onClick?: (letterAndSource: LetterAndSource, i: number) => void,
 }) {
+    const wildcardsWithTypedLetters = lettersAndSources.filter((letterAndSource) =>
+        letterAndSource.sourceType === LetterSources.WILDCARD ? letterAndSource.typedLetter : false
+    );
+    let firstWildcardTypedLetter: string | undefined = undefined;
+    if (wildcardsWithTypedLetters.length && wildcardsWithTypedLetters[0].sourceType === LetterSources.WILDCARD) {
+        firstWildcardTypedLetter = wildcardsWithTypedLetters[0].typedLetter;
+    }
+
     return <div className='cardList'>
         {lettersAndSources.map((letterAndSource, i) => {
-
-            const letterToDisplay = letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === viewingPlayer ? '?' : letterAndSource.letter;
-
+            let letterToDisplay = letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === viewingPlayer ? '?' : letterAndSource.letter;
+            let typedLetter = letterAndSource.sourceType === LetterSources.WILDCARD ? letterAndSource.typedLetter : undefined;
+            if (letterAndSource.sourceType === LetterSources.WILDCARD && !typedLetter && firstWildcardTypedLetter) {
+                // a wildcard without a letter annotation inherits the annotation
+                typedLetter = firstWildcardTypedLetter;
+            } else if (typedLetter && firstWildcardTypedLetter && typedLetter !== firstWildcardTypedLetter) {
+                // a wildcard with an annotation that doesn't agree should become a ×
+                letterToDisplay = '×';
+            }
             const playerNumberOrLetter = getPlayerNumberOrLetterFromLetterAndSource(letterAndSource);
             const cardInactive = !!(inactive && inactive(i));
             return <CardWithPlayerNumberOrLetter
                 letter={letterToDisplay}
+                typedLetter={typedLetter}
                 inactive={cardInactive}
                 playerNumberOrLetter={playerNumberOrLetter}
                 onClick={(onClick !== undefined && !cardInactive) ? () => onClick(letterAndSource, i) : undefined}

@@ -407,6 +407,21 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
         }
     };
 
+    const addTypedLetterToStagedHint = (letter: string) => {
+        const availableLettersWithThatLetter = availableLetters.filter((availableLetter) => availableLetter.letter === letter);
+        if (availableLettersWithThatLetter.length) {
+            // TODO cycle through duplicate letters instead of always choosing
+            // the leftmost
+            addToStagedHint(availableLettersWithThatLetter[0]);
+        } else {
+            addToStagedHint({
+                letter: '*',
+                sourceType: LetterSources.WILDCARD,
+                typedLetter: letter,
+            });
+        }
+    }
+
     const submit = () => {
         if (stagedHint != null
             && canSubmitHint
@@ -442,12 +457,7 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
         }
 
         const letter = e.key.toUpperCase();
-        for (const availableLetter of availableLetters) {
-            if (availableLetter.letter === letter) {
-                addToStagedHint(availableLetter);
-                break;
-            }
-        }
+        addTypedLetterToStagedHint(letter);
     };
 
     return <>
