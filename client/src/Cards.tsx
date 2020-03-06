@@ -142,7 +142,7 @@ function DisplayNumberOrLetterWithTextAndCards({numberOrLetter, topText, cardsTo
     </div>
 }
 
-function getPlayerNumberOrLetterFromLetterAndSource(letterAndSource: LetterAndSource): number | string | null {
+function getPlayerNumberOrLetterFromLetterAndSource(letterAndSource: LetterAndSource | TypedWildcard): number | string | null {
     switch (letterAndSource.sourceType) {
         case LetterSources.PLAYER:
             return letterAndSource.playerNumber;
@@ -159,9 +159,9 @@ function CardsFromLettersAndSources({lettersAndSources, viewingPlayer, inactive,
     lettersAndSources: readonly (LetterAndSource | TypedWildcard)[],
     viewingPlayer: PlayerNumber,
     inactive?: (i: number) => void,
-    onClick?: (letterAndSource: LetterAndSource, i: number) => void,
+    onClick?: (letterAndSource: LetterAndSource | TypedWildcard, i: number) => void,
 }) {
-    const wildcardsWithTypedLetters = lettersAndSources.filter(isTypedWildcard) as TypedWildcard[];
+    const wildcardsWithTypedLetters = lettersAndSources.filter(isTypedWildcard);
     let firstWildcardTypedLetter: string | undefined = undefined;
     if (wildcardsWithTypedLetters.length) {
         firstWildcardTypedLetter = wildcardsWithTypedLetters[0].typedLetter;
@@ -170,7 +170,7 @@ function CardsFromLettersAndSources({lettersAndSources, viewingPlayer, inactive,
     return <div className='cardList'>
         {lettersAndSources.map((letterAndSource, i) => {
             let letterToDisplay = letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === viewingPlayer ? '?' : letterAndSource.letter;
-            let typedLetter = isTypedWildcard(letterAndSource)?.typedLetter;
+            let typedLetter = isTypedWildcard(letterAndSource) ? letterAndSource.typedLetter : undefined;
             if (letterAndSource.sourceType === LetterSources.WILDCARD && !typedLetter && firstWildcardTypedLetter) {
                 // a wildcard without a letter annotation inherits the annotation
                 typedLetter = firstWildcardTypedLetter;

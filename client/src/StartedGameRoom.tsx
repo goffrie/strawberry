@@ -313,7 +313,7 @@ function ProposingHintComponent({hintingGameState}: {hintingGameState: Proposing
     </>;
 }
 
-function addLetterAndSourceToHint(hint: Hint | null, letterAndSource: LetterAndSource, playerNumber: PlayerNumber): Hint {
+function addLetterAndSourceToHint(hint: StagedHint | null, letterAndSource: LetterAndSource | TypedWildcard, playerNumber: PlayerNumber): StagedHint {
     // First letter
     if (hint === null) {
         return {
@@ -327,7 +327,7 @@ function addLetterAndSourceToHint(hint: Hint | null, letterAndSource: LetterAndS
     }
 }
 
-function removeLetterFromHintByIndex(hint: Hint, i: number): Hint | null {
+function removeLetterFromHintByIndex(hint: StagedHint, i: number): StagedHint | null {
     if (hint.lettersAndSources.length === 1) {
         return null;
     }
@@ -390,7 +390,7 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
     const [nextProposedHint, callProposeHint] = useProposeHint(hintingGameState);
     const callSubmitHint = useGiveHint(hintingGameState);
 
-    const stagedHintSentence = stagedHint !== null && getHintSentence(stagedHint);
+    const stagedHintSentence = strippedStagedHint !== null && getHintSentence(strippedStagedHint);
 
     const proposedWord = proposedHint && proposedHint.lettersAndSources.map(letterAndSource => letterAndSource.letter).join('').toUpperCase();
     let proposeText = 'Propose hint';
@@ -496,7 +496,7 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
 function AvailableCards({lettersAndSources, playerNumber, addToStagedHint}: {
     lettersAndSources: readonly LetterAndSource[],
     playerNumber: PlayerNumber,
-    addToStagedHint: (letterAndSource: LetterAndSource) => void,
+    addToStagedHint: (letterAndSource: LetterAndSource | TypedWildcard) => void,
 }) {
     return <div className='hintLogLine' style={{marginLeft: '12px'}}>
         <CardsFromLettersAndSources lettersAndSources={lettersAndSources} viewingPlayer={playerNumber} onClick={addToStagedHint} />

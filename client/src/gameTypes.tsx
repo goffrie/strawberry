@@ -31,6 +31,7 @@ export type LetterAndSource = Readonly<{
 }> | Readonly<{
     letter: '*',
     sourceType: LetterSources.WILDCARD,
+    typedLetter?: never,
 }>;
 
 export type TypedWildcard = Readonly<{
@@ -39,18 +40,13 @@ export type TypedWildcard = Readonly<{
     typedLetter: Letter,
 }>;
 
-export function isTypedWildcard(letterAndSource: LetterAndSource | TypedWildcard): TypedWildcard | null {
-    if (letterAndSource.sourceType === LetterSources.WILDCARD && 'typedLetter' in letterAndSource) {
-        return letterAndSource;
-    } else {
-        return null;
-    }
+export function isTypedWildcard(letterAndSource: LetterAndSource | TypedWildcard): letterAndSource is TypedWildcard {
+    return letterAndSource.sourceType === LetterSources.WILDCARD && letterAndSource.typedLetter != null;
 }
 
 export function stripTypedLetter(letterAndSource: LetterAndSource | TypedWildcard): LetterAndSource {
-    const maybeTypedWildcard = isTypedWildcard(letterAndSource);
-    if (maybeTypedWildcard) {
-        const { letter, sourceType } = maybeTypedWildcard;
+    if (isTypedWildcard(letterAndSource)) {
+        const { letter, sourceType } = letterAndSource;
         return { letter, sourceType };
     }
     return letterAndSource;
