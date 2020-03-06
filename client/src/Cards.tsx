@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import {DisplayNumberOrLetter} from './DisplayNumberOrLetter';
-import {Hand, LetterAndSource, LetterSources, PlayerNumber, HandWithGuesses, Letter} from './gameTypes';
+import {Hand, LetterAndSource, LetterSources, PlayerNumber, HandWithGuesses, Letter, TypedWildcard, isTypedWildcard} from './gameTypes';
 import { LETTERS } from './gameLogic';
 import { FruitEmojiContext } from './Fruit';
 import { LinkButton } from './LinkButton';
@@ -156,23 +156,21 @@ function getPlayerNumberOrLetterFromLetterAndSource(letterAndSource: LetterAndSo
 }
 
 function CardsFromLettersAndSources({lettersAndSources, viewingPlayer, inactive, onClick}: {
-    lettersAndSources: readonly LetterAndSource[],
+    lettersAndSources: readonly (LetterAndSource | TypedWildcard)[],
     viewingPlayer: PlayerNumber,
     inactive?: (i: number) => void,
     onClick?: (letterAndSource: LetterAndSource, i: number) => void,
 }) {
-    const wildcardsWithTypedLetters = lettersAndSources.filter((letterAndSource) =>
-        letterAndSource.sourceType === LetterSources.WILDCARD ? letterAndSource.typedLetter : false
-    );
+    const wildcardsWithTypedLetters = lettersAndSources.filter(isTypedWildcard) as TypedWildcard[];
     let firstWildcardTypedLetter: string | undefined = undefined;
-    if (wildcardsWithTypedLetters.length && wildcardsWithTypedLetters[0].sourceType === LetterSources.WILDCARD) {
+    if (wildcardsWithTypedLetters.length) {
         firstWildcardTypedLetter = wildcardsWithTypedLetters[0].typedLetter;
     }
 
     return <div className='cardList'>
         {lettersAndSources.map((letterAndSource, i) => {
             let letterToDisplay = letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === viewingPlayer ? '?' : letterAndSource.letter;
-            let typedLetter = letterAndSource.sourceType === LetterSources.WILDCARD ? letterAndSource.typedLetter : undefined;
+            let typedLetter = isTypedWildcard(letterAndSource)?.typedLetter;
             if (letterAndSource.sourceType === LetterSources.WILDCARD && !typedLetter && firstWildcardTypedLetter) {
                 // a wildcard without a letter annotation inherits the annotation
                 typedLetter = firstWildcardTypedLetter;

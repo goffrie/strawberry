@@ -31,12 +31,39 @@ export type LetterAndSource = Readonly<{
 }> | Readonly<{
     letter: '*',
     sourceType: LetterSources.WILDCARD,
-    typedLetter?: Letter,
 }>;
+
+export type TypedWildcard = Readonly<{
+    letter: '*',
+    sourceType: LetterSources.WILDCARD,
+    typedLetter: Letter,
+}>;
+
+export function isTypedWildcard(letterAndSource: LetterAndSource | TypedWildcard): TypedWildcard | null {
+    if (letterAndSource.sourceType === LetterSources.WILDCARD && 'typedLetter' in letterAndSource) {
+        return letterAndSource;
+    } else {
+        return null;
+    }
+}
+
+export function stripTypedLetter(letterAndSource: LetterAndSource | TypedWildcard): LetterAndSource {
+    const maybeTypedWildcard = isTypedWildcard(letterAndSource);
+    if (maybeTypedWildcard) {
+        const { letter, sourceType } = maybeTypedWildcard;
+        return { letter, sourceType };
+    }
+    return letterAndSource;
+}
 
 export interface Hint {
     readonly givenByPlayer: PlayerNumber;
     readonly lettersAndSources: Array<LetterAndSource>;
+}
+
+export interface StagedHint {
+    readonly givenByPlayer: PlayerNumber;
+    readonly lettersAndSources: Array<LetterAndSource | TypedWildcard>;
 }
 
 export interface HintSpecs {
