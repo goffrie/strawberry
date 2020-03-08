@@ -36,9 +36,7 @@ function StartedGameRoom({gameState}: {gameState: StartedPhase}) {
     const [settingGuesses, setGuess] = useSetHandGuess(gameState);
 
     let action: React.ReactNode;
-    if (isSpectator) {
-        // Spectators can't act.
-    } else if (gameState.phase === RoomPhase.HINT) {
+    if (gameState.phase === RoomPhase.HINT) {
         const activeHintNumber = gameState.hintLog.length + 1;
         const totalHintsAvailable = gameState.hintLog.length + gameState.hintsRemaining;
         action = <div className="hintLogEntry">
@@ -46,6 +44,8 @@ function StartedGameRoom({gameState}: {gameState: StartedPhase}) {
             {isProposing(gameState) && <ProposingHintComponent hintingGameState={gameState} />}
             {isResolving(gameState) && <ResolvingHintComponent hintingGameState={gameState} setGuess={setGuess} />}
         </div>;
+    } else if (isSpectator) {
+        // Spectators can't act in the ending phase
     } else if (!gameState.players[playerNumber! - 1].committed) {
         action = <div className="hintLogEntry">
             <div className='hintLogTitle'>Construct your word</div>
