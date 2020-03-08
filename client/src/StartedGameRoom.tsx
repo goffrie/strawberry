@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState, useRef, useContext} from 'react';
 import ScrollableFeed from 'react-scrollable-feed';
 import {
     Dummy,
@@ -29,6 +29,7 @@ import {
 import {ResolveActionChoice, specsOfHint, whichResolveActionRequired, playersWithOutstandingAction, LETTERS, lettersForFinalGuess, setFinalGuess} from './gameLogic';
 import {deepEqual} from './utils';
 import { LinkButton } from './LinkButton';
+import { FruitEmojiContext } from './Fruit';
 
 function StartedGameRoom({gameState}: {gameState: StartedPhase}) {
     const {isSpectator, playerNumber} = usePlayerContext();
@@ -281,7 +282,12 @@ function plural(n: number): string {
     return n === 1 ? '' : 's';
 }
 
-function getHintSentence(hint: Hint): string {
+function HintSentence({hint}: {hint: Hint}) {
+    const fruitEmoji = useContext(FruitEmojiContext);
+    if (hint.lettersAndSources.every((letterAndSource) => letterAndSource.sourceType === LetterSources.WILDCARD)) {
+        return <>{fruitEmoji.repeat(hint.lettersAndSources.length)}</>;
+    }
+
     const specs = specsOfHint(hint);
 
     let sentence = `${specs.length} letter${plural(specs.length)}, ${specs.players} player${plural(specs.players)}, ${specs.wildcard ? '' : 'no '}wildcard`;
@@ -293,7 +299,7 @@ function getHintSentence(hint: Hint): string {
         sentence += `, ${specs.bonuses} ${specs.bonuses === 1 ? 'bonus' : 'bonuses'}`;
     }
 
-    return sentence ;
+    return <>{sentence}</>;
 }
 
 
@@ -304,9 +310,9 @@ function ProposingHintComponent({hintingGameState}: {hintingGameState: Proposing
         <div className='hintLogLine'>Players are proposing hints.</div>
         {hintingGameState.players.map((player, i) => {
             const proposedHint = hintingGameState.activeHint.proposedHints[i + 1];
-            const sentence = proposedHint && getHintSentence(proposedHint);
+            const sentence = proposedHint && <HintSentence hint={proposedHint} />;
             return <div className='hintLogLine' key={i}>
-                <PlayerName name={player.name} /> <span className="has">has</span> {proposedHint ? `proposed: ${sentence}.` : 'not proposed a hint.'}
+                <PlayerName name={player.name} /> <span className="has">has</span> {proposedHint ? <>proposed: {sentence}.</> : 'not proposed a hint.'}
             </div>;
         })}
         {!isSpectator && <HintComposer hintingGameState={hintingGameState} />}
@@ -390,7 +396,7 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
     const [nextProposedHint, callProposeHint] = useProposeHint(hintingGameState);
     const callSubmitHint = useGiveHint(hintingGameState);
 
-    const stagedHintSentence = strippedStagedHint !== null && getHintSentence(strippedStagedHint);
+    const stagedHintSentence = strippedStagedHint !== null && <HintSentence hint={strippedStagedHint} />;
 
     const proposedWord = proposedHint && proposedHint.lettersAndSources.map(letterAndSource => letterAndSource.letter).join('').toUpperCase();
     let proposeText = 'Propose hint';
@@ -547,7 +553,7 @@ function HintInLog({hint, playerActions, playerCardUsed, gameState, settingGuess
 
     // TODO: marginLeft -12 if want to align cards with hint construction
     return <>
-        <div className='hintLogLine'><PlayerName name={playerNamesByNumber[hint.givenByPlayer]} /> gave a hint: {getHintSentence(hint)}</div>
+        <div className='hintLogLine'><PlayerName name={playerNamesByNumber[hint.givenByPlayer]} /> gave a hint: <HintSentence hint={hint} /></div>
         <div className='hintLogLine'>
             <CardsFromLettersAndSources lettersAndSources={hint.lettersAndSources} viewingPlayer={playerNumber!} />
         </div>
