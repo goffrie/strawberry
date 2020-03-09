@@ -49,9 +49,9 @@ function UsernameInput({setUsername}: {setUsername: setUsernameFn}) {
 
 function StartNewGame({createGame, setUsername}: {createGame: createGameFn, setUsername: setUsernameFn}) {
     const [wordLength, setWordLength] = useState(5);
-    const [notificationsEnabled, setNotificationsEnabled] = useState(Notification.permission);
+    const [notificationsEnabled, setNotificationsEnabled] = useState(window.Notification?.permission);
     const enableNotifications = () => {
-        Notification.requestPermission().then(() => {
+        window.Notification.requestPermission().then(() => {
             setNotificationsEnabled(Notification.permission);
         });
     };
