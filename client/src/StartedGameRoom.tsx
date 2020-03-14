@@ -309,7 +309,7 @@ function HintSentence({hint}: {hint: Hint}) {
 
 
 function ProposingHintComponent({hintingGameState}: {hintingGameState: ProposingHintPhase}) {
-    const {isSpectator} = usePlayerContext();
+    const {isSpectator, username} = usePlayerContext();
 
     return <>
         <div className='hintLogLine'>Players are proposing hints.</div>
@@ -320,7 +320,7 @@ function ProposingHintComponent({hintingGameState}: {hintingGameState: Proposing
                 <PlayerName name={player.name} /> <span className="has">has</span> {proposedHint ? <>proposed: {sentence}.</> : 'not proposed a hint.'}
             </div>;
         })}
-        {!isSpectator && <HintComposer hintingGameState={hintingGameState} />}
+        {!isSpectator && <HintComposer hintingGameState={hintingGameState} key={`hintComposer:${username}`}/>}
     </>;
 }
 
