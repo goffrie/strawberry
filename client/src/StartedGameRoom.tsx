@@ -284,6 +284,7 @@ function plural(n: number): string {
 
 function HintSentence({hint}: {hint: Hint}) {
     const fruitEmoji = useContext(FruitEmojiContext);
+    const {isSpectator} = usePlayerContext();
     if (hint.lettersAndSources.every((letterAndSource) => letterAndSource.sourceType === LetterSources.WILDCARD)) {
         return <>{fruitEmoji.repeat(hint.lettersAndSources.length)}</>;
     }
@@ -297,6 +298,10 @@ function HintSentence({hint}: {hint: Hint}) {
     }
     if (specs.bonuses > 0) {
         sentence += `, ${specs.bonuses} ${specs.bonuses === 1 ? 'bonus' : 'bonuses'}`;
+    }
+
+    if (isSpectator) {
+        sentence = `${''.concat(...hint.lettersAndSources.map((l) => l.letter))} (${sentence})`;
     }
 
     return <>{sentence}</>;
