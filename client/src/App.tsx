@@ -8,7 +8,7 @@ import { StartGameRoom } from './StartGameRoom';
 import { StartedGameRoom } from './StartedGameRoom';
 import { createNewRoom } from './gameActions';
 import { useStrawberryGame, StrawberryGameProvider, UsernameContext } from './gameHook';
-import { RoomPhase, ResolveActionKind, isResolving, RoomState } from './gameState';
+import { RoomPhase, ResolveActionKind, isResolving, RoomState, StartingPhasePlayer } from './gameState';
 
 import './App.css';
 import { useLocalStorage } from './localStorage';
@@ -91,6 +91,7 @@ enum GameAction {
 
 function playerCurrentAction(game: RoomState, username: string | null): GameAction | null {
     if (username == null) return null;
+    if (!game.players.some((p: {name: string}) => p.name === username)) return null;
     switch (game.phase) {
         case RoomPhase.START:
             return null;
