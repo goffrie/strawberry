@@ -389,17 +389,21 @@ function proposableLettersAndSources(hintingGameState: ProposingHintPhase, playe
 }
 
 function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}) {
+    const [nextProposedHint, callProposeHint] = useProposeHint(hintingGameState);
+    const callSubmitHint = useGiveHint(hintingGameState);
+
     const {playerNumber} = usePlayerContext();
-    const proposedHint: Hint | null = hintingGameState.activeHint.proposedHints[playerNumber!] || null;
+    if (playerNumber == null || callProposeHint == null || callSubmitHint == null) {
+        throw new Error("HintComposer requires a non-spectator");
+    }
+
+    const proposedHint: Hint | null = hintingGameState.activeHint.proposedHints[playerNumber] || null;
 
     const [stagedHint, setStagedHint] = useState<StagedHint | null>(proposedHint);
     const strippedStagedHint: Hint | null = stagedHint && {
         ...stagedHint,
         lettersAndSources: stagedHint.lettersAndSources.map(stripTypedLetter),
     };
-
-    const [nextProposedHint, callProposeHint] = useProposeHint(hintingGameState);
-    const callSubmitHint = useGiveHint(hintingGameState);
 
     const stagedHintSentence = strippedStagedHint !== null && <HintSentence hint={strippedStagedHint} />;
 
@@ -412,7 +416,7 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
     const canSubmitHint = strippedStagedHint != null && deepEqual(strippedStagedHint, proposedHint) && nextProposedHint === undefined;
 
     const addToStagedHint = (letterAndSource: LetterAndSource | TypedWildcard) => {
-        const newHint = addLetterAndSourceToHint(stagedHint, letterAndSource, playerNumber!);
+        const newHint = addLetterAndSourceToHint(stagedHint, letterAndSource, playerNumber);
         setStagedHint(newHint);
 
         if (newHint.lettersAndSources.length === 11) {
@@ -440,9 +444,7 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
     }
 
     const submit = () => {
-        if (strippedStagedHint != null
-            && canSubmitHint
-            && callSubmitHint != null) {
+        if (strippedStagedHint != null && canSubmitHint) {
             callSubmitHint(strippedStagedHint);
             setStagedHint(null);
         }
@@ -453,7 +455,7 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
        setStagedHint(newHint);
     };
 
-    const availableLetters = proposableLettersAndSources(hintingGameState, playerNumber!);
+    const availableLetters = proposableLettersAndSources(hintingGameState, playerNumber);
 
     const onKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Backspace") {
@@ -467,7 +469,7 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
     const onKeyPress = (e: React.KeyboardEvent) => {
         e.preventDefault();
         if (e.key === "Enter") {
-            if (strippedStagedHint && callProposeHint) {
+            if (strippedStagedHint) {
                 callProposeHint(strippedStagedHint);
             }
             return;
@@ -482,11 +484,11 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
         <div className='hintLogLine italics'>Available letters (click to use): </div>
         <AvailableCards
             lettersAndSources={availableLetters}
-            playerNumber={playerNumber!}
+            playerNumber={playerNumber}
             addToStagedHint={addToStagedHint}
         />
         <div className='hintLogGuessBox' tabIndex={0} onKeyDown={onKeyDown} onKeyPress={onKeyPress}>
-            {<CardsFromLettersAndSources lettersAndSources={stagedHint?.lettersAndSources ?? []} viewingPlayer={playerNumber!} onClick={(_, i) => removeLetterFromHint(i)} />}
+            {<CardsFromLettersAndSources lettersAndSources={stagedHint?.lettersAndSources ?? []} viewingPlayer={playerNumber} onClick={(_, i) => removeLetterFromHint(i)} />}
             <div className='flexAlignRight hintLogGuessBoxClear'>
                 <LinkButton onClick={() => {
                     setStagedHint(null);
@@ -496,7 +498,7 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
         <div className='flex hintLogLine stagedHintActions'>
             {stagedHint !== null && <span className='stagedHintSentence italics'>{stagedHintSentence}</span>}
             <span className='flexAlignRight'>
-                <LinkButton isDisabled={stagedHint == null && callProposeHint != null} onClick={() => stagedHint != null && callProposeHint != null && callProposeHint(strippedStagedHint)}>{proposeText}</LinkButton>
+                <LinkButton isDisabled={stagedHint == null} onClick={() => stagedHint != null && callProposeHint(strippedStagedHint)}>{proposeText}</LinkButton>
                 <span style={{marginLeft: '10px'}} />
                 <LinkButton isDisabled={!canSubmitHint} onClick={submit}>Submit hint</LinkButton>
             </span>
