@@ -4,6 +4,6 @@ pkgs.rustPlatform.buildRustPackage {
     pname = "globby";
     version = "0.1.0";
     src = ./.;
-    cargoSha256 = "063sz8a5pk8b8ly63gl3a6l953l3cyb7fhym0cg78883im7wq08w";
+    cargoSha256 = "0pj7bww4bl12bmsf3025i1va5sbn6wvl5hzx8qpr5irkd1h7dnrh";
     cargoSha256Version = 2;
 }
