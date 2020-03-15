@@ -13,6 +13,10 @@ serde = { version = "1.0.104", features = ["derive"] }
 serde_json = { version = "1.0.48", features = ["raw_value"] }
 rand = "0.7.3"
 
+[dev-dependencies]
+bytes = "0.5.4"
+hyper = "0.13.3"
+
 [profile.release]
 lto = true
 panic = "abort"

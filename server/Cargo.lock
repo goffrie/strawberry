@@ -216,7 +216,9 @@ dependencies = [
 name = "globby"
 version = "0.1.0"
 dependencies = [
+ "bytes",
  "futures-intrusive",
+ "hyper",
  "parking_lot",
  "rand",
  "serde",
