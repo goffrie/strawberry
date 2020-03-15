@@ -106,12 +106,16 @@ function DevStrawberryGameProvider({ roomName, children }: { roomName: string, c
 export const StrawberryGameProvider = process.env.NODE_ENV === 'development' ? DevStrawberryGameProvider : RealStrawberryGameProvider;
 
 async function listLoop(roomName: string, version: number, signal: AbortSignal): Promise<StrawberryGame | null> {
+    let backoff = 1000;
     while (true) {
         try {
             const result = await callList(roomName, version, signal);
+            backoff = 1000;
             if (result == null) {
                 // TODO: potentially add error state
                 return null;
+            } else if ('timeout' in result) {
+                continue;
             } else {
                 return {
                     roomName,
@@ -135,9 +139,11 @@ async function listLoop(roomName: string, version: number, signal: AbortSignal):
         } catch (e) {
             if (signal.aborted) return null;
             console.error(e);
-            // probably timed out.
             // back off and retry
-            await delay(1000);
+            console.log(`Backing off for ${backoff} ms`);
+            await delay(backoff);
+            backoff *= (Math.random() + 0.5);
+            backoff = Math.min(backoff, 30000);
             continue;
         }
     }
