@@ -7,12 +7,17 @@ use std::collections::HashMap;
 use std::convert::Infallible;
 use std::net::ToSocketAddrs;
 use std::sync::Arc;
+use std::time::Duration;
 use std::{env, io};
+use tokio::time::timeout;
+use warp::http::StatusCode;
+use warp::reply::Reply;
 use warp::Filter;
 
 mod words;
 
 const SIZE_LIMIT: u64 = 1024 * 1024; // 1MB
+const LIST_TIMEOUT: Duration = Duration::from_secs(45);
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
@@ -46,11 +51,13 @@ async fn main() -> io::Result<()> {
         .and_then(move |req| {
             let state_ = Arc::clone(&state_);
             async move {
-                let reply = state_
-                    .list(req)
-                    .await
-                    .unwrap_or_else(|| warp::reply::json(&None::<()>));
-                Ok::<_, Infallible>(reply)
+                match timeout(LIST_TIMEOUT, state_.list(req)).await {
+                    Ok(Some(reply)) => Ok(reply.into_response()),
+                    Ok(None) => Err(warp::reject::not_found()),
+                    Err(_) => {
+                        Ok(warp::reply::with_status("", StatusCode::NO_CONTENT).into_response())
+                    }
+                }
             }
         });
     let state_ = Arc::clone(&state);
