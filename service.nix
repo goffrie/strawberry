@@ -9,12 +9,11 @@ in {
   wantedBy = [ "multi-user.target" ];
   environment.RUST_BACKTRACE = "1";
   serviceConfig = {
-    ExecStart = "${server}/bin/globby ${listen} ${client}";
+    ExecStart = "${server}/bin/globby ${listen} ${client} /var/lib/strawberry";
     StandardOutput = "syslog";
     StandardError = "syslog";
     SyslogIdentifier = "strawberry";
     DynamicUser = true;
-    PermissionsStartOnly = true;
     ProtectSystem = "strict";
     ProtectHome = true;
     PrivateDevices = true;
@@ -26,5 +25,6 @@ in {
     RestrictAddressFamilies = "AF_INET AF_INET6";
     Restart = "always";
     RestartSec = "5s";
+    StateDirectory = "strawberry";
   };
 }
