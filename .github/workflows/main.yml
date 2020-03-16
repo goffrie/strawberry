@@ -1,0 +1,21 @@
+name: Nix build
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Cachix
+      uses: cachix/cachix-action@v5
+      with:
+        # Name of a cachix cache to push and pull/substitute
+        name: goffrie
+        # Signing key secret retrieved after creating binary cache on https://cachix.org
+        signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
+        # Nix file to build. Defaults to default.nix
+        file: build.nix
