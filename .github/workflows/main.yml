@@ -30,6 +30,7 @@ jobs:
         # SSH key file name (default: id_rsa)
         name: id_rsa # optional, default is id_rsa
     - name: Push to deployment repo
-      run: git remote add deploy git@github.com:goffrie/strawberry-deploy.git &&
+      run: git fetch --unshallow origin &&
+           git remote add deploy git@github.com:goffrie/strawberry-deploy.git &&
            git fetch deploy master &&
-           if [[ $(git merge-base deploy/master HEAD) != $(git rev-parse HEAD) ]]; then git push deploy HEAD:master; fi
+           if [[ $(git merge-base deploy/master HEAD) != $(git rev-parse HEAD) ]]; then git push --force-with-lease deploy HEAD:master; fi
