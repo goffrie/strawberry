@@ -17,7 +17,7 @@ yarn2nix.mkYarnPackage {
   '';
   installPhase = ''
     mkdir $out
-    cp -r deps/client/build/* $out/
+    cp -r deps/client/build/{index.html,favicon*.ico,robots.txt,static} $out/
   '';
   distPhase = ''
     true
