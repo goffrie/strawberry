@@ -2,7 +2,7 @@
 with pkgs.lib;
 let
   cfg = config.services.strawberry;
-  build = import ./build.nix;
+  build = import ./build.nix {};
 in {
   options.services.strawberry = {
     listen = mkOption {
