@@ -19,7 +19,7 @@ in {
     wantedBy = [ "multi-user.target" ];
     environment.RUST_BACKTRACE = "1";
     serviceConfig = {
-      ExecStart = "${server}/bin/globby ${cfg.listen} \$CONFIGURATION_DIRECTORY/client \$STATE_DIRECTORY";
+      ExecStart = "${server}/bin/globby ${cfg.listen} /etc/strawberry/client /var/lib/strawberry";
       StandardOutput = "syslog";
       StandardError = "syslog";
       SyslogIdentifier = "strawberry";
