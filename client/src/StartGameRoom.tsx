@@ -14,8 +14,7 @@ function StartGameRoom({startingGameState}: {startingGameState: StartingPhase}) 
     useEffect(() => {
         localStorage.removeItem(`notes:${roomName}`);
     }, [roomName]);
-    const [shouldJoin, setShouldJoin] = useState(true);
-    useJoinRoom(startingGameState, shouldJoin);
+    const [, setShouldJoin] = useJoinRoom(startingGameState, true /* join by default */);
 
     return <div className='gameContainer'>
         <StartGameRoomSidebar startingGameState={startingGameState} leaveGame={() => setShouldJoin(false)} />
