@@ -429,11 +429,23 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
     };
 
     const addTypedLetterToStagedHint = (letter: string) => {
-        const availableLettersWithThatLetter = availableLetters.filter((availableLetter) => availableLetter.letter === letter);
+        const availableLettersWithThatLetter = availableLetters
+            .filter((availableLetter) => availableLetter.letter === letter);
         if (availableLettersWithThatLetter.length) {
-            // TODO cycle through duplicate letters instead of always choosing
-            // the leftmost
-            addToStagedHint(availableLettersWithThatLetter[0]);
+            const choices = availableLettersWithThatLetter.map((l) => {
+                return {
+                    letterAndSource: l,
+                    source: l.sourceType === LetterSources.PLAYER ? 0 : l.sourceType === LetterSources.DUMMY ? 1 : 2,
+                    timesUsed: strippedStagedHint ? strippedStagedHint.lettersAndSources.filter((stagedLetter) => deepEqual(stagedLetter, l)).length : 0,
+                };
+            });
+            choices.sort((l1, l2) => {
+                if (l1.source !== l2.source) {
+                    return l1.source - l2.source;
+                }
+                return l1.timesUsed - l2.timesUsed;
+            });
+            addToStagedHint(choices[0].letterAndSource);
         } else {
             addToStagedHint({
                 letter: '*',
