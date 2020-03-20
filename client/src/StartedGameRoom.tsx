@@ -432,7 +432,7 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
         // typing a digit gets you that player's letter
         const letterInt = parseInt(letter);
         if (letterInt.toString() === letter) {
-            if (letterInt >= 1 && letterInt <= hintingGameState.players.length && letterInt != playerNumber) {
+            if (letterInt >= 1 && letterInt <= hintingGameState.players.length && letterInt !== playerNumber) {
                 const player = hintingGameState.players[letterInt - 1];
                 addToStagedHint({
                     sourceType: LetterSources.PLAYER,
@@ -617,7 +617,6 @@ function InlineHandGuess({cardIndex, playerGuess, setGuess}: {
     playerGuess: Letter | null,
     setGuess: (index: number, guess: Letter | null) => void,
 }) {
-    const {playerNumber} = usePlayerContext();
     const guess = playerGuess ?? '';
     return <input
         className='strawberryInput strawberryInputSmall inlineHandGuess'
