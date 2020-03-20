@@ -590,18 +590,20 @@ function HintInLog({hint, playerActions, playerCardUsed, gameState, settingGuess
         }
     });
 
+    const playerGuess = playerNumber != null && playerCardUsed != null ? (settingGuesses && settingGuesses[playerCardUsed]) ?? gameState.players[playerNumber-1].hand.guesses[playerCardUsed] : null;
+
     // TODO: marginLeft -12 if want to align cards with hint construction
     return <>
         <div className='hintLogLine'><PlayerName name={playerNamesByNumber[hint.givenByPlayer]} /> gave a hint: <HintSentence hint={hint} /></div>
         <div className='hintLogLine'>
-            <CardsFromLettersAndSources lettersAndSources={hint.lettersAndSources} viewingPlayer={playerNumber!} />
+            <CardsFromLettersAndSources lettersAndSources={hint.lettersAndSources} viewingPlayer={playerNumber} playerGuess={playerGuess} />
         </div>
         {playerCardUsed !== null && <div className='hintLogLine'>
             {playerCardUsed < gameState.wordLength ?
             `Your position ${playerCardUsed + 1} card was used.`:
             `Your bonus letter was used.`}
             {playerCardUsed < gameState.wordLength && setGuess &&
-                <> Your guess: <InlineHandGuess gameState={gameState} cardIndex={playerCardUsed} settingGuesses={settingGuesses} setGuess={setGuess} /></>}
+                <> Your guess: <InlineHandGuess cardIndex={playerCardUsed} playerGuess={playerGuess} setGuess={setGuess} /></>}
         </div>}
 
         {playerActionStrings.map((str, i) => {
@@ -610,14 +612,13 @@ function HintInLog({hint, playerActions, playerCardUsed, gameState, settingGuess
     </>;
 }
 
-function InlineHandGuess({gameState, cardIndex, settingGuesses, setGuess}: {
-    gameState: StartedPhase,
+function InlineHandGuess({cardIndex, playerGuess, setGuess}: {
     cardIndex: number,
-    settingGuesses: Readonly<Record<number, Letter | null>>,
+    playerGuess: Letter | null,
     setGuess: (index: number, guess: Letter | null) => void,
 }) {
     const {playerNumber} = usePlayerContext();
-    const guess = settingGuesses[cardIndex] ?? gameState.players[playerNumber!-1].hand.guesses[cardIndex] ?? '';
+    const guess = playerGuess ?? '';
     return <input
         className='strawberryInput strawberryInputSmall inlineHandGuess'
         value={guess}

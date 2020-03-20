@@ -51,19 +51,19 @@ function Card({letter, typedLetter, onClick, inactive, guess, setGuess}: {letter
     >{text}{maybeTypedLetter}</div>
 }
 
-function CardWithAnnotation({letter, typedLetter, inactive, annotation, onClick, hidden=false}: {letter: Letter, typedLetter?: Letter, inactive?: boolean, annotation: React.ReactNode, onClick?: () => void, hidden?: boolean}) {
+function CardWithAnnotation({letter, typedLetter, inactive, annotation, onClick, hidden=false, guess}: {letter: Letter, typedLetter?: Letter, inactive?: boolean, annotation: React.ReactNode, onClick?: () => void, hidden?: boolean, guess?: Letter}) {
     return <div className='cardWithPlayerNumber' style={hidden ? {visibility: "hidden"} : undefined}>
-        <Card letter={letter} typedLetter={typedLetter} inactive={inactive} onClick={onClick} />
+        <Card letter={letter} typedLetter={typedLetter} inactive={inactive} onClick={onClick} guess={guess} />
         {annotation}
     </div>
 }
 
-function CardWithPlayerNumberOrLetter({letter, typedLetter, playerNumberOrLetter, onClick, inactive=false, hidden=false}: {letter: Letter, typedLetter?: Letter, playerNumberOrLetter: PlayerNumber | Letter | null, onClick?: () => void, inactive?: boolean, hidden?: boolean}) {
+function CardWithPlayerNumberOrLetter({letter, typedLetter, playerNumberOrLetter, onClick, inactive=false, hidden=false, guess}: {letter: Letter, typedLetter?: Letter, playerNumberOrLetter: PlayerNumber | Letter | null, onClick?: () => void, inactive?: boolean, hidden?: boolean, guess?: Letter}) {
     // keep same height even when there is no number or letter.
     const annotation = <div style={playerNumberOrLetter === null ? {visibility: 'hidden'} : {}}>
         <DisplayNumberOrLetter numberOrLetter={playerNumberOrLetter || '🍓'} />
     </div> ;
-    return <CardWithAnnotation letter={letter} typedLetter={typedLetter} inactive={inactive} annotation={annotation} onClick={onClick} hidden={hidden}/>
+    return <CardWithAnnotation letter={letter} typedLetter={typedLetter} inactive={inactive} annotation={annotation} onClick={onClick} hidden={hidden} guess={guess}/>
 }
 
 function RevealedCardsInHand({letters}: {letters: readonly (LetterAndSource | null)[]}) {
@@ -155,11 +155,12 @@ function getPlayerNumberOrLetterFromLetterAndSource(letterAndSource: LetterAndSo
     }
 }
 
-function CardsFromLettersAndSources({lettersAndSources, viewingPlayer, inactive, onClick}: {
+function CardsFromLettersAndSources({lettersAndSources, viewingPlayer, inactive, onClick, playerGuess}: {
     lettersAndSources: readonly (LetterAndSource | TypedWildcard)[],
-    viewingPlayer: PlayerNumber,
+    viewingPlayer: PlayerNumber | null,
     inactive?: (i: number) => void,
     onClick?: (letterAndSource: LetterAndSource | TypedWildcard, i: number) => void,
+    playerGuess?: Letter | null,
 }) {
     const wildcardsWithTypedLetters = lettersAndSources.filter(isTypedWildcard);
     let firstWildcardTypedLetter: string | undefined = undefined;
@@ -169,7 +170,8 @@ function CardsFromLettersAndSources({lettersAndSources, viewingPlayer, inactive,
 
     return <div className='cardList'>
         {lettersAndSources.map((letterAndSource, i) => {
-            let letterToDisplay = letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === viewingPlayer ? '?' : letterAndSource.letter;
+            const isForViewingPlayer = letterAndSource.sourceType === LetterSources.PLAYER && letterAndSource.playerNumber === viewingPlayer;
+            let letterToDisplay = isForViewingPlayer ? '?' : letterAndSource.letter;
             let typedLetter = isTypedWildcard(letterAndSource) ? letterAndSource.typedLetter : undefined;
             if (letterAndSource.sourceType === LetterSources.WILDCARD && !typedLetter && firstWildcardTypedLetter) {
                 // a wildcard without a letter annotation inherits the annotation
@@ -186,6 +188,7 @@ function CardsFromLettersAndSources({lettersAndSources, viewingPlayer, inactive,
                 inactive={cardInactive}
                 playerNumberOrLetter={playerNumberOrLetter}
                 onClick={(onClick !== undefined && !cardInactive) ? () => onClick(letterAndSource, i) : undefined}
+                guess={(isForViewingPlayer && playerGuess) || undefined}
                 key={i}
             />
         })}
