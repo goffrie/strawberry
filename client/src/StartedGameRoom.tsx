@@ -443,7 +443,13 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
                 if (l1.source !== l2.source) {
                     return l1.source - l2.source;
                 }
-                return l1.timesUsed - l2.timesUsed;
+                if (l1.timesUsed !== l2.timesUsed) {
+                    return l1.timesUsed - l2.timesUsed;
+                }
+                if (l1.letterAndSource.sourceType === LetterSources.PLAYER && l2.letterAndSource.sourceType === LetterSources.PLAYER) {
+                    return hintingGameState.players[l1.letterAndSource.playerNumber - 1].hand.activeIndex - hintingGameState.players[l2.letterAndSource.playerNumber - 1].hand.activeIndex;
+                }
+                return 0;
             });
             addToStagedHint(choices[0].letterAndSource);
         } else {
