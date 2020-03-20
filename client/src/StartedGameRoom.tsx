@@ -429,6 +429,20 @@ function HintComposer({hintingGameState}: {hintingGameState: ProposingHintPhase}
     };
 
     const addTypedLetterToStagedHint = (letter: string) => {
+        // typing a digit gets you that player's letter
+        const letterInt = parseInt(letter);
+        if (letterInt.toString() === letter) {
+            if (letterInt >= 1 && letterInt <= hintingGameState.players.length && letterInt != playerNumber) {
+                const player = hintingGameState.players[letterInt - 1];
+                addToStagedHint({
+                    sourceType: LetterSources.PLAYER,
+                    letter: player.hand.letters[player.hand.activeIndex],
+                    playerNumber: letterInt,
+                });
+            }
+            return;
+        }
+
         const availableLettersWithThatLetter = availableLetters
             .filter((availableLetter) => availableLetter.letter === letter);
         if (availableLettersWithThatLetter.length) {
