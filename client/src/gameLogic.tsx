@@ -21,10 +21,13 @@ export const MAX_PLAYERS: number = 6;
 const STARTING_HINTS: number = 11;
 
 // no J, Q, V, X, Z
-export const LETTERS: Array<Letter> = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'U', 'W', 'Y'];
+export const LETTER_DISTRIBUTION: Readonly<Record<Letter, number>> = {'E': 6, 'I': 4, 'R': 4, 'O': 4, 'S': 4, 'T': 4, 'A': 4, 'U': 3, 'N': 3, 'L': 3, 'H': 3, 'C': 3, 'D': 3, 'K': 2, 'Y': 2, 'B': 2, 'W': 2, 'F': 2, 'M': 2, 'P': 2, 'G': 2};
+export const LETTERS: readonly Letter[] = Object.keys(LETTER_DISTRIBUTION);
+
+const MULTI_LETTERS: readonly Letter[] = ([] as Letter[]).concat(...LETTERS.map(letter => Array.from({length: LETTER_DISTRIBUTION[letter]}, () => letter)));
 
 function randomLetter(): Letter {
-    return LETTERS[Math.floor(Math.random() * LETTERS.length)];
+    return MULTI_LETTERS[Math.floor(Math.random() * MULTI_LETTERS.length)];
 }
 
 export function isRoomReady(room: StartingPhase): boolean {
