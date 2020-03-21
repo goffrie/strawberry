@@ -26,7 +26,7 @@ export function deepEqual(x: any, y: any): boolean {
                 if (!deepEqual(x[i], y[i])) return false;
             }
             return true;
-        } else {
+        } else if (!Array.isArray(x) && !Array.isArray(y)) {
             let xk = Object.keys(x);
             let yk = Object.keys(y);
             if (xk.length !== yk.length) return false;
