@@ -2,6 +2,10 @@ export function delay(duration: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, duration));
 }
 
+export function flatten<T>(list: Readonly<T[]>[]): T[] {
+    return ([] as T[]).concat(...list);
+}
+
 export function shuffle<T>(list: Readonly<ArrayLike<T>>): T[] {
     const array = Array.from(list);
     for (let i = 1; i < array.length; i++) {
