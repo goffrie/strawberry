@@ -37,8 +37,8 @@ function reshuffleDeck<T extends BaseStartedPhase>(room: T): T {
 }
 
 function createShuffledDeck(excluded: Letter[]): Letter[] {
-    let distribution = {...LETTER_DISTRIBUTION};
-    for (let letter of excluded) {
+    const distribution = {...LETTER_DISTRIBUTION};
+    for (const letter of excluded) {
         if (distribution[letter] > 0) {
             distribution[letter]--;
         }
@@ -56,7 +56,7 @@ function drawFromDeck<T extends BaseStartedPhase>(room: T): [Letter, T] {
     if (!room.deck || room.deck.length === 0) {
         room = reshuffleDeck(room);
     }
-    let deck = Array.from(room.deck);
+    const deck = Array.from(room.deck);
     const drawnLetter = deck.pop()!;
     return [drawnLetter, {...room, deck}];
 }
@@ -81,7 +81,7 @@ function dummyLettersForFreeHint(playerCount: number): Array<number> {
 
 function cycleDummies(room: HintingPhase, predicate: (index: number) => boolean): HintingPhase {
     let hintsRemaining = room.hintsRemaining;
-    let dummies = Array.from(room.dummies);
+    const dummies = Array.from(room.dummies);
     dummies.forEach((dummy, index) => {
         if (predicate(index)) {
             if (dummy.untilFreeHint === 1) {
@@ -335,7 +335,7 @@ function applyResolution(room: ResolvingHintPhase, action: ResolveAction): Resol
     } else if (action.kind === ResolveActionKind.FLIP) {
         let letters = player.hand.letters;
         if (player.hand.activeIndex === room.wordLength - 1) {
-            let [newLetter, newRoom] = drawFromDeck(room);
+            const [newLetter, newRoom] = drawFromDeck(room);
             letters = [...player.hand.letters, newLetter];
             room = newRoom;
         }
@@ -351,7 +351,7 @@ function applyResolution(room: ResolvingHintPhase, action: ResolveAction): Resol
         if (action.guess === action.actual) {
             bonuses.push(action.guess);
         }
-        let [newLetter, newRoom] = drawFromDeck({...room, bonuses});
+        const [newLetter, newRoom] = drawFromDeck({...room, bonuses});
         room = newRoom;
         player = {
             ...player,
