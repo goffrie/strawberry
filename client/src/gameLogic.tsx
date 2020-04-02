@@ -14,7 +14,7 @@ import {
     StartedPhase,
 } from './gameState';
 import { PlayerNumber, Letter, Hint, HintSpecs, LetterSources } from './gameTypes';
-import { shuffle, mapNth } from './utils';
+import { flatten, shuffle, mapNth } from './utils';
 
 export const MIN_PLAYERS: number = 2;
 export const MAX_PLAYERS: number = 6;
@@ -24,10 +24,41 @@ const STARTING_HINTS: number = 11;
 export const LETTER_DISTRIBUTION: Readonly<Record<Letter, number>> = {'E': 6, 'I': 4, 'R': 4, 'O': 4, 'S': 4, 'T': 4, 'A': 4, 'U': 3, 'N': 3, 'L': 3, 'H': 3, 'C': 3, 'D': 3, 'K': 2, 'Y': 2, 'B': 2, 'W': 2, 'F': 2, 'M': 2, 'P': 2, 'G': 2};
 export const LETTERS: readonly Letter[] = Object.keys(LETTER_DISTRIBUTION);
 
-const MULTI_LETTERS: readonly Letter[] = ([] as Letter[]).concat(...LETTERS.map(letter => Array.from({length: LETTER_DISTRIBUTION[letter]}, () => letter)));
+function reshuffleDeck<T extends BaseStartedPhase>(room: T): T {
+    const excluded = flatten([
+        flatten(room.players.map((player) => player.hand.letters)),
+        room.dummies.map((dummy) => dummy.currentLetter),
+        room.bonuses,
+    ]);
+    return {
+        ...room,
+        deck: createShuffledDeck(excluded),
+    };
+}
 
-function randomLetter(): Letter {
-    return MULTI_LETTERS[Math.floor(Math.random() * MULTI_LETTERS.length)];
+function createShuffledDeck(excluded: Letter[]): Letter[] {
+    let distribution = {...LETTER_DISTRIBUTION};
+    for (const letter of excluded) {
+        if (distribution[letter] > 0) {
+            distribution[letter]--;
+        }
+    }
+    // fallback to a new deck if we've exhausted every letter
+    if (LETTERS.every((letter) => distribution.letter <= 0)) {
+        distribution = {...LETTER_DISTRIBUTION};
+    }
+    const result = shuffle(flatten(LETTERS.map(letter => Array.from({length: distribution[letter]}, () => letter))));
+    return result;
+}
+
+function drawFromDeck<T extends BaseStartedPhase>(room: T): [Letter, T] {
+    // !room.deck check is for migration
+    if (!room.deck || room.deck.length === 0) {
+        room = reshuffleDeck(room);
+    }
+    const deck = Array.from(room.deck);
+    const drawnLetter = deck.pop()!;
+    return [drawnLetter, {...room, deck}];
 }
 
 export function isRoomReady(room: StartingPhase): boolean {
@@ -46,6 +77,33 @@ function dummyLettersForFreeHint(playerCount: number): Array<number> {
         case 6: return [];
         default: throw new Error("wrong number of players");
     }
+}
+
+function cycleDummies(room: HintingPhase, predicate: (index: number) => boolean): HintingPhase {
+    let hintsRemaining = room.hintsRemaining;
+    const dummies = Array.from(room.dummies);
+    dummies.forEach((dummy, index) => {
+        if (predicate(index)) {
+            if (dummy.untilFreeHint === 1) {
+                // got a hint!
+                hintsRemaining += 1;
+            }
+            let [newLetter, newRoom] = drawFromDeck(room);
+            dummies[index] = {
+                currentLetter: newLetter,
+                untilFreeHint: dummy.untilFreeHint - 1,
+            };
+            // Update the room with each iteration since the deck might need to be reshuffled.
+            room = {
+                ...newRoom,
+                dummies,
+            };
+        }
+    });
+    return {
+        ...room,
+        hintsRemaining,
+    };
 }
 
 // Initialize a brand-new room in the StartingPhase.
@@ -86,37 +144,43 @@ export function setPlayerWord(room: StartingPhase, playerName: string, word: str
 
 // Move a room from the StartingPhase to the HintingPhase.
 export function startGameRoom(room: StartingPhase): HintingPhase {
-    return {
+    const players = room.players.map((player, index) => {
+        // each player receives the previous player's word
+        const word = room.players[(index + room.players.length - 1) % room.players.length].word;
+        if (word == null) {
+            throw new Error("Room is not ready");
+        }
+        return {
+            name: player.name,
+            hand: {
+                letters: shuffle(word),
+                guesses: Array.from(word, _ => null),
+                activeIndex: 0,
+            },
+            hintsGiven: 0,
+        };
+    });
+
+    const deck = createShuffledDeck(flatten(players.map((player) => player.hand.letters)));
+    const dummies = dummyLettersForFreeHint(players.length).map((untilFreeHint) => ({
+        currentLetter: '#',    // placeholder to be replaced by cycleDummies
+        untilFreeHint: untilFreeHint + 1,
+    }));
+    const result: HintingPhase = {
         phase: RoomPhase.HINT,
         wordLength: room.wordLength,
-        players: room.players.map((player, index) => {
-            // each player receives the previous player's word
-            const word = room.players[(index + room.players.length - 1) % room.players.length].word;
-            if (word == null) {
-                throw new Error("Room is not ready");
-            }
-            return {
-                name: player.name,
-                hand: {
-                    letters: shuffle(word),
-                    guesses: Array.from(word, _ => null),
-                    activeIndex: 0,
-                },
-                hintsGiven: 0,
-            };
-        }),
-        dummies: dummyLettersForFreeHint(room.players.length).map((untilFreeHint) => ({
-            currentLetter: randomLetter(),
-            untilFreeHint,
-        })),
+        players,
+        dummies,
         bonuses: [],
-        hintsRemaining: STARTING_HINTS,
         hintLog: [],
+        deck,
+        hintsRemaining: STARTING_HINTS,
         activeHint: {
             state: ActiveHintState.PROPOSING,
             proposedHints: {},
         },
     };
+    return cycleDummies(result, () => true);
 }
 
 export function specsOfHint(hint: Hint): HintSpecs {
@@ -269,9 +333,12 @@ function applyResolution(room: ResolvingHintPhase, action: ResolveAction): Resol
         // do nothing
         return room;
     } else if (action.kind === ResolveActionKind.FLIP) {
-        const letters = (player.hand.activeIndex === room.wordLength - 1) ?
-                        [...player.hand.letters, randomLetter()] :
-                        player.hand.letters;
+        let letters = player.hand.letters;
+        if (player.hand.activeIndex === room.wordLength - 1) {
+            const [newLetter, newRoom] = drawFromDeck(room);
+            letters = [...player.hand.letters, newLetter];
+            room = newRoom;
+        }
         player = {
             ...player,
             hand: {
@@ -284,12 +351,14 @@ function applyResolution(room: ResolvingHintPhase, action: ResolveAction): Resol
         if (action.guess === action.actual) {
             bonuses.push(action.guess);
         }
+        const [newLetter, newRoom] = drawFromDeck({...room, bonuses});
+        room = newRoom;
         player = {
             ...player,
             hand: {
                 letters: [
                     ...player.hand.letters.slice(0, room.wordLength),
-                    randomLetter(),
+                    newLetter,
                 ],
                 guesses: player.hand.guesses,
                 // index doesn't change
@@ -301,7 +370,6 @@ function applyResolution(room: ResolvingHintPhase, action: ResolveAction): Resol
     return {
         ...room,
         players,
-        bonuses,
     }
 }
 
@@ -312,7 +380,6 @@ function fullyResolveHint(room: ResolvingHintPhase): StartedPhase {
         activeIndexes: room.activeHint.activeIndexes,
         playerActions: room.activeHint.playerActions,
     };
-    let hintsRemaining = room.hintsRemaining - 1;
 
     // process cards used up
     const dummiesUsed: Set<number> = new Set(); // 0-indexed
@@ -324,35 +391,21 @@ function fullyResolveHint(room: ResolvingHintPhase): StartedPhase {
             dummiesUsed.add(letterAndSource.dummyNumber - 1);
         }
     }
-    const dummies = room.dummies.map((dummy, index) => {
-        if (dummiesUsed.has(index)) {
-            if (dummy.untilFreeHint === 1) {
-                // got a hint!
-                hintsRemaining += 1;
-            }
-            return {
-                currentLetter: randomLetter(),
-                untilFreeHint: dummy.untilFreeHint - 1,
-            };
-        } else {
-            return dummy;
-        }
-    });
     const bonuses = room.bonuses.filter((bonus, index) => !bonusesUsed.has(index));
 
-    const newRoom: ProposingHintPhase = {
+    let newRoom: HintingPhase = {
         ...room,
-        dummies,
         bonuses,
-        hintsRemaining,
+        hintsRemaining: room.hintsRemaining - 1,
         hintLog: [...room.hintLog, logEntry],
         activeHint: {
             state: ActiveHintState.PROPOSING,
             proposedHints: {},
         },
     };
+    newRoom = cycleDummies(newRoom, (index) => dummiesUsed.has(index));
 
-    if (hintsRemaining <= 0) {
+    if (newRoom.hintsRemaining <= 0) {
         return moveToEndgame(newRoom);
     } else {
         return newRoom;
@@ -376,13 +429,14 @@ export function performResolveAction(room: ResolvingHintPhase, action: ResolveAc
 }
 
 export function moveToEndgame(room: HintingPhase): EndgamePhase {
-    const {players, wordLength, dummies, bonuses, hintLog} = room;
+    const {players, wordLength, dummies, bonuses, hintLog, deck} = room;
     return {
         phase: RoomPhase.ENDGAME,
         wordLength,
         dummies,
         bonuses,
         hintLog,
+        deck,
         hintsRemaining: 0,
         players: players.map((player) => ({
             ...player,

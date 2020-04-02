@@ -93,6 +93,7 @@ export interface BaseStartedPhase {
     readonly bonuses: readonly Letter[],
     // Hints that have previously been given and resolved.
     readonly hintLog: readonly HintLogEntry[],
+    readonly deck: readonly Letter[],
 }
 
 // The main phase of the game, in which players give hints and flip over their
