@@ -37,7 +37,7 @@ function reshuffleDeck<T extends BaseStartedPhase>(room: T): T {
 }
 
 function createShuffledDeck(excluded: Letter[]): Letter[] {
-    const distribution = {...LETTER_DISTRIBUTION};
+    let distribution = {...LETTER_DISTRIBUTION};
     for (const letter of excluded) {
         if (distribution[letter] > 0) {
             distribution[letter]--;
