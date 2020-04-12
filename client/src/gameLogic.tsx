@@ -471,7 +471,7 @@ export function setHandGuess<T extends BaseStartedPhase>(room: T, playerNumber: 
 
 class InvalidLetters extends Error {}
 
-export function lettersForFinalGuess(room: EndgamePhase, playerNumber: PlayerNumber): (EndgameLetterChoice & {available: boolean})[] {
+export function lettersForFinalGuess(room: EndgamePhase, playerNumber: PlayerNumber): ({choice: EndgameLetterChoice, available: boolean})[] {
     const player = room.players[playerNumber-1];
     const usedOwnLetters = new Set();
     const bonusesAvailable = new Map();
@@ -498,17 +498,21 @@ export function lettersForFinalGuess(room: EndgamePhase, playerNumber: PlayerNum
         }
     }
 
-    const choices: (EndgameLetterChoice & {available: boolean})[] = [];
+    const choices: ({choice: EndgameLetterChoice, available: boolean})[] = [];
     for (let i = 0; i < room.wordLength; ++i) {
         choices.push({
-            sourceType: LetterSources.PLAYER,
-            index: i,
+            choice: {
+                sourceType: LetterSources.PLAYER,
+                index: i,
+            },
             available: !usedOwnLetters.has(i),
         });
     }
     choices.push({
-        sourceType: LetterSources.WILDCARD,
-        letter: '*',
+        choice: {
+            sourceType: LetterSources.WILDCARD,
+            letter: '*',
+        },
         available: wildcardAvailable,
     });
     for (const letter of room.bonuses) {
@@ -518,8 +522,10 @@ export function lettersForFinalGuess(room: EndgamePhase, playerNumber: PlayerNum
             bonusesAvailable.set(letter, current - 1);
         }
         choices.push({
-            sourceType: LetterSources.BONUS,
-            letter,
+            choice: {
+                sourceType: LetterSources.BONUS,
+                letter,
+            },
             available,
         })
     }

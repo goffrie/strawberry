@@ -736,10 +736,10 @@ function GuessWordComponent({gameState}: {gameState: EndgamePhase}) {
         }
         return choice;
     };
-    const lettersAndSources: LetterAndSource[] = available.map(convert);
+    const lettersAndSources: LetterAndSource[] = available.map(({choice}) => convert(choice));
 
     const addToGuess = (_: object, i: number) => {
-        setGuess([...guess, available[i]]);
+        setGuess([...guess, available[i].choice]);
     };
     const removeLetterFromGuess = (_: object, i: number) => {
         let newGuess = [...guess];
