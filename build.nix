@@ -12,4 +12,8 @@ in
 (pkgs.linkFarm "strawberry" [
   { name = "client"; path = client; }
   { name = "server"; path = server; }
-]) // { inherit client server; }
+]) // {
+  inherit client server;
+  # For nix-prefetch
+  serverCargoDeps = { sha256 }: server.cargoDeps.overrideAttrs (_: { inherit sha256; });
+}
