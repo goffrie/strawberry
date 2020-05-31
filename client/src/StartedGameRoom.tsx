@@ -556,11 +556,14 @@ function PlayerName({name}: {name: string}) {
     </>;
 }
 
-function HintInLog({hint, playerActions, playerCardUsed, gameState, settingGuesses={}, setGuess}: {
+function HintInLog({hint, playerActions, playerCardUsed, gameState, bonusGuess=null, settingGuesses={}, setGuess}: {
     hint: Hint,
     playerActions: readonly ResolveAction[],
     playerCardUsed: null | number,
     gameState: StartedPhase,
+    // This is used to display *bonus* guesses inline, which are not available via gameState.
+    // Guesses for non-bonus letters are grabbed out-of-band. This is arguably bad design.
+    bonusGuess?: Letter | null,
     settingGuesses?: Readonly<Record<number, Letter | null>>,
     setGuess?: (index: number, guess: Letter | null) => void,
 }) {
@@ -596,7 +599,12 @@ function HintInLog({hint, playerActions, playerCardUsed, gameState, settingGuess
     const isBonusResolved = isBonusLetter && playerActions.some(playerAction => playerAction.kind === ResolveActionKind.GUESS && playerAction.player === playerNumber);
 
     // Grab the player's current guess for their card from their hand state.
-    const playerGuess = playerNumber != null && playerCardUsed != null ? (settingGuesses && settingGuesses[playerCardUsed]) ?? gameState.players[playerNumber-1].hand.guesses[playerCardUsed] : null;
+    let playerGuess: Letter | null = null;
+    if (bonusGuess != null) {
+        playerGuess = bonusGuess;
+    } else if (playerNumber != null && playerCardUsed != null) {
+        playerGuess = (settingGuesses && settingGuesses[playerCardUsed]) ?? gameState.players[playerNumber-1].hand.guesses[playerCardUsed];
+    }
 
     // TODO: marginLeft -12 if want to align cards with hint construction
     return <>
@@ -655,16 +663,19 @@ function ResolvingHintComponent({hintingGameState, setGuess}: {
     const waitingOnPlayers = playersWithOutstandingAction(hintingGameState.activeHint);
     const waitingOnPlayerNames = hintingGameState.players.filter((player, i) => waitingOnPlayers.has(i+1)).map((player) => player.name);
 
+    const [bonusGuess, setBonusGuess] = useState<Letter | null>(null);
+
     return <>
         <HintInLog
             hint={activeHint.hint}
             playerActions={activeHint.playerActions}
             playerCardUsed={playerCardUsed}
+            bonusGuess={bonusGuess}
             gameState={hintingGameState}
             setGuess={setGuess} />
         <div className='hintLogLine flex resolveAction'>
             {resolveActionRequired === ResolveActionChoice.FLIP && <FlipResolve playerNumber={playerNumber!} hintingGameState={hintingGameState} />}
-            {resolveActionRequired === ResolveActionChoice.GUESS && <GuessResolve player={player!} playerNumber={playerNumber!} hintingGameState={hintingGameState} />}
+            {resolveActionRequired === ResolveActionChoice.GUESS && <GuessResolve player={player!} playerNumber={playerNumber!} hintingGameState={hintingGameState} guess={bonusGuess} setGuess={setBonusGuess} />}
             {waitingOnPlayerNames.length > 0 && <span className='flexAlignRight italics waitingOnPlayers'>Waiting on: {waitingOnPlayerNames.join(', ')}</span>}
         </div>
     </>;
@@ -690,19 +701,20 @@ function FlipResolve({playerNumber, hintingGameState}: {playerNumber: PlayerNumb
         }}>No</LinkButton></>;
 }
 
-function GuessResolve({player, playerNumber, hintingGameState}: {
+function GuessResolve({player, playerNumber, hintingGameState, guess, setGuess}: {
     player: HintingPhasePlayer,
     playerNumber: PlayerNumber,
     hintingGameState: ResolvingHintPhase,
+    guess: Letter | null,
+    setGuess: (guess: Letter | null) => void,
 }) {
-    const [guess, setGuess] = useState('');
     const resolveFn = useResolveHint(hintingGameState);
     if (resolveFn === null) throw new Error('illegal');
     return <>
         <span className='italics'>Guess the value of your bonus card: </span>
         <form onSubmit={e => {
             e.preventDefault();
-            if (guess !== '') {
+            if (guess != null) {
                 if (guess.length !== 1) throw new Error('how did you guess more than one letter');
                 resolveFn({
                     player: playerNumber,
@@ -714,10 +726,10 @@ function GuessResolve({player, playerNumber, hintingGameState}: {
         }}>
             <input
                 className='strawberryInput strawberryInputSmall'
-                value={guess}
+                value={guess ?? ''}
                 onChange={(e) => {
                     const letter = e.target.value.substr(e.target.value.length - 1, 1).toUpperCase();
-                    setGuess(LETTERS.includes(letter) ? letter : '');
+                    setGuess(LETTERS.includes(letter) ? letter : null);
                 }}
                 autoFocus
             />
