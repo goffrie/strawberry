@@ -590,13 +590,24 @@ function HintInLog({hint, playerActions, playerCardUsed, gameState, settingGuess
         }
     });
 
+    // Whether the `playerCardUsed` is a bonus letter.
+    const isBonusLetter = playerCardUsed != null && playerCardUsed >= gameState.wordLength;
+    // Whether the player has already made a guess for said bonus letter.
+    const isBonusResolved = isBonusLetter && playerActions.some(playerAction => playerAction.kind === ResolveActionKind.GUESS && playerAction.player === playerNumber);
+
+    // Grab the player's current guess for their card from their hand state.
     const playerGuess = playerNumber != null && playerCardUsed != null ? (settingGuesses && settingGuesses[playerCardUsed]) ?? gameState.players[playerNumber-1].hand.guesses[playerCardUsed] : null;
 
     // TODO: marginLeft -12 if want to align cards with hint construction
     return <>
         <div className='hintLogLine'><PlayerName name={playerNamesByNumber[hint.givenByPlayer]} /> gave a hint: <HintSentence hint={hint} /></div>
         <div className='hintLogLine'>
-            <CardsFromLettersAndSources lettersAndSources={hint.lettersAndSources} viewingPlayer={playerNumber} playerGuess={playerGuess} />
+            <CardsFromLettersAndSources
+                lettersAndSources={hint.lettersAndSources}
+                // As a special case, if a player has already made a guess for their bonus card, we can just reveal the actual card.
+                // Do this by unsetting viewingPlayer as though this were a spectator.
+                viewingPlayer={isBonusResolved ? null : playerNumber}
+                playerGuess={playerGuess} />
         </div>
         {playerCardUsed !== null && <div className='hintLogLine'>
             {playerCardUsed < gameState.wordLength ?
