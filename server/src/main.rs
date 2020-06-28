@@ -1,3 +1,4 @@
+use anyhow::Context;
 use parking_lot::RwLock;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
@@ -25,45 +26,27 @@ const LIST_TIMEOUT: Duration = Duration::from_secs(45);
 const DUMP_FILENAME: &str = "room_data.json";
 
 #[tokio::main]
-async fn main() -> io::Result<()> {
-    let listen_addr = env::args().nth(1).ok_or_else(|| {
-        io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "First argument should be listen host:port",
-        )
-    })?;
-    let static_dir = env::args().nth(2).ok_or_else(|| {
-        io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "Second argument should be static directory",
-        )
-    })?;
-    let data_path = env::args().nth(3).ok_or_else(|| {
-        io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "Third argument should be data directory",
-        )
-    })?;
+async fn main() -> anyhow::Result<()> {
+    let (listen_addr, static_dir, data_path) = {
+        let mut args = env::args().skip(1);
+        match (args.next(), args.next(), args.next()) {
+            (Some(a), Some(b), Some(c)) => (a, b, c),
+            _ => {
+                anyhow::bail!("Usage: globby LISTEN_ADDRESS STATIC_DIRECTORY DATA_DIRECTORY");
+            }
+        }
+    };
     let data_path = Path::new(&data_path);
-    let dump_path = data_path.join(DUMP_FILENAME);
-    std::fs::create_dir_all(&data_path)?;
+    std::fs::create_dir_all(&data_path)
+        .with_context(|| format!("Error creating data path {}", data_path.display()))?;
     let listen_addr = listen_addr
-        .to_socket_addrs()?
+        .to_socket_addrs()
+        .with_context(|| format!("Error resolving listen address {}", listen_addr))?
         .into_iter()
         .next()
-        .ok_or_else(|| {
-            io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "Listen address resolved to nothing",
-            )
-        })?;
-    let initial_state = match fs::File::open(&dump_path) {
-        Ok(f) => serde_json::from_reader(io::BufReader::new(f))?,
-        Err(ref e) if e.kind() == io::ErrorKind::NotFound => Inner::default(),
-        Err(e) => return Err(e),
-    };
+        .context("Listen address resolved to nothing")?;
     let state = Arc::new(State {
-        inner: RwLock::new(initial_state),
+        inner: RwLock::new(Inner::load_state(data_path).context("Error loading state")?),
     });
     let state_ = Arc::clone(&state);
     let list = warp::path!("list")
@@ -99,7 +82,7 @@ async fn main() -> io::Result<()> {
     let mut sigterm = signal(SignalKind::terminate())?;
     let ctrl_c = ctrl_c();
     let (listen_addr, server) =
-        warp::serve(stateful_routes.or(static_routes)).bind_ephemeral(listen_addr);
+        warp::serve(stateful_routes.or(static_routes)).try_bind_ephemeral(listen_addr)?;
     println!("Listening on {}", listen_addr);
     tokio::select! {
         _ = server => panic!("server cannot exit"),
@@ -107,17 +90,14 @@ async fn main() -> io::Result<()> {
             println!("Received SIGTERM, shutting down");
         },
         _ = ctrl_c => {
-            println!("Received Ctrl-C, shutting down");
+            println!("\nReceived Ctrl-C, shutting down");
         },
     };
-    println!("Dumping server state to {}", data_path.display());
-    let inner = state.inner.read();
-    let random_path = data_path.join(format!("tmp.{:032x}", rand::thread_rng().gen::<u128>()));
-    let mut dump_file = io::BufWriter::new(fs::File::create(&random_path)?);
-    serde_json::to_writer(&mut dump_file, &*inner)?;
-    let dump_file = dump_file.into_inner()?;
-    dump_file.sync_all()?;
-    fs::rename(&random_path, &dump_path)?;
+    state
+        .inner
+        .read()
+        .dump_state(data_path)
+        .context("Error dumping state")?;
     Ok(())
 }
 
@@ -235,4 +215,33 @@ impl State {
 
 fn new_event() -> Arc<futures_intrusive::channel::OneshotBroadcastChannel<Infallible>> {
     Arc::new(futures_intrusive::channel::OneshotBroadcastChannel::new())
+}
+
+impl Inner {
+    fn dump_state(&self, data_path: &Path) -> anyhow::Result<()> {
+        let dump_path = data_path.join(DUMP_FILENAME);
+        println!("Dumping server state to {}", data_path.display());
+        let random_path = data_path.join(format!("tmp.{:032x}", rand::thread_rng().gen::<u128>()));
+        let mut dump_file =
+            io::BufWriter::new(fs::File::create(&random_path).context("Error creating data dump")?);
+        serde_json::to_writer(&mut dump_file, self).context("Error writing to data dump")?;
+        let dump_file = dump_file
+            .into_inner()
+            .context("Error writing to data dump")?;
+        dump_file.sync_all().context("Error writing to data dump")?;
+        fs::rename(&random_path, &dump_path).context("Error writing to data dump")?;
+        Ok(())
+    }
+
+    fn load_state(data_path: &Path) -> anyhow::Result<Inner> {
+        let dump_path = data_path.join(DUMP_FILENAME);
+        match fs::File::open(&dump_path) {
+            Ok(f) => serde_json::from_reader(io::BufReader::new(f))
+                .with_context(|| format!("Error reading dump file {}", dump_path.display())),
+            Err(ref e) if e.kind() == io::ErrorKind::NotFound => Ok(Inner::default()),
+            Err(e) => {
+                Err(e).with_context(|| format!("Could not open dump file {}", dump_path.display()))
+            }
+        }
+    }
 }
