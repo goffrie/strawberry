@@ -17,7 +17,7 @@ import { PlayerNumber, Letter, Hint, HintSpecs, LetterSources } from './gameType
 import { flatten, shuffle, mapNth } from './utils';
 
 export const MIN_PLAYERS: number = 2;
-export const MAX_PLAYERS: number = 6;
+export const MAX_PLAYERS: number = 9;
 const STARTING_HINTS: number = 11;
 
 // no J, Q, V, X, Z
@@ -75,6 +75,9 @@ function dummyLettersForFreeHint(playerCount: number): Array<number> {
         case 4: return [7, 8];
         case 5: return [7];
         case 6: return [];
+        case 7: return [];
+        case 8: return [];
+        case 9: return [];
         default: throw new Error("wrong number of players");
     }
 }
