@@ -5,18 +5,18 @@ authors = ["Geoffry Song <goffrie@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-tokio = { version = "0.2.11", features = ["rt-core", "io-driver", "tcp", "macros", "signal", "stream", "time", "parking_lot"] }
-futures-intrusive = "0.3.0"
-warp = { version = "0.2.1", default-features = false }
-parking_lot = "0.10.0"
+tokio = { version = "1", features = ["rt", "macros", "net", "signal"] }
+futures-intrusive = "0.4"
+warp = { version = "0.3", default-features = false }
+parking_lot = "0.11"
 serde = { version = "1.0.104", features = ["derive"] }
 serde_json = { version = "1.0.48", features = ["raw_value"] }
-rand = "0.7.3"
-anyhow = "1.0"
+rand = "0.8"
+anyhow = "1"
 
 [dev-dependencies]
-bytes = "0.5.4"
-hyper = "0.13.3"
+bytes = "1"
+hyper = "0.14"
 
 [profile.release]
 lto = true

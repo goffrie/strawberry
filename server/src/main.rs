@@ -25,7 +25,7 @@ const SIZE_LIMIT: u64 = 1024 * 1024; // 1MB
 const LIST_TIMEOUT: Duration = Duration::from_secs(45);
 const DUMP_FILENAME: &str = "room_data.json";
 
-#[tokio::main]
+#[tokio::main(flavor = "current_thread")]
 async fn main() -> anyhow::Result<()> {
     let (listen_addr, static_dir, data_path) = {
         let mut args = env::args().skip(1);

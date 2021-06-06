@@ -1,13 +1,13 @@
 { pkgs ? import <nixpkgs> {} }:
 
 let
-rustPkgs = import (pkgs.fetchFromGitHub {
-  owner = "mozilla";
-  repo = "nixpkgs-mozilla";
-  rev = "e912ed483e980dfb4666ae0ed17845c4220e5e7c";
-  sha256 = "08fvzb8w80bkkabc1iyhzd15f4sm7ra10jn32kfch5klgl0gj3j3";
+rustPkgs = pkgs // import (pkgs.fetchFromGitHub {
+  owner = "oxalica";
+  repo = "rust-overlay";
+  rev = "26d7210f4801d9dc8f48b5d8bc34df1cf41284c8";
+  sha256 = "0pggczamd1ilbs9aid5w6nxlww6cbvv6ibaxj7x3vk4185xbd16s";
 }) rustPkgs pkgs;
-rustc = rustPkgs.rustChannelOfTargets "1.42.0" null ["x86_64-unknown-linux-musl"];
+rustc = rustPkgs.rust-bin.stable."1.52.1".default.override { targets = ["x86_64-unknown-linux-musl"]; };
 in
 (pkgs.rustPlatform.buildRustPackage.override { inherit rustc; }) {
   pname = "globby";
@@ -17,7 +17,7 @@ in
     { name = "Cargo.lock"; path = "${./Cargo.lock}"; }
     { name = "src"; path = "${./src}"; }
   ];
-  cargoSha256 = "0jhn5cn3xkzgfw44k490z7svhx5kh15hix300yk0966jzqfbg9dh";
+  cargoSha256 = "1456rgp8d2gfscbphzi7j5slzdjrw8ysm9yy8blzi5p6dbxln1p3";
   cargoSha256Version = 2;
   checkPhase = "true";
   target = "x86_64-unknown-linux-musl";
