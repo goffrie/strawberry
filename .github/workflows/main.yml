@@ -10,11 +10,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: cachix/install-nix-action@v12
+    - uses: cachix/install-nix-action@v18
       with:
         nix_path: nixpkgs=channel:nixos-unstable
     - name: Cachix build
-      uses: cachix/cachix-action@v8
+      uses: cachix/cachix-action@v10
       with:
         # Name of a cachix cache to push and pull/substitute
         name: goffrie
