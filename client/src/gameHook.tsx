@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { delay, deepEqual } from './utils';
+import { deepEqual } from './utils';
 import { Hint, Letter, PlayerNumber } from './gameTypes';
 import {
     HintingPhase,
@@ -29,8 +29,8 @@ import {
     removePlayerFromRoom,
     commitFinalGuess,
 } from './gameLogic';
-import {callCommit, callList} from './gameAPI';
 import {TestRooms} from './testData';
+import { useMutation, useQuery } from './convex/_generated';
 
 export type StrawberryGame = Readonly<{
     roomName: string,
@@ -105,59 +105,21 @@ function DevStrawberryGameProvider({ roomName, children }: { roomName: string, c
 
 export const StrawberryGameProvider = process.env.NODE_ENV === 'development' ? DevStrawberryGameProvider : RealStrawberryGameProvider;
 
-async function listLoop(roomName: string, version: number, signal: AbortSignal): Promise<StrawberryGame | null> {
-    let backoff = 1000;
-    while (true) {
-        try {
-            const result = await callList(roomName, version, signal);
-            backoff = 1000;
-            if (result == null) {
-                // TODO: potentially add error state
-                return null;
-            } else if ('timeout' in result) {
-                continue;
-            } else {
-                return {
-                    roomName,
-                    gameState: result.data,
-                    stateVersion: result.version,
-                    setGameState: (newState, abortSignal) => {
-                        callCommit(roomName, result.version, newState, abortSignal)
-                            .then((response) => {
-                                if (!response.success) {
-                                    console.log("commit failed; race condition occurred");
-                                }
-                            })
-                            .catch((reason) => {
-                                if (!abortSignal.aborted) {
-                                    console.error(reason);
-                                }
-                            });
-                    },
-                };
-            }
-        } catch (e) {
-            if (signal.aborted) return null;
-            console.error(e);
-            // back off and retry
-            console.log(`Backing off for ${backoff} ms`);
-            await delay(backoff);
-            backoff *= (Math.random() + 0.5);
-            backoff = Math.min(backoff, 30000);
-            continue;
-        }
-    }
-}
-
 function useListStrawberryGame(roomName: string): StrawberryGame | null {
-    const [state, setState] = useState<StrawberryGame | null>(null);
-    const version = state?.stateVersion || 0;
-    useEffect(() => {
-        const abortController = new AbortController();
-        listLoop(roomName, version, abortController.signal).then(setState);
-        return () => abortController.abort();
-    }, [roomName, version]);
-    return state;
+    const r = useQuery("getRoom", roomName);
+    const setRoom = useMutation("setRoom");
+    if (r == null) {
+        return null;
+    }
+    const { name, value, version } = r;
+    return {
+        roomName,
+        gameState: JSON.parse(value),
+        stateVersion: version,
+        setGameState: (newState, abortSignal) => {
+            setRoom(roomName, version, JSON.stringify(newState));
+        },
+    };
 }
 
 function useFakeStrawberryGame(roomName: string): StrawberryGame | null {

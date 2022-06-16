@@ -6,13 +6,14 @@ import { FRUIT, FruitEmojiContext, FRUIT_NAMES } from './Fruit';
 import { MainPage } from './MainPage';
 import { StartGameRoom } from './StartGameRoom';
 import { StartedGameRoom } from './StartedGameRoom';
-import { createNewRoom } from './gameActions';
 import { useStrawberryGame, StrawberryGameProvider, UsernameContext } from './gameHook';
 import { RoomPhase, ResolveActionKind, isResolving, RoomState } from './gameState';
 
 import './App.css';
 import { useLocalStorage } from './localStorage';
-import { ResolveActionChoice, whichResolveActionRequired } from './gameLogic';
+import { newStartingPhase, ResolveActionChoice, whichResolveActionRequired } from './gameLogic';
+
+import { useMutation } from './convex/_generated';
 
 const USERNAME_KEY: string = 'username';
 const FRUIT_KEY: string = 'fruit';
@@ -53,6 +54,8 @@ function App({ initialRoom }: { initialRoom: string }) {
         };
     });
 
+    const createRoom = useMutation("createRoom");
+
     let page;
     if (isPendingRoomCreation) {
         page = <SuperWrappedLoadingStrawberry />;
@@ -69,7 +72,8 @@ function App({ initialRoom }: { initialRoom: string }) {
             setUsername={setUsername}
             createGame={async (wordLength) => {
                 setIsPendingRoomCreation(true);
-                const newRoom = await createNewRoom(username!, wordLength);
+                const initial = newStartingPhase(username!, wordLength);
+                const newRoom = await createRoom(JSON.stringify(initial), Math.random());
                 setRoom(newRoom);
                 window.location.hash = `#${newRoom}`;
                 setIsPendingRoomCreation(false);
