@@ -6,9 +6,9 @@ edition = "2018"
 
 [dependencies]
 tokio = { version = "1", features = ["rt", "macros", "net", "signal"] }
-futures-intrusive = "0.4"
+futures-intrusive = "0.5"
 warp = { version = "0.3", default-features = false }
-parking_lot = "0.11"
+parking_lot = "0.12"
 serde = { version = "1.0.104", features = ["derive"] }
 serde_json = { version = "1.0.48", features = ["raw_value"] }
 rand = "0.8"
