@@ -1,8 +1,8 @@
 let pinnedNixpkgs = (import <nixpkgs> {}).fetchFromGitHub {
   owner = "NixOS";
   repo = "nixpkgs";
-  rev = "52e3e80afff4b16ccb7c52e9f0f5220552f03d04";
-  sha256 = "FqZ7b2RpoHQ/jlG6JPcCNmG/DoUPCIvyaropUDFhF3Q=";
+  rev = "e0da498ad77ac8909a980f07eff060862417ccf7";
+  hash = "sha256-evZzmLW7qoHXf76VCepvun1esZDxHfVRFUJtumD7L2M=";
 };
 in { pkgs ? import pinnedNixpkgs {} }:
 let

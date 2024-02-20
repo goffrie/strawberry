@@ -17,8 +17,7 @@ in
     { name = "Cargo.lock"; path = "${./Cargo.lock}"; }
     { name = "src"; path = "${./src}"; }
   ];
-  cargoSha256 = "hbYB/WiIvyViEITlvSLvlCdgBZxb8Q5Sw23wqtOQIqE=";
-  cargoSha256Version = 2;
+  cargoHash = "sha256-XSfN3X9jKtb95xSEDfCB6B0hNhYh4YLlBCdeUHgJgkM=";
   checkPhase = "true";
   target = "x86_64-unknown-linux-musl";
 }
