@@ -1,4 +1,10 @@
 use anyhow::Context;
+use axum::extract::DefaultBodyLimit;
+use axum::response::IntoResponse;
+use axum::response::Response;
+use axum::routing::post;
+use axum::Json;
+use axum::Router;
 use parking_lot::RwLock;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
@@ -12,16 +18,14 @@ use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 use std::{env, fs, io};
+use tokio::net::TcpListener;
 use tokio::signal::ctrl_c;
 use tokio::signal::unix::{signal, SignalKind};
-use tokio::time::timeout;
-use warp::http::StatusCode;
-use warp::reply::Reply;
-use warp::Filter;
+use tower_http::services::ServeDir;
 
 mod words;
 
-const SIZE_LIMIT: u64 = 1024 * 1024; // 1MB
+const SIZE_LIMIT: usize = 1024 * 1024; // 1MB
 const LIST_TIMEOUT: Duration = Duration::from_secs(45);
 const DUMP_FILENAME: &str = "room_data.json";
 
@@ -48,42 +52,20 @@ async fn main() -> anyhow::Result<()> {
     let state = Arc::new(State {
         inner: RwLock::new(Inner::load_state(data_path).context("Error loading state")?),
     });
-    let state_ = Arc::clone(&state);
-    let list = warp::path!("list")
-        .and(warp::body::json())
-        .and_then(move |req| {
-            let state_ = Arc::clone(&state_);
-            async move {
-                match timeout(LIST_TIMEOUT, state_.list(req)).await {
-                    Ok(Some(reply)) => Ok(reply.into_response()),
-                    Ok(None) => Err(warp::reject::not_found()),
-                    Err(_) => {
-                        Ok(warp::reply::with_status("", StatusCode::NO_CONTENT).into_response())
-                    }
-                }
-            }
-        });
-    let state_ = Arc::clone(&state);
-    let commit = warp::path!("commit")
-        .and(warp::body::json())
-        .map(move |req| {
-            warp::reply::json(&CommitReply {
-                success: state_.commit(req),
-            })
-        });
-    let state_ = Arc::clone(&state);
-    let make_room = warp::path!("make_room")
-        .and(warp::body::json())
-        .map(move |req| warp::reply::json(&state_.make_room(req)));
-    let stateful_routes = warp::post()
-        .and(warp::body::content_length_limit(SIZE_LIMIT))
-        .and(list.or(commit).or(make_room));
-    let static_routes = warp::get().and(warp::fs::dir(static_dir));
+    let app = Router::new()
+        .route("/list", post(routes::list))
+        .route("/commit", post(routes::commit))
+        .route("/make_room", post(routes::make_room))
+        .layer(DefaultBodyLimit::max(SIZE_LIMIT))
+        .with_state(state.clone())
+        .fallback_service(ServeDir::new(static_dir));
     let mut sigterm = signal(SignalKind::terminate())?;
     let ctrl_c = ctrl_c();
-    let (listen_addr, server) =
-        warp::serve(stateful_routes.or(static_routes)).try_bind_ephemeral(listen_addr)?;
+    let listener = TcpListener::bind(&listen_addr)
+        .await
+        .with_context(|| format!("Error listening on {}", listen_addr))?;
     println!("Listening on {}", listen_addr);
+    let server = axum::serve(listener, app);
     tokio::select! {
         _ = server => panic!("server cannot exit"),
         _ = sigterm.recv() => {
@@ -99,6 +81,49 @@ async fn main() -> anyhow::Result<()> {
         .dump_state(data_path)
         .context("Error dumping state")?;
     Ok(())
+}
+
+mod routes {
+    use std::sync::Arc;
+
+    use axum::{
+        extract::State,
+        http::StatusCode,
+        response::{IntoResponse, Response},
+        Json,
+    };
+    use tokio::time::timeout;
+
+    use crate::{CommitReply, CommitReq, ListReq, MakeRoomReq, LIST_TIMEOUT};
+
+    pub(crate) async fn list(
+        State(state): State<Arc<crate::State>>,
+        Json(req): Json<ListReq>,
+    ) -> Response {
+        match timeout(LIST_TIMEOUT, state.list(req)).await {
+            Ok(Some(reply)) => reply,
+            Ok(None) => StatusCode::NOT_FOUND.into_response(),
+            // timed out
+            Err(_) => StatusCode::NO_CONTENT.into_response(),
+        }
+    }
+
+    pub(crate) async fn commit(
+        State(state): State<Arc<crate::State>>,
+        Json(req): Json<CommitReq>,
+    ) -> Response {
+        Json(CommitReply {
+            success: state.commit(req),
+        })
+        .into_response()
+    }
+
+    pub(crate) async fn make_room(
+        State(state): State<Arc<crate::State>>,
+        Json(req): Json<MakeRoomReq>,
+    ) -> Response {
+        Json(state.make_room(req)).into_response()
+    }
 }
 
 struct State {
@@ -154,16 +179,19 @@ struct MakeRoomReply {
 }
 
 impl State {
-    async fn list(&self, req: ListReq) -> Option<warp::reply::Json> {
+    async fn list(&self, req: ListReq) -> Option<Response> {
         loop {
             let event = {
                 let inner = self.inner.read();
                 let room = inner.rooms.get(&req.room)?;
                 if room.version != req.version {
-                    return Some(warp::reply::json(&ListReply {
-                        version: room.version,
-                        data: &room.data,
-                    }));
+                    return Some(
+                        Json(&ListReply {
+                            version: room.version,
+                            data: &room.data,
+                        })
+                        .into_response(),
+                    );
                 } else {
                     room.event.clone()
                 }
@@ -220,7 +248,7 @@ fn new_event() -> Arc<futures_intrusive::channel::OneshotBroadcastChannel<Infall
 impl Inner {
     fn dump_state(&self, data_path: &Path) -> anyhow::Result<()> {
         let dump_path = data_path.join(DUMP_FILENAME);
-        println!("Dumping server state to {}", data_path.display());
+        println!("Dumping server state to {}", dump_path.display());
         let random_path = data_path.join(format!("tmp.{:032x}", rand::thread_rng().gen::<u128>()));
         let mut dump_file =
             io::BufWriter::new(fs::File::create(&random_path).context("Error creating data dump")?);

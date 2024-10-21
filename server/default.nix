@@ -4,10 +4,10 @@ let
 rustPkgs = pkgs // import (pkgs.fetchFromGitHub {
   owner = "oxalica";
   repo = "rust-overlay";
-  rev = "d45281ce1027a401255db01ea44972afbc569b7e";
-  hash = "sha256-FtKWP6d51kz8282jfziNNcCBpAvEzv2TtKH6dYIXCuA=";
+  rev = "784981a9feeba406de38c1c9a3decf966d853cca";
+  hash = "sha256-as0I9xieJUHf7kiK2a9znDsVZQTFWhM1pLivII43Gi0=";
 }) rustPkgs pkgs;
-rustc = rustPkgs.rust-bin.stable."1.76.0".default.override { targets = ["x86_64-unknown-linux-musl"]; };
+rustc = rustPkgs.rust-bin.stable."1.82.0".default.override { targets = ["x86_64-unknown-linux-musl"]; };
 in
 (pkgs.rustPlatform.buildRustPackage.override { inherit rustc; }) {
   pname = "globby";
