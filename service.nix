@@ -1,8 +1,8 @@
-{ config, pkgs, ... }:
-with pkgs.lib;
+{ client, server }:
+{ config, lib, ... }:
+with lib;
 let
   cfg = config.services.strawberry;
-  build = import ./build.nix {};
 in {
   options.services.strawberry = {
     listen = mkOption {
@@ -11,14 +11,14 @@ in {
       description = "The address on which to listen";
     };
   };
-  config.environment.etc."strawberry/client".source = "${build.client}";
+  config.environment.etc."strawberry/client".source = "${client}";
   config.systemd.services.strawberry = {
     description = "Strawberry";
     after = [ "network.target" ];
     wantedBy = [ "multi-user.target" ];
     environment.RUST_BACKTRACE = "1";
     serviceConfig = {
-      ExecStart = "${build.server}/bin/globby ${cfg.listen} /etc/strawberry/client /var/lib/strawberry";
+      ExecStart = "${server}/bin/globby ${cfg.listen} /etc/strawberry/client /var/lib/strawberry";
       StandardOutput = "syslog";
       StandardError = "syslog";
       SyslogIdentifier = "strawberry";
