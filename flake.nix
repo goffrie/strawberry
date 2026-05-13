@@ -2,7 +2,8 @@
   description = "a game about strawberries";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    # TODO: update for mkYarnPackage deprecation
+    nixpkgs.url = "github:NixOS/nixpkgs/27398c2c3e05206410f246410161f095b0566c91";
     rust-overlay.url = "github:oxalica/rust-overlay";
     rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";

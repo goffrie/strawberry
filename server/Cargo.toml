@@ -10,9 +10,9 @@ futures-intrusive = "0.5"
 parking_lot = "0.12"
 serde = { version = "1.0.104", features = ["derive"] }
 serde_json = { version = "1.0.48", features = ["raw_value"] }
-rand = "0.8"
+rand = "0.10"
 anyhow = "1"
-axum = "0.7.7"
+axum = "0.8"
 tower-http = { version = "0.6.1", features = ["fs"] }
 
 [dev-dependencies]

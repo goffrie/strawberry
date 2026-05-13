@@ -6,9 +6,7 @@ use axum::routing::post;
 use axum::Json;
 use axum::Router;
 use parking_lot::RwLock;
-use rand::seq::SliceRandom;
-use rand::thread_rng;
-use rand::Rng;
+use rand::seq::IndexedRandom as _;
 use serde::{Deserialize, Serialize};
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
@@ -219,7 +217,7 @@ impl State {
 
     fn make_room(&self, req: MakeRoomReq) -> MakeRoomReply {
         let mut inner = self.inner.write();
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
         loop {
             let room = format!(
                 "{}.{}",
@@ -249,7 +247,7 @@ impl Inner {
     fn dump_state(&self, data_path: &Path) -> anyhow::Result<()> {
         let dump_path = data_path.join(DUMP_FILENAME);
         println!("Dumping server state to {}", dump_path.display());
-        let random_path = data_path.join(format!("tmp.{:032x}", rand::thread_rng().gen::<u128>()));
+        let random_path = data_path.join(format!("tmp.{:032x}", rand::random::<u128>()));
         let mut dump_file =
             io::BufWriter::new(fs::File::create(&random_path).context("Error creating data dump")?);
         serde_json::to_writer(&mut dump_file, self).context("Error writing to data dump")?;
