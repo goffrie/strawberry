@@ -62,7 +62,7 @@ async fn main() -> anyhow::Result<()> {
     let listener = TcpListener::bind(&listen_addr)
         .await
         .with_context(|| format!("Error listening on {}", listen_addr))?;
-    println!("Listening on {}", listen_addr);
+    println!("Listening on {}", listener.local_addr()?);
     let server = axum::serve(listener, app);
     tokio::select! {
         _ = server => panic!("server cannot exit"),

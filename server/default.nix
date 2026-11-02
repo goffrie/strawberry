@@ -3,14 +3,14 @@
     (import ((import <nixpkgs> { }).fetchFromGitHub {
       owner = "oxalica";
       repo = "rust-overlay";
-      rev = "77265d2dc1e61b2abfd3b1d6609dbb66fe75e0a5";
-      hash = "sha256-bhk4lawR4ZnFhPtamB5WkCyvfgyZmsEUbWfT/3FRxFY=";
+      rev = "c85ccd343087c57da6021cafa1647142ad03e32e";
+      hash = "sha256-vHPjEGxtV+StSLW9DJpa3c3gt0UD0s1q4nC98AZ0N0c=";
     }))
   ];
 } }:
 
 let
-  rustc = pkgs.rust-bin.stable."1.95.0".default.override {
+  rustc = pkgs.rust-bin.stable."1.99.1".default.override {
     targets = [ "x86_64-unknown-linux-musl" ];
   };
 in (pkgs.rustPlatform.buildRustPackage.override { inherit rustc; }) {
